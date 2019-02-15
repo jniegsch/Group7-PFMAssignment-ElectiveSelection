@@ -1,3 +1,5 @@
+package SELECTive;
+
 import java.util.Scanner;
 
 public class Admin extends User {

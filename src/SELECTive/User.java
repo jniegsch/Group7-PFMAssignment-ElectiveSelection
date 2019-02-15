@@ -1,3 +1,5 @@
+package SELECTive;
+
 import java.io.*;
 
 import java.nio.charset.StandardCharsets;
@@ -56,7 +58,7 @@ public class User {
     private String[][] uPs;
     //endregion
 
-    //region User Management Definitions
+    //region SELECTive.User Management Definitions
     private final static int MAX_LOGIN_ATTEMPTS = 3;
     private boolean hasOpenUP = false;
     private final static String UPLoc = "./UPdb.txt";
@@ -65,12 +67,12 @@ public class User {
     private final static String StudentInfoLoc = "./studentuinfo.txt";
     //endregion
 
-    //region Public Session Management
+    //region Public SELECTive.Session Management
     private static String invalidID = "ohno_notvalid";
     public String getInvalidID() { return invalidID; }
     //endregion
 
-    //region Session Management
+    //region SELECTive.Session Management
     /**
      * Login a user. The login function will continously call authenticate user, until the maximum login attempts have
      * been reached. If this occurs, it is assumed that the user might have forgotten their password. If the user is
@@ -132,7 +134,7 @@ public class User {
         try {
             this.dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(uinfo[5]);
         } catch (ParseException pe) {
-            Session.printError("User", "createActiveSession", "ParseException", pe.getMessage());
+            Session.printError("SELECTive.User", "createActiveSession", "ParseException", pe.getMessage());
         }
         this.sessionId = userId + "_" + type.toString().toLowerCase();
         Calendar cal = Calendar.getInstance();
@@ -207,7 +209,7 @@ public class User {
                 }
             }
         } catch (NoSuchAlgorithmException nsae) {
-            Session.printError("User",
+            Session.printError("SELECTive.User",
                     "authenticateUser",
                     "NoSuchAlgorithmException",
                     "The algorithm required to hash the username or password was not available: " + nsae.getMessage());
@@ -216,7 +218,7 @@ public class User {
     }
     //endregion
 
-    //region User Management
+    //region SELECTive.User Management
     /**
      * Allows a user to change their password. If the user is an admin, then no old password is required.
      * @param username      {@code String} the username for which a password change should occur
@@ -250,7 +252,7 @@ public class User {
                 }
             }
         } catch (NoSuchAlgorithmException nsae) {
-            Session.printError("User",
+            Session.printError("SELECTive.User",
                     "changePassword",
                     "NoSuchAlgorithmException",
                     "The algorithm required to hash the username or password was not available: " + nsae.getMessage());
@@ -309,7 +311,7 @@ public class User {
             }
             reader.close();
         } catch (IOException ioe) {
-            Session.printError("User",
+            Session.printError("SELECTive.User",
                     "readDictFromFile",
                     "IOException",
                     "Could not read the file " + fname);
@@ -318,7 +320,7 @@ public class User {
         String [][] dictToReturn = new String[dictPairs.length][3];
         for (int i = 0; i < dictPairs.length; i++) {
             String[] sp = dictPairs[i].split(" : ");
-            if (sp.length != 3) Session.printError("User",
+            if (sp.length != 3) Session.printError("SELECTive.User",
                     "readDictFromFile",
                     "BadDict",
                     "The dictionary entry are not a key/pair & type form");
@@ -349,7 +351,7 @@ public class User {
             }
             printer.close();
         } catch (IOException ioe) {
-            Session.printError("User",
+            Session.printError("SELECTive.User",
                     "writeDictTofile",
                     "IOException",
                     "Could not write to the file " + fname);
@@ -360,7 +362,7 @@ public class User {
 
     /**
      * Reads the data connected to a certain user
-     * @param someone {@code User} the user to get the information for
+     * @param someone {@code SELECTive.User} the user to get the information for
      * @return {@code String[]} representing the users information
      */
     private String[] readUserInfo(User someone) {
@@ -377,7 +379,7 @@ public class User {
             }
             reader.close();
         } catch (IOException ioe) {
-            Session.printError("User", "readUserInfo", "IOException", ioe.getMessage());
+            Session.printError("SELECTive.User", "readUserInfo", "IOException", ioe.getMessage());
             return null;
         }
 
@@ -392,7 +394,7 @@ public class User {
 
     /**
      * Updates a users record after anythin has changed
-     * @param you {@code User} the user whose data should be changed
+     * @param you {@code SELECTive.User} the user whose data should be changed
      * @return {@code boolean} indicating if the update was successful
      */
     private boolean updateUserInfo(User you) {
@@ -425,7 +427,7 @@ public class User {
 
             temp.renameTo(new File(loc));
         } catch (IOException ioe) {
-            Session.printError("User",
+            Session.printError("SELECTive.User",
                     "updateUserInfo",
                     "IOException",
                     "Something went wrong updating the user file");
