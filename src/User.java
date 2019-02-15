@@ -95,7 +95,7 @@ public class User {
      * the password is stored usind SHA256 hashing. All passwords are handled as {@code char[]} since garbage collection
      * for {@code Strings} is not immediate, and thus this could be a security issue.
      * @param uname {@code String}: the username of the user requesting authentication
-     * @param pword {@code char[]}: the password, passed as a char array for security reasons [see above]
+     * @param pword {@code char[]}: the password, passed as a char array for security reasons (see above)
      * @return {@code boolean}: indicating if authentication was successful
      */
     private boolean authenticateUser(String uname, char[] pword) {
