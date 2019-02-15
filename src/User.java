@@ -114,21 +114,21 @@ public class User {
      * Creates an active session by reading in the user data
      */
     private void createActiveSession() {
-        String[] uinfo = readUserInfo(username, type);
+        String[] uinfo = readUserInfo(this);
         // only 7 things, hard code them
-        userId = uinfo[0];
-        firstName = uinfo[1];
-        lastname = uinfo[2];
-        middleInitial = uinfo[3];
+        this.userId = uinfo[0];
+        this.firstName = uinfo[1];
+        this.lastname = uinfo[2];
+        this.middleInitial = uinfo[3];
         try {
-            dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(uinfo[5]);
+            this.dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(uinfo[5]);
         } catch (ParseException pe) {
             ESError.printError("User", "createActiveSession", "ParseException", pe.getMessage());
         }
-        sessionId = userId + "_" + type.toString().toLowerCase();
+        this.sessionId = userId + "_" + type.toString().toLowerCase();
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.HOUR, 1);
-        sessionExpiration = cal.getTime();
+        this.sessionExpiration = cal.getTime();
     }
 
     /**
@@ -353,18 +353,17 @@ public class User {
 
     /**
      * Reads the data connected to a certain user
-     * @param uname {@code String} the filename from which to read the specific dictionary
-     * @param t     {@code UserType} indicating which type of user's file to read
+     * @param someone {@code User} the user to get the information for
      * @return {@code String[]} representing the users information
      */
-    private String[] readUserInfo(String uname, UserType t) {
+    private String[] readUserInfo(User someone) {
         String userInfo = "";
-        String loc = (t.equals(UserType.ADMIN))? AdminInfoLoc : (t.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
+        String loc = (someone.type.equals(UserType.ADMIN))? AdminInfoLoc : (someone.type.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
         try {
             BufferedReader reader = new BufferedReader(new FileReader(loc));
             String currentLine;
             while((currentLine = reader.readLine()) != null) {
-                if (currentLine.contains(uname)) {
+                if (currentLine.split(" ; ")[4].equals(someone.username)) {
                     userInfo = currentLine;
                     break;
                 }
@@ -377,11 +376,11 @@ public class User {
 
         if (userInfo.equals("")) {
             ESError.printIssue("No user info found.",
-                    "No user info for the user ("+ uname +") was found. Please ensure this user actually exists.");
+                    "No user info for the user ("+ someone.username +") was found. Please ensure this user actually exists.");
             return null;
         }
 
-        return userInfo.split(";");
+        return userInfo.split(" ; ");
     }
 
     /**
