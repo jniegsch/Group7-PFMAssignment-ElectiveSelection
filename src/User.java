@@ -29,13 +29,23 @@ enum UserType {
  */
 public class User {
     //region Private Property Definitions
-    private String userId = "invX00nallowed";
+    private long userId = 0;
     private UserType type = UserType.DEFAULT;
     private String firstName = "";
     private String lastname = "";
     private String middleInitial = "";
     private String username = "";
     private Date dateOfBirth = new Date();
+    //endregion
+
+    //region Constructors
+    public User() {
+
+    }
+
+    public User(UserType type) {
+        this.type = type;
+    }
     //endregion
 
     //region Private user management & session controls
@@ -61,7 +71,6 @@ public class User {
     //endregion
 
     //region Session Management
-
     /**
      * Login a user. The login function will continously call authenticate user, until the maximum login attempts have
      * been reached. If this occurs, it is assumed that the user might have forgotten their password. If the user is
@@ -85,7 +94,7 @@ public class User {
             loggedIn = true;
             return true;
         }
-        ESError.printIssue("Reached maximum login tries.", "You have reached the maximum amount of login attempts. ");
+        Session.printIssue("Reached maximum login tries.", "You have reached the maximum amount of login attempts. ");
         if (type == UserType.ADMIN) {
             System.out.print("Would you like to change the users password (Y/n)? ");
             Scanner cPass = new Scanner(System.in);
@@ -101,10 +110,10 @@ public class User {
                     npass = cPass.nextLine();
                     changePassword(username, null, npass.toCharArray());
                 } else {
-                    ESError.printIssue("Invalid Input.", "The password you typed was incorrect!");
+                    Session.printIssue("Invalid Input.", "The password you typed was incorrect!");
                 }
             }
-            ESError.printIssue("Password change declined.", "");
+            Session.printIssue("Password change declined.", "");
             return false;
         }
         return false;
@@ -116,14 +125,14 @@ public class User {
     private void createActiveSession() {
         String[] uinfo = readUserInfo(this);
         // only 7 things, hard code them
-        this.userId = uinfo[0];
+        this.userId = Long.parseLong(uinfo[0]);
         this.firstName = uinfo[1];
         this.lastname = uinfo[2];
         this.middleInitial = uinfo[3];
         try {
             this.dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(uinfo[5]);
         } catch (ParseException pe) {
-            ESError.printError("User", "createActiveSession", "ParseException", pe.getMessage());
+            Session.printError("User", "createActiveSession", "ParseException", pe.getMessage());
         }
         this.sessionId = userId + "_" + type.toString().toLowerCase();
         Calendar cal = Calendar.getInstance();
@@ -137,14 +146,14 @@ public class User {
      * expiration time.
      * @return {@code boolean} indicating if the session is active - or not
      */
-    private boolean isSessionActive() {
+    public boolean isSessionActive() {
         return (sessionId != invalidID && new Date().before(sessionExpiration));
     }
 
     /**
      * Invalidates a session by changing the ID to the invalidID as well as setting the expiration time to 1 hour prior
      */
-    private void invalidateSession() {
+    public void invalidateSession() {
         sessionId = invalidID;
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.HOUR, -1); // set expiration to an hour prior
@@ -154,7 +163,7 @@ public class User {
     /**
      * Not only invalidates a session, but also closes the system if the user does not relogin
      */
-    private void forceInvalidSessionBurnout() {
+    public void forceInvalidSessionBurnout() {
         invalidateSession();
         // see if user would like to login again
         System.out.print("The session has expired. Do you wish to login again (Y/n)?");
@@ -163,7 +172,7 @@ public class User {
         if (contScan.hasNextLine()) {
             ans = contScan.nextLine();
         } else {
-            ESError.printIssue("Invalid input.", "The input was invalid, terminating the session");
+            Session.printIssue("Invalid input.", "The input was invalid, terminating the session");
             System.exit(0);
         }
         if (ans.equals("Y")) Session.main(null);
@@ -198,7 +207,7 @@ public class User {
                 }
             }
         } catch (NoSuchAlgorithmException nsae) {
-            ESError.printError("User",
+            Session.printError("User",
                     "authenticateUser",
                     "NoSuchAlgorithmException",
                     "The algorithm required to hash the username or password was not available: " + nsae.getMessage());
@@ -231,7 +240,7 @@ public class User {
                             uPs[i][1] = newPassHash;
                             changed = true;
                         } else {
-                            ESError.printIssue("Incorrect password.", "The password you supplied is incorrect. Thus the request users password will not be changed.");
+                            Session.printIssue("Incorrect password.", "The password you supplied is incorrect. Thus the request users password will not be changed.");
                             return false;
                         }
                     } else {
@@ -241,7 +250,7 @@ public class User {
                 }
             }
         } catch (NoSuchAlgorithmException nsae) {
-            ESError.printError("User",
+            Session.printError("User",
                     "changePassword",
                     "NoSuchAlgorithmException",
                     "The algorithm required to hash the username or password was not available: " + nsae.getMessage());
@@ -250,9 +259,9 @@ public class User {
             if (writeDictToFile(uPs, UPLoc, true)) return true;
             // error saving, try to revert...
             if ((uPs = readDictFromFile(UPLoc)) != null) {
-                ESError.printIssue("An issue occured saving the new password.", "There was a severe issue trying to save your new password. For this reason the change was not saved, and your password was reverted to the old one.");
+                Session.printIssue("An issue occured saving the new password.", "There was a severe issue trying to save your new password. For this reason the change was not saved, and your password was reverted to the old one.");
             } else {
-                ESError.printIssue("Fatal Error", "A Fatal error has occured where the current internal user management state is broken. Exiting, as gracefully as possible...");
+                Session.printIssue("Fatal Error", "A Fatal error has occured where the current internal user management state is broken. Exiting, as gracefully as possible...");
                 System.exit(12);
             }
         }
@@ -264,13 +273,12 @@ public class User {
      * created.
      * @return {@code boolean} indicating if no users are present
      */
-    public static boolean noUsers() {
+    public static boolean hasNoUsers() {
         return (new User().readDictFromFile(UPLoc).length == 0);
     }
     //endregion
 
     //region Access
-
     /**
      * Returns the user id
      * @return {@code String} the user ID
@@ -282,7 +290,6 @@ public class User {
     //endregion
 
     //region File Access
-
     /**
      * Reads a form of dictionary used by the system. The format is used for the user authentication. Each line of the
      * authentication file is in the form:
@@ -302,7 +309,7 @@ public class User {
             }
             reader.close();
         } catch (IOException ioe) {
-            ESError.printError("User",
+            Session.printError("User",
                     "readDictFromFile",
                     "IOException",
                     "Could not read the file " + fname);
@@ -311,7 +318,7 @@ public class User {
         String [][] dictToReturn = new String[dictPairs.length][3];
         for (int i = 0; i < dictPairs.length; i++) {
             String[] sp = dictPairs[i].split(" : ");
-            if (sp.length != 3) ESError.printError("User",
+            if (sp.length != 3) Session.printError("User",
                     "readDictFromFile",
                     "BadDict",
                     "The dictionary entry are not a key/pair & type form");
@@ -342,7 +349,7 @@ public class User {
             }
             printer.close();
         } catch (IOException ioe) {
-            ESError.printError("User",
+            Session.printError("User",
                     "writeDictTofile",
                     "IOException",
                     "Could not write to the file " + fname);
@@ -370,12 +377,12 @@ public class User {
             }
             reader.close();
         } catch (IOException ioe) {
-            ESError.printError("User", "readUserInfo", "IOException", ioe.getMessage());
+            Session.printError("User", "readUserInfo", "IOException", ioe.getMessage());
             return null;
         }
 
         if (userInfo.equals("")) {
-            ESError.printIssue("No user info found.",
+            Session.printIssue("No user info found.",
                     "No user info for the user ("+ someone.username +") was found. Please ensure this user actually exists.");
             return null;
         }
@@ -418,7 +425,7 @@ public class User {
 
             temp.renameTo(new File(loc));
         } catch (IOException ioe) {
-            ESError.printError("User",
+            Session.printError("User",
                     "updateUserInfo",
                     "IOException",
                     "Something went wrong updating the user file");
