@@ -4,28 +4,61 @@ import java.util.Scanner;
 
 public class Session {
     private static final int consoleCharWidth = 120;
-    private static final String systemName = "SELECTive ";
+    private static final String systemName = "SELECTive";
 
     public static final boolean systemPrintsErrors = true;
 
     public static void main(String[] args) {
         //TODO: The actual program...
+
+        /*
+        Some simple testing
+         */
+        println("Welcome to " + systemName);
+        printTitle("Login type selection", '*', false);
+        Scanner lgSelect = new Scanner(System.in);
+        println("" +
+                "(1) Admin \n" +
+                "(2) Lecturer \n" +
+                "(3) Student");
+        print("Please choose a login type (1, 2, or 3): ");
+        int choice = 0;
+        if (lgSelect.hasNextInt()) {
+            choice = lgSelect.nextInt();
+        } else {
+            System.exit(0);
+        }
+
+        Admin lala = new Admin();
+
+        if (User.hasNoUsers()) createInitialAdmin();
     }
+
+    //region Dashboard Login
+
+    //endregion
+
+    //region Initial System Setup
+    private static boolean createInitialAdmin() {
+        Admin init = new Admin();
+        return init.createAdminUser("sudo", new char[]{'m', 'a', 's', 't', 'e', 'r', 'P', 'a', 's', 's', '!'});
+    }
+    //endregion
 
     // region General printing
     public static void printTitle(String title, char c, boolean supressName) {
         if (title.length() > consoleCharWidth - 9) return;
         String beginning = c + " " + c + " ";
-        int setWidth = beginning.length() + ((supressName)? 0 : systemName.length()) + 2; // +2 for the ': ' that is appended later
+        int setWidth = beginning.length() + ((supressName)? 0 : systemName.length() + 2); // +2 for the ': ' that is appended later
         int leftToFill = 0;
-        System.out.print(beginning + ((supressName)? "" : systemName) + ": ");
+        System.out.print(beginning + ((supressName)? "" : systemName + ": "));
         if (title.length() + setWidth > consoleCharWidth - 3) {
             String nLine = "\n      " + title;
             System.out.print(nLine);
             leftToFill = consoleCharWidth - nLine.length() + 2; // -2 for the '\n'
         } else {
             String nLine = beginning + ((supressName)? "" : systemName) + ": " + title;
-            System.out.print(nLine);
+            System.out.print(" " + title + " ");
             leftToFill = consoleCharWidth - nLine.length();
         }
         for (int i = 0; i < leftToFill; i += 2) System.out.print(c + " ");
@@ -81,6 +114,7 @@ public class Session {
             println("> An " + type + " error occurred in " + className + ": " + function + "\n" +
                     "    " + message + "\n");
             println(consoleLine('-'));
+            print("\n");
         }
     }
 
@@ -96,7 +130,7 @@ public class Session {
         System.out.println("" +
                 ">> Warning: " + title);
         if (!message.equals("")) System.out.println("" +
-                "    " + message);
+                "    " + message + "\n\n");
     }
     //endregion
 }

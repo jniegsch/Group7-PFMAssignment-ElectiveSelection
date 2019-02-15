@@ -48,6 +48,22 @@ public class User {
     public User(UserType type) {
         this.type = type;
     }
+
+    public boolean createNew(String fname, String lname, String minitials, String username, Date dob, char[] pword) {
+        this.firstName = fname;
+        this.lastname = lname;
+        this.middleInitial = minitials;
+        this.username = username;
+        this.dateOfBirth = dob;
+        if (!saveNewUser(pword, this)) {
+            Session.printError("SELECTive.User",
+                    "createNew",
+                    "FatalError",
+                    "Saving the new account failed. Something seems to be seriously wrong. Exiting...");
+            System.exit(1);
+        }
+        return true;
+    }
     //endregion
 
     //region Private user management & session controls
@@ -61,10 +77,10 @@ public class User {
     //region SELECTive.User Management Definitions
     private final static int MAX_LOGIN_ATTEMPTS = 3;
     private boolean hasOpenUP = false;
-    private final static String UPLoc = "./UPdb.txt";
-    private final static String AdminInfoLoc = "./adminuinfo.txt";
-    private final static String LecturerInfoLoc = "./lectureruinfo.txt";
-    private final static String StudentInfoLoc = "./studentuinfo.txt";
+    private final static String UPLoc = ".db/UPdb.txt";
+    private final static String AdminInfoLoc = ".db/adminuinfo.txt";
+    private final static String LecturerInfoLoc = ".db/lectureruinfo.txt";
+    private final static String StudentInfoLoc = ".db/studentuinfo.txt";
     //endregion
 
     //region Public SELECTive.Session Management
@@ -192,27 +208,17 @@ public class User {
      */
     private boolean authenticateUser(String uname, char[] pword) {
         if (!hasOpenUP) { uPs = readDictFromFile(UPLoc); hasOpenUP = true; }
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            String uhash = Base64.getEncoder().encodeToString(md.digest(uname.getBytes())).toUpperCase();
-            MessageDigest sh = MessageDigest.getInstance("SHA-256");
-            String phash = Base64.getEncoder().encodeToString(sh.digest(new String(pword).getBytes(StandardCharsets.UTF_8)));
-            for (int i = 0; i < uPs.length; i++) {
-                if (uhash.equals(uPs[i][0])) {
-                    if (phash.equals(uPs[i][1])) {
-                        username = uname;
-                        type = UserType.valueOf(uPs[i][2]);
-                        pword = null;
-                        return true;
-                    }
-                    return false;
+        String uhash = hashUsername(uname), phash = hashPassword(pword);
+        for (int i = 0; i < uPs.length; i++) {
+            if (uhash.equals(uPs[i][0])) {
+                if (phash.equals(uPs[i][1])) {
+                    username = uname;
+                    type = UserType.valueOf(uPs[i][2]);
+                    pword = null;
+                    return true;
                 }
+                return false;
             }
-        } catch (NoSuchAlgorithmException nsae) {
-            Session.printError("SELECTive.User",
-                    "authenticateUser",
-                    "NoSuchAlgorithmException",
-                    "The algorithm required to hash the username or password was not available: " + nsae.getMessage());
         }
         return false;
     }
@@ -229,33 +235,24 @@ public class User {
     public boolean changePassword(String username, char[] oldPassword, char[] newPassword) {
         if (!hasOpenUP) { uPs = readDictFromFile(UPLoc); hasOpenUP = true; }
         boolean changed = false;
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            String uhash = Base64.getEncoder().encodeToString(md.digest(username.getBytes())).toUpperCase();
-            for (int i = 0; i < uPs.length && !changed; i++) {
-                if (uhash.equals(uPs[i][0])) {
-                    MessageDigest sh = MessageDigest.getInstance("SHA-256");
-                    String oldPassHash = (type.equals(UserType.ADMIN))? "" : Base64.getEncoder().encodeToString(sh.digest(new String(oldPassword).getBytes(StandardCharsets.UTF_8)));
-                    String newPassHash = Base64.getEncoder().encodeToString(sh.digest(new String(newPassword).getBytes(StandardCharsets.UTF_8)));
-                    if (!type.equals(UserType.ADMIN)) {
-                        if (oldPassHash.equals(uPs[i][1])) {
-                            uPs[i][1] = newPassHash;
-                            changed = true;
-                        } else {
-                            Session.printIssue("Incorrect password.", "The password you supplied is incorrect. Thus the request users password will not be changed.");
-                            return false;
-                        }
-                    } else {
+        String uhash = hashUsername(username);
+        for (int i = 0; i < uPs.length && !changed; i++) {
+            if (uhash.equals(uPs[i][0])) {
+                String oldPassHash = (type.equals(UserType.ADMIN))? "" : hashPassword(oldPassword);
+                String newPassHash = hashPassword(newPassword);
+                if (!type.equals(UserType.ADMIN)) {
+                    if (oldPassHash.equals(uPs[i][1])) {
                         uPs[i][1] = newPassHash;
                         changed = true;
+                    } else {
+                        Session.printIssue("Incorrect password.", "The password you supplied is incorrect. Thus the request users password will not be changed.");
+                        return false;
                     }
+                } else {
+                    uPs[i][1] = newPassHash;
+                    changed = true;
                 }
             }
-        } catch (NoSuchAlgorithmException nsae) {
-            Session.printError("SELECTive.User",
-                    "changePassword",
-                    "NoSuchAlgorithmException",
-                    "The algorithm required to hash the username or password was not available: " + nsae.getMessage());
         }
         if (changed) {
             if (writeDictToFile(uPs, UPLoc, true)) return true;
@@ -276,7 +273,9 @@ public class User {
      * @return {@code boolean} indicating if no users are present
      */
     public static boolean hasNoUsers() {
-        return (new User().readDictFromFile(UPLoc).length == 0);
+        File userFile = new File(UPLoc);
+        Session.printIssue("Info", "Auth file to be found at: " + userFile.getAbsolutePath());
+        return !userFile.exists();
     }
     //endregion
 
@@ -304,6 +303,13 @@ public class User {
     private String[][] readDictFromFile(String fname) {
         String dump = "";
         try {
+            if (!targetFileExists(fname)) {
+                Session.printError("SELECTive.User",
+                        "readDictFromFile",
+                        "File IO Error",
+                        "Apparently the requested file (" + fname + ") does not exist and cannot be created.");
+                return null;
+            }
             BufferedReader reader = new BufferedReader(new FileReader(fname));
             String currentLine;
             while ((currentLine = reader.readLine()) != null) {
@@ -340,6 +346,13 @@ public class User {
      */
     private boolean writeDictToFile(String[][] dict, String fname, boolean overwrite) {
         try {
+            if (!targetFileExists(fname)) {
+                Session.printError("SELECTive.User",
+                        "writeDictToFile",
+                        "File IO Error",
+                        "Apparently the requested file (" + fname + ") does not exist and cannot be created.");
+                return false;
+            }
             PrintWriter printer = new PrintWriter(new BufferedWriter( new FileWriter(fname, !overwrite)));
             for (int i = 0; i < dict.length; i++) {
                 String line = "";
@@ -369,6 +382,13 @@ public class User {
         String userInfo = "";
         String loc = (someone.type.equals(UserType.ADMIN))? AdminInfoLoc : (someone.type.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
         try {
+            if (!targetFileExists(loc)) {
+                Session.printError("SELECTive.User",
+                        "readUserInfo",
+                        "File IO Error",
+                        "Apparently the requested file (" + loc + ") does not exist and cannot be created.");
+                return null;
+            }
             BufferedReader reader = new BufferedReader(new FileReader(loc));
             String currentLine;
             while((currentLine = reader.readLine()) != null) {
@@ -400,6 +420,13 @@ public class User {
     private boolean updateUserInfo(User you) {
         String loc = (you.type.equals(UserType.ADMIN))? AdminInfoLoc : (you.type.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
         try {
+            if (!targetFileExists(loc)) {
+                Session.printError("SELECTive.User",
+                        "updateUserInfo",
+                        "File IO Error",
+                        "Apparently the requested file (" + loc + ") does not exist and cannot be created.");
+                return false;
+            }
             final File temp = File.createTempFile("tmp", "txt");
             BufferedReader reader = new BufferedReader(new FileReader(loc));
             String currentLine;
@@ -433,6 +460,107 @@ public class User {
                     "Something went wrong updating the user file");
         }
         return false;
+    }
+
+    private boolean saveNewUser(char[] pword, User them) {
+        String userLoc = (them.type.equals(UserType.ADMIN))? AdminInfoLoc : (them.type.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
+        try {
+            // save auth creds
+            writeDictToFile(new String[][]{{hashUsername(them.username), hashPassword(pword), them.type.toString()}},
+                    UPLoc,
+                    false);
+
+            // get last line to increment id
+            if (!targetFileExists(userLoc)) {
+                Session.printError("SELECTive.User",
+                        "saveNewUser",
+                        "File IO Error",
+                        "Apparently the requested file (" + userLoc + ") does not exist and cannot be created.");
+                return false;
+            }
+            BufferedReader reader = new BufferedReader(new FileReader(userLoc));
+            String currentLine = "", prevLine = "";
+            int lineCount= 0;
+            while ((currentLine = reader.readLine()) != null) {
+                prevLine = currentLine;
+                lineCount++;
+            }
+            reader.close();
+            long id = (lineCount > 0)? Long.parseLong(prevLine.split(" ; ")[0]) : 0;
+            id++;
+            // save user to file
+            PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(userLoc, true)));
+            writer.println(id + " ; " + them.firstName + " ; " + them.lastname + " ; " + them.middleInitial + " ; " +
+                    them.username + " ; " + (new SimpleDateFormat("yyyy-MM-dd").format(them.dateOfBirth)));
+            writer.close();
+            return true;
+        } catch (IOException ioe) {
+            Session.printError("SELECTive.User",
+                    "saveNewUser",
+                    "UIException",
+                    "Something went wrong writing to the user file");
+            return false;
+        }
+    }
+
+    /**
+     * Checks if a file exists at the specified path. If it doesn't the function automatically creates the file.
+     * <b>
+     *     IMPORTANT!
+     *     This function does take action if a file is not found, the {@code boolean} return is mainly there to check
+     *     if file creation failed in the case it wasn't found. By calling this function a missing file will be created
+     *     thus - in a sense - fixing the issue.
+     * </b>
+     * @param fname {@code String} representing the file name/path relative to the current directory
+     * @return {@code boolean} indicating if the file exists after completion of this function
+     */
+    private boolean targetFileExists(String fname) {
+        File tmp = new File(fname);
+        if (tmp.exists()) return true;
+        try {
+            tmp.createNewFile();
+        } catch (IOException ioe) {
+            Session.printError("SELECTive.User",
+                    "targetFileExists",
+                    "IOException",
+                    "Could not create the file...");
+            return false;
+        }
+        return true;
+    }
+    //endregion
+
+    //region Hashing
+    private String hashUsername(String uname) {
+
+        String hash = "";
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            hash = Base64.getEncoder().encodeToString(md.digest(uname.getBytes())).toUpperCase();
+        } catch (NoSuchAlgorithmException nsae) {
+            Session.printError("SELECTive.User",
+                    "hashUsername",
+                    "NoSuchAlgorithmException",
+                    "The required algorithm is not available. Crashing...");
+            System.exit(7);
+        }
+        return hash;
+    }
+
+    private String hashPassword(char[] pword) {
+
+        String hash = "";
+        try {
+            MessageDigest sh = MessageDigest.getInstance("SHA-256");
+            hash = Base64.getEncoder().encodeToString(sh.digest(new String(pword).getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException nsae) {
+            Session.printError("SELECTive.User",
+                    "hashUsername",
+                    "NoSuchAlgorithmException",
+                    "The required algorithm is not available. Crashing...");
+            System.exit(7);
+        }
+        return hash;
     }
     //endregion
 
