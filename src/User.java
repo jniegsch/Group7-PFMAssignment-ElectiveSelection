@@ -6,28 +6,37 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Scanner;
+
+enum UserType {
+    ADMIN,
+    LECTURER,
+    STUDENT,
+    DEFAULT
+}
 
 public class User {
-
     //region Private Property Definitions
-    private String userId;
-    private String firstName;
-    private String lastname;
-    private String middleInitial;
-    private String username;
-    private Date dateOfBirth;
+    private String userId = "invX00nallowed";
+    private UserType type = UserType.DEFAULT;
+    private String firstName = "";
+    private String lastname = "";
+    private String middleInitial = "";
+    private String username = "";
+    private Date dateOfBirth = new Date();
     //endregion
 
     //region Private user management & session controls
     // password will never be stored on run time, only checked
-    private boolean loggedIn;
-    private String sessionId;
-    private Date sessionExpiration;
+    private boolean loggedIn = false;
+    private String sessionId = invalidID;
+    private Date sessionExpiration = new Date();
     private String[][] uPs;
     //endregion
 
     //region User Management Definitions
-    private boolean hasOpenUP;
+    private final static int MAX_LOGIN_ATTEMPTS = 3;
+    private boolean hasOpenUP = false;
     private final static String UPLoc = "./UPdb.txt";
     //endregion
 
@@ -37,6 +46,35 @@ public class User {
 
     //region Session Management
     public boolean login(String username, char[] password) {
+        //todo: change password reading to use java.io.Console
+        int failedAccessCount = 0;
+        boolean authed = false;
+        while (failedAccessCount < MAX_LOGIN_ATTEMPTS) {
+            if (authenticateUser(username, password)) { authed = true; break; }
+        }
+        if (authed) return true;
+        ESError.printIssue("Reached maximum login tries.", "You have reached the maximum amount of login attempts. ");
+        if (type == UserType.ADMIN) {
+            System.out.print("Would you like to change the users password (Y/n)? ");
+            Scanner cPass = new Scanner(System.in);
+            String choice = "";
+            if (cPass.hasNext()) {
+                choice = cPass.nextLine();
+            }
+            cPass.close();
+            if (choice.equals("Y")) {
+                String npass;
+                System.out.print("What should the new password be: ");
+                if (cPass.hasNext()) {
+                    npass = cPass.nextLine();
+                    changePassword(username, null, npass.toCharArray());
+                } else {
+                    ESError.printIssue("Invalid Input.", "The password you typed was incorrect!");
+                }
+            }
+            ESError.printIssue("Password change declined.", "");
+            return false;
+        }
         return false;
     }
 

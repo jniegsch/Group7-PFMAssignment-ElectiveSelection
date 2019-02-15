@@ -6,4 +6,11 @@ public class ESError {
                 "    " + message + "\n" +
                 "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  ");
     }
+
+    public static void printIssue(String title, String message) {
+        System.out.println("" +
+                ">> Warning: " + title);
+        if (!message.equals("")) System.out.println("" +
+                "    " + message);
+    }
 }
