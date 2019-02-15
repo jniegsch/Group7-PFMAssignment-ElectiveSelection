@@ -1,6 +1,4 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 
 import java.nio.charset.StandardCharsets;
 
@@ -14,7 +12,10 @@ import java.util.Date;
 import java.util.Calendar;
 import java.util.Scanner;
 
-
+/**
+ * An enum defining what type of user the subclass is. If something as gone wrong, or the class is just being initialized,
+ * then the type must be `DEFAULT`
+ */
 enum UserType {
     ADMIN,
     LECTURER,
@@ -22,6 +23,10 @@ enum UserType {
     DEFAULT
 }
 
+/**
+ * The core class for any user of the system. It handles all basic functionalities shared by all user types. Some
+ * functions are prepared for extra functionality of specific uber classes, but the class does ensure rights are checked.
+ */
 public class User {
     //region Private Property Definitions
     private String userId = "invX00nallowed";
@@ -45,7 +50,9 @@ public class User {
     private final static int MAX_LOGIN_ATTEMPTS = 3;
     private boolean hasOpenUP = false;
     private final static String UPLoc = "./UPdb.txt";
-    private final static String UInfoLoc = "./uinfo.txt";
+    private final static String AdminInfoLoc = "./adminuinfo.txt";
+    private final static String LecturerInfoLoc = "./lectureruinfo.txt";
+    private final static String StudentInfoLoc = "./studentuinfo.txt";
     //endregion
 
     //region Public Session Management
@@ -73,6 +80,7 @@ public class User {
             if (authenticateUser(username, password)) { authed = true; break; }
         }
         if (authed) {
+            password = null;
             createActiveSession();
             loggedIn = true;
             return true;
@@ -102,16 +110,18 @@ public class User {
         return false;
     }
 
+    /**
+     * Creates an active session by reading in the user data
+     */
     private void createActiveSession() {
-        String[] uinfo = readUserInfo(username);
+        String[] uinfo = readUserInfo(username, type);
         // only 7 things, hard code them
         userId = uinfo[0];
-        type = UserType.valueOf(uinfo[1]);
-        firstName = uinfo[2];
-        lastname = uinfo[3];
-        middleInitial = uinfo[4];
+        firstName = uinfo[1];
+        lastname = uinfo[2];
+        middleInitial = uinfo[3];
         try {
-            dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(uinfo[6]);
+            dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(uinfo[5]);
         } catch (ParseException pe) {
             ESError.printError("User", "createActiveSession", "ParseException", pe.getMessage());
         }
@@ -141,7 +151,11 @@ public class User {
         sessionExpiration = cal.getTime();
     }
 
+    /**
+     * Not only invalidates a session, but also closes the system if the user does not relogin
+     */
     private void forceInvalidSessionBurnout() {
+        invalidateSession();
         // see if user would like to login again
         System.out.print("The session has expired. Do you wish to login again (Y/n)?");
         Scanner contScan = new Scanner(System.in);
@@ -176,6 +190,7 @@ public class User {
                 if (uhash.equals(uPs[i][0])) {
                     if (phash.equals(uPs[i][1])) {
                         username = uname;
+                        type = UserType.valueOf(uPs[i][2]);
                         pword = null;
                         return true;
                     }
@@ -193,12 +208,73 @@ public class User {
     //endregion
 
     //region User Management
+    /**
+     * Allows a user to change their password. If the user is an admin, then no old password is required.
+     * @param username      {@code String} the username for which a password change should occur
+     * @param oldPassword   {@code char[]} the old password
+     * @param newPassword   {@code char[]} the new password to overwrite the old one with
+     * @return {@code boolean} that indicates if the change was successful
+     */
     public boolean changePassword(String username, char[] oldPassword, char[] newPassword) {
+        if (!hasOpenUP) { uPs = readDictFromFile(UPLoc); hasOpenUP = true; }
+        boolean changed = false;
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            String uhash = Base64.getEncoder().encodeToString(md.digest(username.getBytes())).toUpperCase();
+            for (int i = 0; i < uPs.length && !changed; i++) {
+                if (uhash.equals(uPs[i][0])) {
+                    MessageDigest sh = MessageDigest.getInstance("SHA-256");
+                    String oldPassHash = (type.equals(UserType.ADMIN))? "" : Base64.getEncoder().encodeToString(sh.digest(new String(oldPassword).getBytes(StandardCharsets.UTF_8)));
+                    String newPassHash = Base64.getEncoder().encodeToString(sh.digest(new String(newPassword).getBytes(StandardCharsets.UTF_8)));
+                    if (!type.equals(UserType.ADMIN)) {
+                        if (oldPassHash.equals(uPs[i][1])) {
+                            uPs[i][1] = newPassHash;
+                            changed = true;
+                        } else {
+                            ESError.printIssue("Incorrect password.", "The password you supplied is incorrect. Thus the request users password will not be changed.");
+                            return false;
+                        }
+                    } else {
+                        uPs[i][1] = newPassHash;
+                        changed = true;
+                    }
+                }
+            }
+        } catch (NoSuchAlgorithmException nsae) {
+            ESError.printError("User",
+                    "changePassword",
+                    "NoSuchAlgorithmException",
+                    "The algorithm required to hash the username or password was not available: " + nsae.getMessage());
+        }
+        if (changed) {
+            if (writeDictToFile(uPs, UPLoc, true)) return true;
+            // error saving, try to revert...
+            if ((uPs = readDictFromFile(UPLoc)) != null) {
+                ESError.printIssue("An issue occured saving the new password.", "There was a severe issue trying to save your new password. For this reason the change was not saved, and your password was reverted to the old one.");
+            } else {
+                ESError.printIssue("Fatal Error", "A Fatal error has occured where the current internal user management state is broken. Exiting, as gracefully as possible...");
+                System.exit(12);
+            }
+        }
         return false;
+    }
+
+    /**
+     * A static method that checks if any users exist in the system. Can be used to evaluate if a default admin must be
+     * created.
+     * @return {@code boolean} indicating if no users are present
+     */
+    public static boolean noUsers() {
+        return (new User().readDictFromFile(UPLoc).length == 0);
     }
     //endregion
 
     //region Access
+
+    /**
+     * Returns the user id
+     * @return {@code String} the user ID
+     */
     public String getUserId() {
         if (!isSessionActive()) return invalidID;
         return sessionId;
@@ -206,13 +282,23 @@ public class User {
     //endregion
 
     //region File Access
+
+    /**
+     * Reads a form of dictionary used by the system. The format is used for the user authentication. Each line of the
+     * authentication file is in the form:
+     * <pre>
+     *     [MD5 hash of username] : [SHA256 hash of password] : [Type of user]
+     * </pre>
+     * @param fname {@code String} the filename from which to read the specific dictionary
+     * @return {@code String[][]} representing the occurances split into their respective sections denoted by the format
+     */
     private String[][] readDictFromFile(String fname) {
         String dump = "";
         try {
             BufferedReader reader = new BufferedReader(new FileReader(fname));
             String currentLine;
             while ((currentLine = reader.readLine()) != null) {
-                dump += currentLine + " \\\\\\\\"; // 4x \
+                dump += currentLine + " \n";
             }
             reader.close();
         } catch (IOException ioe) {
@@ -221,23 +307,61 @@ public class User {
                     "IOException",
                     "Could not read the file " + fname);
         }
-        String [] dictPairs = dump.split(" \\\\\\\\");
-        String [][] dictToReturn = new String[dictPairs.length][2];
+        String [] dictPairs = dump.split(" \n");
+        String [][] dictToReturn = new String[dictPairs.length][3];
         for (int i = 0; i < dictPairs.length; i++) {
             String[] sp = dictPairs[i].split(" : ");
-            if (sp.length != 2) ESError.printError("User",
+            if (sp.length != 3) ESError.printError("User",
                     "readDictFromFile",
                     "BadDict",
-                    "The dictionary entry didis not a key/pair");
+                    "The dictionary entry are not a key/pair & type form");
             dictToReturn[i] = sp;
         }
         return dictToReturn;
     }
 
-    private String[] readUserInfo(String uname) {
-        String userInfo = "";
+    /**
+     * Writes a system dict to the specified file. Usually used to update the authentication file. For the format check
+     * the reading function defined in `see`
+     * @see #writeDictToFile(String[][], String, boolean)
+     * @param dict      {@code String[][]} which is the system dict to write
+     * @param fname     {@code String} representing the file to write to
+     * @param overwrite {@code boolean} that indicates if the file should be overwritten or appended to
+     * @return {@code boolean} representing if the write was successful
+     */
+    private boolean writeDictToFile(String[][] dict, String fname, boolean overwrite) {
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(UInfoLoc));
+            PrintWriter printer = new PrintWriter(new BufferedWriter( new FileWriter(fname, !overwrite)));
+            for (int i = 0; i < dict.length; i++) {
+                String line = "";
+                for (int j = 0; j < dict[i].length; j++) {
+                    line += dict[i][j];
+                    line += (j != dict[i].length - 1)? " : " : "";
+                }
+                printer.println(line);
+            }
+            printer.close();
+        } catch (IOException ioe) {
+            ESError.printError("User",
+                    "writeDictTofile",
+                    "IOException",
+                    "Could not write to the file " + fname);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Reads the data connected to a certain user
+     * @param uname {@code String} the filename from which to read the specific dictionary
+     * @param t     {@code UserType} indicating which type of user's file to read
+     * @return {@code String[]} representing the users information
+     */
+    private String[] readUserInfo(String uname, UserType t) {
+        String userInfo = "";
+        String loc = (t.equals(UserType.ADMIN))? AdminInfoLoc : (t.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(loc));
             String currentLine;
             while((currentLine = reader.readLine()) != null) {
                 if (currentLine.contains(uname)) {
@@ -245,8 +369,10 @@ public class User {
                     break;
                 }
             }
+            reader.close();
         } catch (IOException ioe) {
             ESError.printError("User", "readUserInfo", "IOException", ioe.getMessage());
+            return null;
         }
 
         if (userInfo.equals("")) {
@@ -258,8 +384,49 @@ public class User {
         return userInfo.split(";");
     }
 
-    private boolean updateUserInfo(String uname) {
+    /**
+     * Updates a users record after anythin has changed
+     * @param you {@code User} the user whose data should be changed
+     * @return {@code boolean} indicating if the update was successful
+     */
+    private boolean updateUserInfo(User you) {
+        String loc = (you.type.equals(UserType.ADMIN))? AdminInfoLoc : (you.type.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
+        try {
+            final File temp = File.createTempFile("tmp", "txt");
+            BufferedReader reader = new BufferedReader(new FileReader(loc));
+            String currentLine;
+            StringBuffer newBuffer = new StringBuffer();
+
+            while ((currentLine = reader.readLine()) != null) {
+                if (currentLine.split(" ; ")[0].equals(you.userId)) {
+                    newBuffer.append(you.userId + " ; ");
+                    newBuffer.append(you.firstName + " ; ");
+                    newBuffer.append(you.lastname + " ; ");
+                    newBuffer.append(you.middleInitial + " ; ");
+                    newBuffer.append(you.username + " ; ");
+                    newBuffer.append(new SimpleDateFormat("yyyy-MM-dd").format(dateOfBirth));
+                    newBuffer.append("\n");
+                } else {
+                    newBuffer.append(currentLine);
+                    newBuffer.append("\n");
+                }
+            }
+            reader.close();
+
+            BufferedWriter writer = new BufferedWriter(new FileWriter(temp));
+            writer.write(newBuffer.toString());
+            writer.close();
+
+            temp.renameTo(new File(loc));
+        } catch (IOException ioe) {
+            ESError.printError("User",
+                    "updateUserInfo",
+                    "IOException",
+                    "Something went wrong updating the user file");
+        }
         return false;
     }
     //endregion
+
+    //TODO: implement filtering and searching
 }
