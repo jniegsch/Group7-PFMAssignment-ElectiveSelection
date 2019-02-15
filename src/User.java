@@ -46,7 +46,7 @@ public class User {
 
     //region Session Management
     public boolean login(String username, char[] password) {
-        //todo: change password reading to use java.io.Console
+        //TODO: change password reading to use java.io.Console
         int failedAccessCount = 0;
         boolean authed = false;
         while (failedAccessCount < MAX_LOGIN_ATTEMPTS) {
