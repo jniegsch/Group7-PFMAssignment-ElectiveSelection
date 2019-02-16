@@ -41,14 +41,33 @@ public class User {
     //endregion
 
     //region Constructors
-    public User() {
 
+    /**
+     * An empty constructor for simplicity and ease. SHOULD NOT BE USED! Is considered depreciated!
+     * @deprecated
+     */
+    public User() {
     }
 
+    /**
+     * An initial constructor to be used in the defined subclasses to meely set the type and then add the user details
+     * once aquired
+     * @param type {@code UserType} denoting the type of user being created
+     */
     public User(UserType type) {
         this.type = type;
     }
 
+    /**
+     * Constructor taking all the required information for the User class
+     * @param fname     {@code String} representing the users first name
+     * @param lname     {@code String} representing the last name of the user
+     * @param minitials {@code Stirng} representing the initial(s) of the user
+     * @param username  {@code String} representing the username the user wishes to use
+     * @param dob       {@code Date} representing the date when the user was born, TIME aspect is invalid
+     * @param pword     {@code char[]} representing the password the user would like to use
+     * @return {@code boolean} indicating if the creation of the user account was successful
+     */
     public boolean createNew(String fname, String lname, String minitials, String username, Date dob, char[] pword) {
         this.firstName = fname;
         this.lastname = lname;
@@ -68,23 +87,66 @@ public class User {
 
     //region Private user management & session controls
     // password will never be stored on run time, only checked
+    /**
+     * a quick check {@code boolean} to see if any user is actually logged in
+     */
     private boolean loggedIn = false;
+    /**
+     * A constant representing an invalid session id. All invalid session should be set to this!
+     */
     private String sessionId = invalidID;
+    /**
+     * The date representing after which a session is invalid and no further actions should be taken using the "loggedin"
+     * credentials. As a defualt it takes the current date.
+     */
     private Date sessionExpiration = new Date();
+    /**
+     * A loaded memory copy of the authentication DB
+     */
     private String[][] uPs;
     //endregion
 
     //region SELECTive.User Management Definitions
+    /**
+     * Defines the amount of times a user can attempt a login, until precautionary measures should be taken
+     */
     private final static int MAX_LOGIN_ATTEMPTS = 3;
+    /**
+     * Represents if the authentication file has been loaded into memory and is accessible
+     */
     private boolean hasOpenUP = false;
+    /**
+     * The location in the DB folder where the authentication file is stored
+     */
     private final static String UPLoc = ".db/UPdb.txt";
+    /**
+     * The location in the DB folder where the Admin User Information file is stored
+     */
     private final static String AdminInfoLoc = ".db/adminuinfo.txt";
+    /**
+     * The location in the DB folder where the Lecturer User Information file is stored
+     */
     private final static String LecturerInfoLoc = ".db/lectureruinfo.txt";
+    /**
+     * The location in the DB folder where the Student User Information file is stored
+     */
     private final static String StudentInfoLoc = ".db/studentuinfo.txt";
     //endregion
 
     //region Public SELECTive.Session Management
-    private static String invalidID = "ohno_notvalid";
+    /**
+     * A constant defining what all invalid User Ids should be se to.
+     * <pre>
+     *     VALUE = "ohno_notvalid"
+     * </pre>
+     */
+    private static final String invalidID = "ohno_notvalid";
+    /**
+     * Gets the current `invalidID`. This is usually not required outside of the context of the User class, however,
+     * it is an important factor for validation, so if pre-validation ever needs to be done a comparison of this value
+     * to another UserId could give important insights.
+     * @return {@code String} representing the invalid id
+     */
     public String getInvalidID() { return invalidID; }
     //endregion
 
@@ -462,6 +524,14 @@ public class User {
         return false;
     }
 
+    /**
+     * Saves a newly created user to both the appropriate database file and the authentication database. If the latter
+     * fails, an exception should be caught resulting in to user info being stored. This not only allows for ensuring
+     * redundent users arent stored anywhere in the DB but also that without the "crucial" parts nothing is stored.
+     * @param pword {@code char[]} of the password for the user
+     * @param them {@code User} representing the new User + subType to store in the subType specific location
+     * @return {@code boolean} representing if the saving was entirely complete or failed at any stage
+     */
     private boolean saveNewUser(char[] pword, User them) {
         String userLoc = (them.type.equals(UserType.ADMIN))? AdminInfoLoc : (them.type.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
         try {
@@ -531,6 +601,14 @@ public class User {
     //endregion
 
     //region Hashing
+
+    /**
+     * Applies the MD5 hash alogrithm to the users username. Eventhough MD5 is no loger considered cryptographically
+     * secure, it is good enough for obscuring an actual username. If this were to be bruteforced, to gain access this
+     * would still require attacking SHA256 - a cryptographically secure algoritm.
+     * @param uname {@code String} of the username to encrypt using MD5
+     * @return {@code String} the hash of the passed username
+     */
     private String hashUsername(String uname) {
 
         String hash = "";
@@ -547,6 +625,11 @@ public class User {
         return hash;
     }
 
+    /**
+     * Applies the secure SHA256 hashing algorithm to the password.
+     * @param pword {@code char[]} representing the password to encrypt using SHA-256
+     * @return {@code String} representing the encrypted password
+     */
     private String hashPassword(char[] pword) {
 
         String hash = "";
