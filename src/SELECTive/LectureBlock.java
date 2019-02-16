@@ -15,4 +15,5 @@ public class LectureBlock {
         this.startDate = start;
         this.endDate = end;
     }
+    //endregion
 }
