@@ -43,7 +43,7 @@ public class User {
     //region Constructors
 
     /**
-     * An empty constructor for simplicity and ease. SHOULD NOT BE USED! Is considered depreciated!
+     * An empty constructor for simplicity and ease. SHOULD NOT BE USED! Is considered deprecated!
      * @deprecated
      */
     public User() {
@@ -59,7 +59,7 @@ public class User {
     }
 
     /**
-     * Constructor taking all the required information for the User class
+     * Initializer taking all the required information for an initialized User class
      * @param fname     {@code String} representing the users first name
      * @param lname     {@code String} representing the last name of the user
      * @param minitials {@code Stirng} representing the initial(s) of the user
@@ -437,7 +437,7 @@ public class User {
 
     /**
      * Reads the data connected to a certain user
-     * @param someone {@code SELECTive.User} the user to get the information for
+     * @param someone {@code User} the user to get the information for
      * @return {@code String[]} representing the users information
      */
     private String[] readUserInfo(User someone) {
@@ -476,7 +476,7 @@ public class User {
 
     /**
      * Updates a users record after anythin has changed
-     * @param you {@code SELECTive.User} the user whose data should be changed
+     * @param you {@code User} the user whose data should be changed
      * @return {@code boolean} indicating if the update was successful
      */
     private boolean updateUserInfo(User you) {
