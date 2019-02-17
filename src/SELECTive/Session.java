@@ -1,5 +1,10 @@
 package SELECTive;
 
+import java.io.Console;
+import java.io.IOError;
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class Session {
@@ -8,44 +13,130 @@ public class Session {
 
     public static final boolean systemPrintsErrors = true;
 
+    //region Session Properties
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static User sessionUser = null;
+    //endregion
+
+    //region Exit Codes
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public static final int ALL_GOOD_IN_THE_HOOD = 0;
+    public static final int INITIAL_STATE_SETUP_FAILED_FATALITY = 1;
+    public static final int BROKEN_INTERNAL_STATE_FATAL = 2;
+    public static final int USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE = 3;
+    public static final int REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE = 4;
+    public static final int NO_AUTHENTICATION = 5;
+    //endregion
+
+    //region _MAIN
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public static void main(String[] args) {
         //TODO: The actual program...
 
-        /*
-        Some simple testing
-         */
-        println("Welcome to " + systemName);
-        printTitle("Login type selection", '*', false);
-        Scanner lgSelect = new Scanner(System.in);
-        println("" +
-                "(1) Admin \n" +
-                "(2) Lecturer \n" +
-                "(3) Student");
-        print("Please choose a login type (1, 2, or 3): ");
-        int choice = 0;
-        if (lgSelect.hasNextInt()) {
-            choice = lgSelect.nextInt();
-        } else {
-            System.exit(0);
+        if (User.hasNoUsers(true)) createRootUser();
+        loadRootUser();
+
+        printTitle("Welcome", '*', false);
+        println("Please login to use the system.");
+        println("Info: see the code for the masterAdmin ;)");
+        println(consoleLine('-'));
+        println("");
+        if (!loginToSession()) {
+            printIssue("Incorrect Username/Password", "The username or password you have entered is incorrect.");
+            System.exit(NO_AUTHENTICATION);
         }
 
-        Admin lala = new Admin();
-
-        if (User.hasNoUsers()) createInitialAdmin();
     }
-
-    //region Dashboard Login
-
     //endregion
 
-    //region Initial System Setup
-    private static boolean createInitialAdmin() {
-        Admin init = new Admin();
-        return init.createAdminUser("sudo", new char[]{'m', 'a', 's', 't', 'e', 'r', 'P', 'a', 's', 's', '!'});
+    //region Dashboard Login
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public static boolean loginToSession() {
+        if (sessionUser != null) return true;
+
+        // Check if initial startup
+        if (User.hasNoUsers(false)) {
+            if ((sessionUser = createInitialAdmin()) != null) return true;
+            printIssue("Fatal error occured", "A fatal error occured and the initial user could not be created. Please retry, and if the problem persists inform a rep. of the 'GoodEnoughCloseEnoughCoding corp.'");
+            System.exit(INITIAL_STATE_SETUP_FAILED_FATALITY);
+        }
+
+        Scanner lgSelect = new Scanner(System.in);
+        String uname = "";
+        char[] pword = null;
+        print("Username: ");
+        if (lgSelect.hasNextLine()) {
+            uname = lgSelect.nextLine();
+        } else {
+            printIssue("Invalid Username", "You have selected an invalid username. The system will exit.");
+            System.exit(ALL_GOOD_IN_THE_HOOD);
+        }
+        try {
+            if (System.console() != null) {
+                pword = System.console().readPassword();
+            } else {
+                throw new IOError(new IOException("No console"));
+            }
+        } catch (IOError ioe) {
+            printError("Session",
+                    "loginToSession",
+                    "IOError",
+                    "An IO Error occurred when trying to read the password securely. Will use the standard Scanner instead");
+            print("Password: ");
+            if (lgSelect.hasNextLine()) {
+                pword = lgSelect.nextLine().toCharArray();
+            } else {
+                printIssue("Invalid password", "You have selected an invalid password. The system will exit.");
+                pword = null;
+            }
+        }
+        if (pword == null) {
+            printIssue("Invalid Username", "You have selected an invalid username. The system will exit.");
+            System.exit(ALL_GOOD_IN_THE_HOOD);
+        }
+
+        sessionUser = new User();
+        if (sessionUser.login(uname, pword)) return true;
+        return false;
+    }
+    //endregion
+
+    //region Initial Admin Setup
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static Admin createInitialAdmin() {
+        printIssue("No admin created.", "Please create an admin first. You will be guided through the setup.");
+        Scanner adminCreationScanner = new Scanner(System.in);
+        print("\nWhat username would you like: ");
+        String uname = "";
+        if (adminCreationScanner.hasNextLine()) {
+            uname = adminCreationScanner.nextLine();
+        } else {
+            println("Using default.");
+        }
+        print("Passord: ");
+        char[] pword;
+        if (adminCreationScanner.hasNextLine()) {
+            pword = adminCreationScanner.nextLine().toCharArray();
+            print("Repeat password: ");
+            if (adminCreationScanner.hasNextLine()) {
+                if (!Arrays.equals(pword, adminCreationScanner.nextLine().toCharArray())) {
+                    println("Account creation failed.");
+                    return null;
+                }
+            } else {
+                println("Account creation failed.");
+                return null;
+            }
+        } else {
+            println("Account creation failed.");
+            return null;
+        }
+        return new Admin(new User().createNewUser(uname, pword, UserType.ADMIN, rootUser));
     }
     //endregion
 
     // region General printing
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public static void printTitle(String title, char c, boolean supressName) {
         if (title.length() > consoleCharWidth - 9) return;
         String beginning = c + " " + c + " ";
@@ -57,8 +148,8 @@ public class Session {
             System.out.print(nLine);
             leftToFill = consoleCharWidth - nLine.length() + 2; // -2 for the '\n'
         } else {
-            String nLine = beginning + ((supressName)? "" : systemName) + ": " + title;
-            System.out.print(" " + title + " ");
+            String nLine = beginning + ((supressName)? "" : systemName + ": ") + title;
+            System.out.print(title + " ");
             leftToFill = consoleCharWidth - nLine.length();
         }
         for (int i = 0; i < leftToFill; i += 2) System.out.print(c + " ");
@@ -67,7 +158,9 @@ public class Session {
 
     public static String consoleLine(char c) {
         String line = "";
-        for (int i = 0; i < consoleCharWidth + 2; i += 2) line += c + " ";
+        int i;
+        for (i = 0; i < consoleCharWidth; i += 2) line += c + " ";
+        if (i - 1 == consoleCharWidth) line += c;
         return line;
     }
 
@@ -101,6 +194,7 @@ public class Session {
     //endregion
 
     //region Error and Issue handling
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
      * Print an error
      * @param className {@code String} defining the class in which the error occurred
@@ -131,6 +225,24 @@ public class Session {
                 ">> Warning: " + title);
         if (!message.equals("")) System.out.println("" +
                 "    " + message + "\n\n");
+    }
+    //endregion
+
+    //region Initial System and Internals
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static Admin rootUser;
+
+    private static boolean createRootUser() {
+        rootUser = new Admin(User.getRootAdmin());
+        if (rootUser != null) return true;
+        return false;
+    }
+
+    private static boolean loadRootUser() {
+        User u = new User();
+        if (!u.login(User.rootUserName, User.rootUserPass)) return false;
+        rootUser = new Admin(u);
+        return true;
     }
     //endregion
 }

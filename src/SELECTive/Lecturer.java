@@ -2,7 +2,9 @@ package SELECTive;
 
 public class Lecturer extends User {
 
-    public Lecturer() {
-        super(UserType.LECTURER);
+    //region Constructor
+    public Lecturer(User base) {
+        super(base, UserType.LECTURER);
     }
+    //endregion
 }

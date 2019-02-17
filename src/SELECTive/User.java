@@ -31,6 +31,7 @@ enum UserType {
  */
 public class User {
     //region Private Property Definitions
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private long userId = 0;
     private UserType type = UserType.DEFAULT;
     private String firstName = "";
@@ -40,52 +41,87 @@ public class User {
     private Date dateOfBirth = new Date();
     //endregion
 
-    //region Constructors
+    //region Property getters
+    public UserType getUserType() {
+        return this.type;
+    }
+    //endregion
 
+    //region Constructors
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
-     * An empty constructor for simplicity and ease. SHOULD NOT BE USED! Is considered deprecated!
-     * @deprecated
+     * An empty constructor for simplicity and ease.
      */
     public User() {
     }
 
     /**
-     * An initial constructor to be used in the defined subclasses to meely set the type and then add the user details
-     * once aquired
-     * @param type {@code UserType} denoting the type of user being created
+     * An initial constructor to be used in the defined subclasses to create themselves based upon a user
+     * @param copy {@code User} denoting the user to initialize with
+     * @param target {@code UserType} the type of user to be created, if this is not the same as the one attached to
+     *                               the user the type is set to DEFAULT - denoting failure
      */
-    public User(UserType type) {
-        this.type = type;
+    public User(User copy, UserType target) {
+        this.userId = copy.userId;
+        this.firstName = copy.firstName;
+        this.lastname = copy.lastname;
+        this.middleInitial = copy.middleInitial;
+        this.username = copy.username;
+        this.dateOfBirth = copy.dateOfBirth;
+        this.type = copy.type;
+        if (copy.type != target) this.type = UserType.DEFAULT;
     }
 
     /**
      * Initializer taking all the required information for an initialized User class
-     * @param fname     {@code String} representing the users first name
-     * @param lname     {@code String} representing the last name of the user
-     * @param minitials {@code Stirng} representing the initial(s) of the user
-     * @param username  {@code String} representing the username the user wishes to use
-     * @param dob       {@code Date} representing the date when the user was born, TIME aspect is invalid
+     * @param uname  {@code String} representing the username the user wishes to use
      * @param pword     {@code char[]} representing the password the user would like to use
      * @return {@code boolean} indicating if the creation of the user account was successful
      */
-    public boolean createNew(String fname, String lname, String minitials, String username, Date dob, char[] pword) {
+    public User createNewUser(String uname, char[] pword, UserType utype, User admin) {
+        if (admin.type != UserType.ADMIN) {
+            Session.printIssue("Cannot create user", "You do not have the priveleges as a non admin to create a user");
+            return null;
+        }
+        Scanner newAdminScanner = new Scanner(System.in);
+        Session.println("Please fill in the account details. You can also skip them by pressing `enter`");
+        Session.print("What is your first name: ");
+        String fname = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
+        Session.print("What is your last name: ");
+        String lname = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
+        Session.print("What is/are your middle initial(s): ");
+        String minit = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
+        Session.print("What is your date of birth (please enter in the format yyyy-MM-dd: ");
+        String dobStr = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
+        Date dob = null;
+        try {
+            dob = new SimpleDateFormat("yyyy-MM-dd").parse(dobStr);
+        } catch (ParseException pe) {
+            Session.printError("User",
+                    "createNewUser",
+                    "ParseException",
+                    "Could not parse the passed date (" + dobStr +")");
+        }
+
         this.firstName = fname;
         this.lastname = lname;
-        this.middleInitial = minitials;
-        this.username = username;
+        this.middleInitial = minit;
+        this.username = uname;
         this.dateOfBirth = dob;
+        this.type = utype;
         if (!saveNewUser(pword, this)) {
             Session.printError("SELECTive.User",
                     "createNew",
                     "FatalError",
                     "Saving the new account failed. Something seems to be seriously wrong. Exiting...");
-            System.exit(1);
+            System.exit(Session.USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE);
         }
-        return true;
+        return this;
     }
     //endregion
 
     //region Private user management & session controls
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // password will never be stored on run time, only checked
     /**
      * a quick check {@code boolean} to see if any user is actually logged in
@@ -106,7 +142,7 @@ public class User {
     private String[][] uPs;
     //endregion
 
-    //region SELECTive.User Management Definitions
+    //region User Management Definitions
     /**
      * Defines the amount of times a user can attempt a login, until precautionary measures should be taken
      */
@@ -133,7 +169,8 @@ public class User {
     private final static String StudentInfoLoc = ".db/studentuinfo.txt";
     //endregion
 
-    //region Public SELECTive.Session Management
+    //region Public Session Management
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
      * A constant defining what all invalid User Ids should be se to.
      * <pre>
@@ -150,7 +187,8 @@ public class User {
     public String getInvalidID() { return invalidID; }
     //endregion
 
-    //region SELECTive.Session Management
+    //region Session Management
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
      * Login a user. The login function will continously call authenticate user, until the maximum login attempts have
      * been reached. If this occurs, it is assumed that the user might have forgotten their password. If the user is
@@ -194,8 +232,10 @@ public class User {
                 }
             }
             Session.printIssue("Password change declined.", "");
+            loggedIn = false;
             return false;
         }
+        loggedIn = false;
         return false;
     }
 
@@ -253,10 +293,10 @@ public class User {
             ans = contScan.nextLine();
         } else {
             Session.printIssue("Invalid input.", "The input was invalid, terminating the session");
-            System.exit(0);
+            System.exit(Session.ALL_GOOD_IN_THE_HOOD);
         }
         if (ans.equals("Y")) Session.main(null);
-        System.exit(0);
+        System.exit(Session.ALL_GOOD_IN_THE_HOOD);
     }
 
     /**
@@ -286,7 +326,8 @@ public class User {
     }
     //endregion
 
-    //region SELECTive.User Management
+    //region User Management
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
      * Allows a user to change their password. If the user is an admin, then no old password is required.
      * @param username      {@code String} the username for which a password change should occur
@@ -317,13 +358,16 @@ public class User {
             }
         }
         if (changed) {
-            if (writeDictToFile(uPs, UPLoc, true)) return true;
+            if (writeDictToFile(uPs, UPLoc, true)) {
+                hasOpenUP = false; // has been changed current is invalid
+                return true;
+            }
             // error saving, try to revert...
             if ((uPs = readDictFromFile(UPLoc)) != null) {
                 Session.printIssue("An issue occured saving the new password.", "There was a severe issue trying to save your new password. For this reason the change was not saved, and your password was reverted to the old one.");
             } else {
                 Session.printIssue("Fatal Error", "A Fatal error has occured where the current internal user management state is broken. Exiting, as gracefully as possible...");
-                System.exit(12);
+                System.exit(Session.BROKEN_INTERNAL_STATE_FATAL);
             }
         }
         return false;
@@ -334,14 +378,18 @@ public class User {
      * created.
      * @return {@code boolean} indicating if no users are present
      */
-    public static boolean hasNoUsers() {
+    public static boolean hasNoUsers(boolean initRequired) {
         File userFile = new File(UPLoc);
-        Session.printIssue("Info", "Auth file to be found at: " + userFile.getAbsolutePath());
-        return !userFile.exists();
+        if (userFile.exists()) {
+            String[][] auth = new User().readDictFromFile(UPLoc);
+            if (auth.length > ((initRequired)? 0 : 1)) return false;
+        }
+        return true;
     }
     //endregion
 
     //region Access
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
      * Returns the user id
      * @return {@code String} the user ID
@@ -353,6 +401,7 @@ public class User {
     //endregion
 
     //region File Access
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
      * Reads a form of dictionary used by the system. The format is used for the user authentication. Each line of the
      * authentication file is in the form:
@@ -409,7 +458,7 @@ public class User {
     private boolean writeDictToFile(String[][] dict, String fname, boolean overwrite) {
         try {
             if (!targetFileExists(fname)) {
-                Session.printError("SELECTive.User",
+                Session.printError("User",
                         "writeDictToFile",
                         "File IO Error",
                         "Apparently the requested file (" + fname + ") does not exist and cannot be created.");
@@ -426,7 +475,7 @@ public class User {
             }
             printer.close();
         } catch (IOException ioe) {
-            Session.printError("SELECTive.User",
+            Session.printError("User",
                     "writeDictTofile",
                     "IOException",
                     "Could not write to the file " + fname);
@@ -445,7 +494,7 @@ public class User {
         String loc = (someone.type.equals(UserType.ADMIN))? AdminInfoLoc : (someone.type.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
         try {
             if (!targetFileExists(loc)) {
-                Session.printError("SELECTive.User",
+                Session.printError("User",
                         "readUserInfo",
                         "File IO Error",
                         "Apparently the requested file (" + loc + ") does not exist and cannot be created.");
@@ -461,7 +510,7 @@ public class User {
             }
             reader.close();
         } catch (IOException ioe) {
-            Session.printError("SELECTive.User", "readUserInfo", "IOException", ioe.getMessage());
+            Session.printError("User", "readUserInfo", "IOException", ioe.getMessage());
             return null;
         }
 
@@ -483,7 +532,7 @@ public class User {
         String loc = (you.type.equals(UserType.ADMIN))? AdminInfoLoc : (you.type.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
         try {
             if (!targetFileExists(loc)) {
-                Session.printError("SELECTive.User",
+                Session.printError("User",
                         "updateUserInfo",
                         "File IO Error",
                         "Apparently the requested file (" + loc + ") does not exist and cannot be created.");
@@ -542,7 +591,7 @@ public class User {
 
             // get last line to increment id
             if (!targetFileExists(userLoc)) {
-                Session.printError("SELECTive.User",
+                Session.printError("User",
                         "saveNewUser",
                         "File IO Error",
                         "Apparently the requested file (" + userLoc + ") does not exist and cannot be created.");
@@ -561,11 +610,12 @@ public class User {
             // save user to file
             PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(userLoc, true)));
             writer.println(id + " ; " + them.firstName + " ; " + them.lastname + " ; " + them.middleInitial + " ; " +
-                    them.username + " ; " + (new SimpleDateFormat("yyyy-MM-dd").format(them.dateOfBirth)));
+                    them.username + " ; " +
+                    ((them.dateOfBirth != null)? (new SimpleDateFormat("yyyy-MM-dd").format(them.dateOfBirth)) : " "));
             writer.close();
             return true;
         } catch (IOException ioe) {
-            Session.printError("SELECTive.User",
+            Session.printError("User",
                     "saveNewUser",
                     "UIException",
                     "Something went wrong writing to the user file");
@@ -601,7 +651,7 @@ public class User {
     //endregion
 
     //region Hashing
-
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
      * Applies the MD5 hash alogrithm to the users username. Eventhough MD5 is no loger considered cryptographically
      * secure, it is good enough for obscuring an actual username. If this were to be bruteforced, to gain access this
@@ -620,7 +670,7 @@ public class User {
                     "hashUsername",
                     "NoSuchAlgorithmException",
                     "The required algorithm is not available. Crashing...");
-            System.exit(7);
+            System.exit(Session.REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE);
         }
         return hash;
     }
@@ -641,11 +691,39 @@ public class User {
                     "hashUsername",
                     "NoSuchAlgorithmException",
                     "The required algorithm is not available. Crashing...");
-            System.exit(7);
+            System.exit(Session.REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE);
         }
         return hash;
     }
     //endregion
 
     //TODO: implement filtering and searching
+
+    //region Root User
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public static final String rootUserName = "sudo";
+    public static final char[] rootUserPass = "masterPAss!_2k19".toCharArray();
+
+    public static User getRootAdmin() {
+        User root = new User();
+        root.firstName = "Progamming";
+        root.lastname = "Managers";
+        root.middleInitial = "4";
+        root.username = rootUserName;
+        try {
+            root.dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse("2019-01-28");
+        } catch (ParseException pe) {
+            root.dateOfBirth = null;
+        }
+        root.type = UserType.ADMIN;
+        if (!root.saveNewUser(rootUserPass, root)) {
+            Session.printError("User",
+                    "createNew",
+                    "FatalError",
+                    "Saving the new account failed. Something seems to be seriously wrong. Exiting...");
+            System.exit(Session.USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE);
+        }
+        return root;
+    }
+    //endregion
 }

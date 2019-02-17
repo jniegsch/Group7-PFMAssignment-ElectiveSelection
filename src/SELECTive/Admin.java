@@ -8,36 +8,11 @@ import java.util.Scanner;
 public class Admin extends User {
 
     //region Constructor
-    public Admin() {
-        super(UserType.ADMIN);
+    public Admin(User base) {
+        super(base, UserType.ADMIN);
     }
     //endregion
 
-    //region Account Creation
-    public boolean createAdminUser(String uname, char[] pword) {
-        Scanner newAdminScanner = new Scanner(System.in);
-        Session.println("Please fill in the account details. You can also skip them by pressing `enter`");
-        Session.print("What is your first name: ");
-        String fname = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
-        Session.print("What is your last name: ");
-        String lname = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
-        Session.print("What is/are your middle initial(s): ");
-        String minit = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
-        Session.print("What is your date of birth (please enter in the format yyyy-MM-dd: ");
-        String dobStr = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
-        Date dob = null;
-        try {
-            dob = new SimpleDateFormat("yyyy-MM-dd").parse(dobStr);
-        } catch (ParseException pe) {
-            Session.printError("SELECTive.Admin",
-                    "createAdminUser",
-                    "ParseException",
-                    "Could not parse the passed date (" + dobStr +")");
-            return false;
-        }
-        return createNew(fname, lname, minit, uname, dob, pword);
-    }
-    //endregion
 
     public boolean addElective() {
         Scanner inpScanner = new Scanner(System.in);
