@@ -172,8 +172,8 @@ public class Session {
 
     /**
      * The underlying function for the 2 public functions for printing titles
-     * @see {@link #printTitle(String, char)}
-     * @see {@link #printTitleNoName(String, char)}
+     * check: printTitle(String, char)
+     * check: printTitleNoName(String, char)
      * @param title         the {@code String} representing the title to print
      * @param c             a {@code char} from which to print the line
      * @param supressName   a {@code bool} indicating if the system name should be printed
