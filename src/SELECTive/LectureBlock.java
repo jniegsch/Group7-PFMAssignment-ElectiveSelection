@@ -9,6 +9,9 @@ public class LectureBlock {
     private Date endDate = null;
     //endregion
 
+    //region Getters
+    //endregion
+
     //region Constructor
     public LectureBlock(int BlockID, Date start, Date end) {
         this.id = BlockID;

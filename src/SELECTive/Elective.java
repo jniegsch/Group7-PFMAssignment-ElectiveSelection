@@ -41,6 +41,7 @@ public class Elective {
     private String[] keywords = null;
     private LectureTime[] classTimes = null;
     private LectureBlock[] blocks = null;
+    //TODO: add test method?
     //endregion
 
     //region Constructors

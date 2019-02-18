@@ -1,9 +1,7 @@
 package SELECTive;
 
-import java.io.Console;
 import java.io.IOError;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -20,12 +18,13 @@ public class Session {
 
     //region Exit Codes
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    protected static final int ALL_GOOD_IN_THE_HOOD = 0;
-    protected static final int INITIAL_STATE_SETUP_FAILED_FATALITY = 1;
-    protected static final int BROKEN_INTERNAL_STATE_FATAL = 2;
-    protected static final int USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE = 3;
-    protected static final int REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE = 4;
-    protected static final int NO_AUTHENTICATION = 5;
+    public static final int ALL_GOOD_IN_THE_HOOD = 0;
+    public static final int INITIAL_STATE_SETUP_FAILED_FATALITY = 1;
+    public static final int BROKEN_INTERNAL_STATE_FATAL = 2;
+    public static final int INTERNALLY_REQUIRED_FILE_CANNOT_EXIST = 3;
+    public static final int USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE = 4;
+    public static final int REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE = 5;
+    public static final int NO_AUTHENTICATION = 6;
     //endregion
 
     //region _MAIN
@@ -45,6 +44,11 @@ public class Session {
             System.exit(NO_AUTHENTICATION);
         }
 
+        // DEBUG
+        long[] a = {1};
+        User[] retUsers = User.getUsers(a, UserType.STUDENT);
+
+        //TODO: Program continues here....
     }
     //endregion
 
@@ -131,7 +135,7 @@ public class Session {
             println("Account creation failed.");
             return null;
         }
-        return new Admin(new User().createNewUser(uname, pword, UserType.ADMIN, rootUser));
+        return new Admin(rootUser.createNewUser(uname, pword, UserType.ADMIN));
     }
     //endregion
 
