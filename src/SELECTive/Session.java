@@ -33,8 +33,7 @@ public class Session {
     public static void main(String[] args) {
         //TODO: The actual program...
 
-        if (User.hasNoUsers(true)) createRootUser();
-        loadRootUser();
+        if (User.hasNoUsers()) createInitialAdmin();
 
         printTitle("Welcome", '*', false);
         println("Please login to use the system.");
@@ -55,7 +54,7 @@ public class Session {
         if (sessionUser != null) return true;
 
         // Check if initial startup
-        if (User.hasNoUsers(false)) {
+        if (User.hasNoUsers()) {
             if ((sessionUser = createInitialAdmin()) != null) return true;
             printIssue("Fatal error occured", "A fatal error occured and the initial user could not be created. Please retry, and if the problem persists inform a rep. of the 'GoodEnoughCloseEnoughCoding corp.'");
             System.exit(INITIAL_STATE_SETUP_FAILED_FATALITY);
@@ -104,6 +103,7 @@ public class Session {
     //region Initial Admin Setup
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static Admin createInitialAdmin() {
+        loadRootUser(); // only load root user if initial admin still needs to be created
         printIssue("No admin created.", "Please create an admin first. You will be guided through the setup.");
         Scanner adminCreationScanner = new Scanner(System.in);
         print("\nWhat username would you like: ");
@@ -239,12 +239,6 @@ public class Session {
     //region Initial System and Internals
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static Admin rootUser;
-
-    private static boolean createRootUser() {
-        rootUser = new Admin(User.getRootAdmin());
-        if (rootUser != null) return true;
-        return false;
-    }
 
     private static boolean loadRootUser() {
         User u = new User();

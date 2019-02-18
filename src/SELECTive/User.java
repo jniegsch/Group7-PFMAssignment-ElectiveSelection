@@ -32,18 +32,52 @@ enum UserType {
  * functions are prepared for extra functionality of specific uber classes, but the class does ensure rights are checked.
  */
 public class User {
+
+    //region Private Static
+    /**
+     * Tracks the amount of user objects that exist
+     */
+    private static int userCount = 0;
+    //endregion
+
     //region Private Property Definitions
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    /**
+     * User ID of the current user
+     */
     private long userId = 0;
+    /**
+     * {@code UserType} of the current user
+     */
     private UserType type = UserType.DEFAULT;
+    /**
+     * The first name of the current user
+     */
     private String firstName = "";
+    /**
+     * The last name of the current user
+     */
     private String lastname = "";
+    /**
+     * The middle initials of the current user, i.e P.
+     */
     private String middleInitial = "";
+    /**
+     * The username of the current user
+     */
     private String username = "";
+    /**
+     * The date of birth of the current user
+     */
     private Date dateOfBirth = new Date();
     //endregion
 
     //region Property getters
+
+    /**
+     * Gets the current users {@code USerType}
+     * @return {@code UserType} of the current user
+     */
     public UserType getUserType() {
         return this.type;
     }
@@ -52,9 +86,12 @@ public class User {
     //region Constructors
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
-     * An empty constructor for simplicity and ease.
+     * An empty constructor which also checks that not several users are created at the same time.
      */
     public User() {
+        //todo: HANDLE THIS!!!!!! When to decrement the counter
+        userCount++;
+        if (userCount > 1) invalidateSession();
     }
 
     /**
@@ -76,8 +113,10 @@ public class User {
 
     /**
      * Initializer taking all the required information for an initialized User class
-     * @param uname  {@code String} representing the username the user wishes to use
+     * @param uname     {@code String} representing the username the user wishes to use
      * @param pword     {@code char[]} representing the password the user would like to use
+     * @param utype     {@code UserType} representing the type of user to create
+     * @param admin     {@code Admin} the admin creating the user
      * @return {@code boolean} indicating if the creation of the user account was successful
      */
     public User createNewUser(String uname, char[] pword, UserType utype, User admin) {
@@ -216,7 +255,7 @@ public class User {
         }
         Session.printIssue("Reached maximum login tries.", "You have reached the maximum amount of login attempts. ");
         if (type == UserType.ADMIN) {
-            System.out.print("Would you like to change the users password (Y/n)? ");
+            Session.print("Since you are an Admin, would you like to change the users password (Y/n)? ");
             Scanner cPass = new Scanner(System.in);
             String choice = "";
             if (cPass.hasNextLine()) {
@@ -225,7 +264,7 @@ public class User {
             cPass.close();
             if (choice.equals("Y")) {
                 String npass;
-                System.out.print("What should the new password be: ");
+                Session.print("What should the new password be: ");
                 if (cPass.hasNextLine()) {
                     npass = cPass.nextLine();
                     changePassword(username, null, npass.toCharArray());
@@ -330,16 +369,25 @@ public class User {
 
     //region User Management
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    /**
+     * Allows the current user to change their password
+     * @param oldPassword {@code char[]} the old password to change
+     * @param newPassword {@code char[]} the new password to overwrite the old one with
+     * @return {@code bool} indicating if the change was successful
+     */
     public boolean changePassword(char[] oldPassword, char[] newPassword) {
         return changePassword(username, oldPassword, newPassword);
     }
 
     /**
-     * Allows a user to change their password. If the user is an admin, then no old password is required.
+     * Allows a user to change their password. If the user is an admin, then no old password is required. If an admin
+     * is not specifically changing another users password and the password change should only occur for the current
+     * user - use {@code changePassword(char[] oldPassword, char[] newPassword)}
      * @param uname      {@code String} the username for which a password change should occur
      * @param oldPassword   {@code char[]} the old password
      * @param newPassword   {@code char[]} the new password to overwrite the old one with
-     * @return {@code boolean} that indicates if the change was successful
+     * @return {@code bool} that indicates if the change was successful
      */
     public boolean changePassword(String uname, char[] oldPassword, char[] newPassword) {
         if (!validPassword(newPassword)) {
@@ -385,16 +433,33 @@ public class User {
 
     /**
      * A static method that checks if any users exist in the system. Can be used to evaluate if a default admin must be
-     * created.
-     * @return {@code boolean} indicating if no users are present
+     * created. Also checks if a root exists, if not create it.
+     * @return {@code bool} indicating if no users are present
      */
-    public static boolean hasNoUsers(boolean initRequired) {
+    public static boolean hasNoUsers() {
+        // check if root needs to be created
+        if (!userExists(rootUserName)) createRootAdmin();
         File userFile = new File(UPLoc);
         if (userFile.exists()) {
-            String[][] auth = new User().readDictFromFile(UPLoc);
-            if (auth.length > ((initRequired)? 0 : 1)) return false;
+           String[][] auth = new User().readDictFromFile(UPLoc);
+           if (auth.length > 1) return false;
+           return true;
         }
         return true;
+    }
+
+    /**
+     * Checks if a specific user exists
+     * @param username {@code String} the username of the user to check for existence
+     * @return {@code bool} indicating if the user was found
+     */
+    public static boolean userExists(String username) {
+        File userFile = new File(UPLoc);
+        if (!userFile.exists()) return false;
+        String[][] auth = new User().readDictFromFile(UPLoc);
+        String uHash = hashUsername(username);
+        for (int i = 0; i < auth.length; i++) if (auth[i][0].equals(uHash)) return true;
+        return false;
     }
     //endregion
 
@@ -463,7 +528,7 @@ public class User {
      * @param dict      {@code String[][]} which is the system dict to write
      * @param fname     {@code String} representing the file to write to
      * @param overwrite {@code boolean} that indicates if the file should be overwritten or appended to
-     * @return {@code boolean} representing if the write was successful
+     * @return {@code bool} representing if the write was successful
      */
     private boolean writeDictToFile(String[][] dict, String fname, boolean overwrite) {
         try {
@@ -536,7 +601,7 @@ public class User {
     /**
      * Updates a users record after anythin has changed
      * @param you {@code User} the user whose data should be changed
-     * @return {@code boolean} indicating if the update was successful
+     * @return {@code bool} indicating if the update was successful
      */
     private boolean updateUserInfo(User you) {
         String loc = (you.type.equals(UserType.ADMIN))? AdminInfoLoc : (you.type.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
@@ -663,16 +728,45 @@ public class User {
     //region Password Validation
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // Rules
+    /**
+     * The minimum length a valid password must be
+     */
     private static final int pwordMinLength = 8;
+    /**
+     * The maximum length a valid password must be
+     */
     private static final int pwordMaxLength = 30;
+    /**
+     * The minimum amount of numbers (digits) a valid password must have
+     */
     private static final int pwordMinNumCount = 2;
+    /**
+     * The minimum amount of special characters a valid password must have
+     */
     private static final int pwordMinSpecialCount = 2;
+    /**
+     * The minimum amount of capital letters a valid password must have
+     */
     private static final int pwordMinCapitalCount = 2;
+
     // Rules - Regex
+    /**
+     * Regex definition to match to single digits
+     */
     private static final String regexNumCount = "\\d";
+    /**
+     * Regex definition to match to single special characters (anything that is not a digit, lower case character,
+     * or a upper case character)
+     */
     private static final String regexSpecialCount = "[^\\da-zA-Z]";
+    /**
+     * Regex definition to match to single upper case characters
+     */
     private static final String regexCapital = "[A-Z]";
 
+    /**
+     * Prints out the rules for the user to see - should be called before any account creation or password change
+     */
     public static void showPasswordRules() {
         Session.printTitle("Password Rules", '-');
         Session.println("" +
@@ -685,6 +779,13 @@ public class User {
         Session.println(Session.consoleLine('-'));
     }
 
+    /**
+     * Checks if a password is valid. Is always called internally when a new user is created or password changed,
+     * but also can be called externally to not have to call either previous functions without knowing if the given
+     * password is valid.
+     * @param pword {@code char[]} the password to validate
+     * @return {@code bool} indicating if the password is valid or not
+     */
     public static boolean validPassword(char[] pword) {
         if (pword.length < pwordMinLength) return false;
         if (pword.length > pwordMaxLength) return false;
@@ -694,14 +795,24 @@ public class User {
         return true;
     }
 
+    /**
+     * This function checks, based on a regex, how many times a match is found. It then checks if this amount is equal
+     * to or greater than the required minimum.
+     * Mainly only for use in the {@code validatePassword(char[] pword)} function and is thus private to the
+     * {@code User} class.
+     * @param regex     {@code String} representing the pattern (regex) to use
+     * @param minCount  {@code int} representing the minimum amount of matches required
+     * @param str       {@code String} representing the string to search
+     * @return {@code bool} indicating if the `minCount` of matches occured
+     */
     private static boolean containsAtLeast(String regex, int minCount, String str) {
         Pattern regexP = Pattern.compile(regex);
         Matcher regexM = regexP.matcher(str);
         int count = 0;
         while (regexM.find()) {
             count++;
+            if (count == minCount) return true;
         }
-        if (count >= minCount) return true;
         return false;
     }
     //endregion
@@ -715,7 +826,7 @@ public class User {
      * @param uname {@code String} of the username to encrypt using MD5
      * @return {@code String} the hash of the passed username
      */
-    private String hashUsername(String uname) {
+    private static String hashUsername(String uname) {
 
         String hash = "";
         try {
@@ -736,7 +847,7 @@ public class User {
      * @param pword {@code char[]} representing the password to encrypt using SHA-256
      * @return {@code String} representing the encrypted password
      */
-    private String hashPassword(char[] pword) {
+    private static String hashPassword(char[] pword) {
 
         String hash = "";
         try {
@@ -757,10 +868,20 @@ public class User {
 
     //region Root User
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    /**
+     * The hardcode, root username
+     */
     public static final String rootUserName = "sudo";
+    /**
+     * The hardcoded root password
+     */
     public static final char[] rootUserPass = "masterPAss!_2k19".toCharArray();
 
-    public static User getRootAdmin() {
+    /**
+     * Creates a new root user
+     * @return {@code bool} indicating if the creation was a success
+     */
+    private static User createRootAdmin() {
         User root = new User();
         root.firstName = "Progamming";
         root.lastname = "Managers";
