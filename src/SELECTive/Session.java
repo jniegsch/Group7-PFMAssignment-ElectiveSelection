@@ -54,7 +54,12 @@ public class Session {
 
     //region Dashboard Login
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    public static boolean loginToSession() {
+
+    /**
+     * Call to begin the login
+     * @return {@code bool} indicating if the login was successful
+     */
+    private static boolean loginToSession() {
         if (sessionUser != null) return true;
 
         // Check if initial startup
@@ -106,6 +111,11 @@ public class Session {
 
     //region Initial Admin Setup
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    /**
+     * Begins the process to create an initial admin
+     * @return the {@code Admin} created
+     */
     private static Admin createInitialAdmin() {
         loadRootUser(); // only load root user if initial admin still needs to be created
         printIssue("No admin created.", "Please create an admin first. You will be guided through the setup.");
@@ -141,15 +151,34 @@ public class Session {
 
     // region General printing
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    /**
+     * Prints a title on the session without the system name
+     * @param title the {@code String} representing the title to print
+     * @param c     a {@code char} from which to print the line
+     */
     public static void printTitleNoName(String title, char c) {
         printTitle(title, c, true);
     }
 
+    /**
+     * Prints a title on the session with the system name
+     * @param title the {@code String} representing the title to print
+     * @param c     a {@code char} from which to print the line
+     */
     public static void printTitle(String title, char c) {
         printTitle(title, c, false);
     }
 
-    public static void printTitle(String title, char c, boolean supressName) {
+    /**
+     * The underlying function for the 2 public functions for printing titles
+     * @see {@link #printTitle(String, char)}
+     * @see {@link #printTitleNoName(String, char)}
+     * @param title         the {@code String} representing the title to print
+     * @param c             a {@code char} from which to print the line
+     * @param supressName   a {@code bool} indicating if the system name should be printed
+     */
+    private static void printTitle(String title, char c, boolean supressName) {
         if (title.length() > consoleCharWidth - 9) return;
         String beginning = c + " " + c + " ";
         int setWidth = beginning.length() + ((supressName)? 0 : systemName.length() + 2); // +2 for the ': ' that is appended later
@@ -168,6 +197,11 @@ public class Session {
         System.out.print("\n");
     }
 
+    /**
+     * Creates a string representing a line spanning the entire console width
+     * @param c the {@code char} to use to create the line
+     * @return  {@code String} representing the line to print
+     */
     public static String consoleLine(char c) {
         String line = "";
         int i;
@@ -176,6 +210,11 @@ public class Session {
         return line;
     }
 
+    /**
+     * Override of the {@code System.out.println()} method to ensure prints always have a width defined by the constant
+     * {@code consoleCharWidth}
+     * @param str the {@code String} to print
+     */
     public static void println(String str) {
         String[] sections = str.split("\n");
         for (int i = 0; i < sections.length; i++) {
@@ -188,6 +227,11 @@ public class Session {
         }
     }
 
+    /**
+     * Override of the {@code System.out.print()} method to ensure prints always have a width defined by the constant
+     * {@code consoleCharWidth}
+     * @param str the {@code String} to print
+     */
     public static void print(String str) {
         String[] sections = str.split("\n");
         for (int i = 0; i < sections.length; i++) {
@@ -242,8 +286,15 @@ public class Session {
 
     //region Initial System and Internals
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    /**
+     * The root user of the session
+     */
     private static Admin rootUser;
 
+    /**
+     * Loads the root user to be used in the session
+     * @return a {@code bool} indicating if the load was successful
+     */
     private static boolean loadRootUser() {
         User u = new User();
         if (!u.login(User.rootUserName, User.rootUserPass)) return false;

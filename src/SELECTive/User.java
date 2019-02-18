@@ -907,7 +907,7 @@ public class User {
     //region Root User
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
-     * The hardcode, root username
+     * The hardcoded root username
      */
     public static final String rootUserName = "sudo";
     /**
