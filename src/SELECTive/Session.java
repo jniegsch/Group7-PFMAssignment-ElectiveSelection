@@ -20,12 +20,12 @@ public class Session {
 
     //region Exit Codes
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    public static final int ALL_GOOD_IN_THE_HOOD = 0;
-    public static final int INITIAL_STATE_SETUP_FAILED_FATALITY = 1;
-    public static final int BROKEN_INTERNAL_STATE_FATAL = 2;
-    public static final int USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE = 3;
-    public static final int REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE = 4;
-    public static final int NO_AUTHENTICATION = 5;
+    protected static final int ALL_GOOD_IN_THE_HOOD = 0;
+    protected static final int INITIAL_STATE_SETUP_FAILED_FATALITY = 1;
+    protected static final int BROKEN_INTERNAL_STATE_FATAL = 2;
+    protected static final int USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE = 3;
+    protected static final int REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE = 4;
+    protected static final int NO_AUTHENTICATION = 5;
     //endregion
 
     //region _MAIN
@@ -137,6 +137,14 @@ public class Session {
 
     // region General printing
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public static void printTitleNoName(String title, char c) {
+        printTitle(title, c, true);
+    }
+
+    public static void printTitle(String title, char c) {
+        printTitle(title, c, false);
+    }
+
     public static void printTitle(String title, char c, boolean supressName) {
         if (title.length() > consoleCharWidth - 9) return;
         String beginning = c + " " + c + " ";

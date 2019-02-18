@@ -13,6 +13,8 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Calendar;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * An enum defining what type of user the subclass is. If something as gone wrong, or the class is just being initialized,
@@ -328,17 +330,25 @@ public class User {
 
     //region User Management
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public boolean changePassword(char[] oldPassword, char[] newPassword) {
+        return changePassword(username, oldPassword, newPassword);
+    }
+
     /**
      * Allows a user to change their password. If the user is an admin, then no old password is required.
-     * @param username      {@code String} the username for which a password change should occur
+     * @param uname      {@code String} the username for which a password change should occur
      * @param oldPassword   {@code char[]} the old password
      * @param newPassword   {@code char[]} the new password to overwrite the old one with
      * @return {@code boolean} that indicates if the change was successful
      */
-    public boolean changePassword(String username, char[] oldPassword, char[] newPassword) {
+    public boolean changePassword(String uname, char[] oldPassword, char[] newPassword) {
+        if (!validPassword(newPassword)) {
+            Session.printIssue("New Password is Invalid", "The password you selected in invalid!");
+            return false;
+        }
         if (!hasOpenUP) { uPs = readDictFromFile(UPLoc); hasOpenUP = true; }
         boolean changed = false;
-        String uhash = hashUsername(username);
+        String uhash = hashUsername(uname);
         for (int i = 0; i < uPs.length && !changed; i++) {
             if (uhash.equals(uPs[i][0])) {
                 String oldPassHash = (type.equals(UserType.ADMIN))? "" : hashPassword(oldPassword);
@@ -647,6 +657,52 @@ public class User {
             return false;
         }
         return true;
+    }
+    //endregion
+
+    //region Password Validation
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Rules
+    private static final int pwordMinLength = 8;
+    private static final int pwordMaxLength = 30;
+    private static final int pwordMinNumCount = 2;
+    private static final int pwordMinSpecialCount = 2;
+    private static final int pwordMinCapitalCount = 2;
+    // Rules - Regex
+    private static final String regexNumCount = "\\d";
+    private static final String regexSpecialCount = "[^\\da-zA-Z]";
+    private static final String regexCapital = "[A-Z]";
+
+    public static void showPasswordRules() {
+        Session.printTitle("Password Rules", '-');
+        Session.println("" +
+                "The password must abide by these rules:\n" +
+                "- Minimum length: " + pwordMinLength + "\n" +
+                "- Maximum length: " + pwordMaxLength + "\n" +
+                "- Minimum amount of numbers: " + pwordMinNumCount + "\n" +
+                "- Minimum amount of special characters: " + pwordMinSpecialCount + "\n" +
+                "- Minimum amount of capitals: " + pwordMinCapitalCount);
+        Session.println(Session.consoleLine('-'));
+    }
+
+    public static boolean validPassword(char[] pword) {
+        if (pword.length < pwordMinLength) return false;
+        if (pword.length > pwordMaxLength) return false;
+        if (!containsAtLeast(regexNumCount, pwordMinNumCount, pword.toString())) return false;
+        if (!containsAtLeast(regexCapital, pwordMinCapitalCount, pword.toString())) return false;
+        if (!containsAtLeast(regexSpecialCount, pwordMinSpecialCount, pword.toString())) return false;
+        return true;
+    }
+
+    private static boolean containsAtLeast(String regex, int minCount, String str) {
+        Pattern regexP = Pattern.compile(regex);
+        Matcher regexM = regexP.matcher(str);
+        int count = 0;
+        while (regexM.find()) {
+            count++;
+        }
+        if (count >= minCount) return true;
+        return false;
     }
     //endregion
 
