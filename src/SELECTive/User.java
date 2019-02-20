@@ -120,10 +120,10 @@ public class User {
             this.dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(d);
             this.type = UserType.valueOf(t);
         } catch (ParseException pe) {
-            Session.printError("User", "User(...)", "ParseException", pe.getMessage());
+            InternalCore.printError("User", "User(...)", "ParseException", pe.getMessage());
             this.dateOfBirth = null;
         } catch (IllegalArgumentException iae) {
-            Session.printError("User", "User(...", "IllegalArgumentException", iae.getMessage());
+            InternalCore.printError("User", "User(...", "IllegalArgumentException", iae.getMessage());
             this.type = UserType.DEFAULT;
         }
     }
@@ -137,24 +137,24 @@ public class User {
      */
     public User createNewUser(String uname, char[] pword, UserType utype) {
         if (this.type != UserType.ADMIN) {
-            Session.printIssue("Cannot create user", "You do not have the rights to create a user");
+            InternalCore.printIssue("Cannot create user", "You do not have the rights to create a user");
             return null;
         }
         Scanner newAdminScanner = new Scanner(System.in);
-        Session.println("Please fill in the account details. You can also skip them by pressing `enter`. The user can change these at a later stage");
-        Session.print("What is your first name: ");
+        InternalCore.println("Please fill in the account details. You can also skip them by pressing `enter`. The user can change these at a later stage");
+        InternalCore.print("What is your first name: ");
         String fname = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
-        Session.print("What is your last name: ");
+        InternalCore.print("What is your last name: ");
         String lname = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
-        Session.print("What is/are your middle initial(s): ");
+        InternalCore.print("What is/are your middle initial(s): ");
         String minit = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
-        Session.print("What is your date of birth (please enter in the format yyyy-MM-dd: ");
+        InternalCore.print("What is your date of birth (please enter in the format yyyy-MM-dd: ");
         String dobStr = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
         Date dob = null;
         try {
             dob = new SimpleDateFormat("yyyy-MM-dd").parse(dobStr);
         } catch (ParseException pe) {
-            Session.printError("User",
+            InternalCore.printError("User",
                     "createNewUser",
                     "ParseException",
                     "Could not parse the passed date (" + dobStr +")");
@@ -167,11 +167,11 @@ public class User {
         newUser.dateOfBirth = dob;
         newUser.type = utype;
         if (saveNewUser(pword, newUser) == null) {
-            Session.printError("User",
+            InternalCore.printError("User",
                     "createNew",
                     "FatalError",
                     "Saving the new account failed. Something seems to be seriously wrong. Exiting...");
-            System.exit(Session.USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE);
+            System.exit(InternalCore.USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE);
         }
         return newUser;
     }
@@ -274,9 +274,9 @@ public class User {
             loggedIn = true;
             return true;
         }
-        Session.printIssue("Reached maximum login tries.", "You have reached the maximum amount of login attempts. ");
+        InternalCore.printIssue("Reached maximum login tries.", "You have reached the maximum amount of login attempts. ");
         if (type == UserType.ADMIN) {
-            Session.print("Since you are an Admin, would you like to change the users password (Y/n)? ");
+            InternalCore.print("Since you are an Admin, would you like to change the users password (Y/n)? ");
             Scanner cPass = new Scanner(System.in);
             String choice = "";
             if (cPass.hasNextLine()) {
@@ -285,15 +285,15 @@ public class User {
             cPass.close();
             if (choice.equals("Y")) {
                 String npass;
-                Session.print("What should the new password be: ");
+                InternalCore.print("What should the new password be: ");
                 if (cPass.hasNextLine()) {
                     npass = cPass.nextLine();
                     changePassword(username, null, npass.toCharArray());
                 } else {
-                    Session.printIssue("Invalid Input.", "The password you typed was incorrect!");
+                    InternalCore.printIssue("Invalid Input.", "The password you typed was incorrect!");
                 }
             }
-            Session.printIssue("Password change declined.", "");
+            InternalCore.printIssue("Password change declined.", "");
             loggedIn = false;
             return false;
         }
@@ -311,7 +311,7 @@ public class User {
      * @return {@code boolean}: indicating if authentication was successful
      */
     private boolean authenticateUser(String uname, char[] pword) {
-        if (!hasOpenUP) { uPs = readDictFromFile(Session.UPLoc); hasOpenUP = true; }
+        if (!hasOpenUP) { uPs = readDictFromFile(InternalCore.UPLoc); hasOpenUP = true; }
         String uhash = hashUsername(uname), phash = hashPassword(pword);
         for (int i = 0; i < uPs.length; i++) {
             if (uhash.equals(uPs[i][0])) {
@@ -351,10 +351,10 @@ public class User {
      */
     public boolean changePassword(String uname, char[] oldPassword, char[] newPassword) {
         if (!validPassword(newPassword)) {
-            Session.printIssue("New Password is Invalid", "The password you selected in invalid!");
+            InternalCore.printIssue("New Password is Invalid", "The password you selected in invalid!");
             return false;
         }
-        if (!hasOpenUP) { uPs = readDictFromFile(Session.UPLoc); hasOpenUP = true; }
+        if (!hasOpenUP) { uPs = readDictFromFile(InternalCore.UPLoc); hasOpenUP = true; }
         boolean changed = false;
         String uhash = hashUsername(uname);
         for (int i = 0; i < uPs.length && !changed; i++) {
@@ -366,7 +366,7 @@ public class User {
                         uPs[i][1] = newPassHash;
                         changed = true;
                     } else {
-                        Session.printIssue("Incorrect password.", "The password you supplied is incorrect. Thus the request users password will not be changed.");
+                        InternalCore.printIssue("Incorrect password.", "The password you supplied is incorrect. Thus the request users password will not be changed.");
                         return false;
                     }
                 } else {
@@ -376,16 +376,16 @@ public class User {
             }
         }
         if (changed) {
-            if (writeDictToFile(uPs, Session.UPLoc, true)) {
+            if (writeDictToFile(uPs, InternalCore.UPLoc, true)) {
                 hasOpenUP = false; // has been changed current is invalid
                 return true;
             }
             // error saving, try to revert...
-            if ((uPs = readDictFromFile(Session.UPLoc)) != null) {
-                Session.printIssue("An issue occured saving the new password.", "There was a severe issue trying to save your new password. For this reason the change was not saved, and your password was reverted to the old one.");
+            if ((uPs = readDictFromFile(InternalCore.UPLoc)) != null) {
+                InternalCore.printIssue("An issue occured saving the new password.", "There was a severe issue trying to save your new password. For this reason the change was not saved, and your password was reverted to the old one.");
             } else {
-                Session.printIssue("Fatal Error", "A Fatal error has occured where the current internal user management state is broken. Exiting, as gracefully as possible...");
-                System.exit(Session.BROKEN_INTERNAL_STATE_FATAL);
+                InternalCore.printIssue("Fatal Error", "A Fatal error has occured where the current internal user management state is broken. Exiting, as gracefully as possible...");
+                System.exit(InternalCore.BROKEN_INTERNAL_STATE_FATAL);
             }
         }
         return false;
@@ -399,9 +399,9 @@ public class User {
     public static boolean hasNoUsers() {
         // check if root needs to be created
         if (!userExists(rootUserName)) createRootAdmin();
-        File userFile = new File(Session.UPLoc);
+        File userFile = new File(InternalCore.UPLoc);
         if (userFile.exists()) {
-           String[][] auth = new User().readDictFromFile(Session.UPLoc);
+           String[][] auth = new User().readDictFromFile(InternalCore.UPLoc);
            if (auth.length > 1) return false;
            return true;
         }
@@ -414,9 +414,9 @@ public class User {
      * @return {@code bool} indicating if the user was found
      */
     public static boolean userExists(String username) {
-        File userFile = new File(Session.UPLoc);
+        File userFile = new File(InternalCore.UPLoc);
         if (!userFile.exists()) return false;
-        String[][] auth = new User().readDictFromFile(Session.UPLoc);
+        String[][] auth = new User().readDictFromFile(InternalCore.UPLoc);
         String uHash = hashUsername(username);
         for (int i = 0; i < auth.length; i++) if (auth[i][0].equals(uHash)) return true;
         return false;
@@ -429,18 +429,20 @@ public class User {
      * @return {@code User[]} the created user objects
      */
     public static User[] getUsers(long[] userIDs, UserType typeOfUser) {
-        String[] userInfo = getUserInfo(typeOfUser, userIDs);
+        String[] ids = new String[userIDs.length];
+        for (int i = 0; i < userIDs.length; i++) ids[i] = Long.toString(userIDs[i]);
+
+        String[][] userInfo = getUserInfo(typeOfUser, ids);
         User[] users = new User[userInfo.length];
         for (int i = 0; i < users.length; i++) {
-            String[] currInfo = userInfo[i].split(userInfoSeperator);
             User n = new User(
-                    (currInfo[0] != null)? currInfo[0] : "",
-                    (currInfo[1] != null)? currInfo[1] : "",
-                    (currInfo[2] != null)? currInfo[2] : "",
-                    (currInfo[3] != null)? currInfo[3] : "",
-                    (currInfo[4] != null)? currInfo[4] : "",
-                    (currInfo[5] != null)? currInfo[5] : "",
-                    (currInfo[6] != null)? currInfo[6] : ""
+                    (userInfo[i][0] != null)? userInfo[i][0] : "",
+                    (userInfo[i][1] != null)? userInfo[i][1] : "",
+                    (userInfo[i][2] != null)? userInfo[i][2] : "",
+                    (userInfo[i][3] != null)? userInfo[i][3] : "",
+                    (userInfo[i][4] != null)? userInfo[i][4] : "",
+                    (userInfo[i][5] != null)? userInfo[i][5] : "",
+                    (userInfo[i][6] != null)? userInfo[i][6] : ""
             );
             users[i] = n;
         }
@@ -451,7 +453,7 @@ public class User {
 
     //region File Access
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    private static final String userInfoSeperator = " ; ";
+
     /**
      * Reads a form of dictionary used by the system. The format is used for the user authentication. Each line of the
      * authentication file is in the form:
@@ -464,8 +466,8 @@ public class User {
     private static String[][] readDictFromFile(String fname) {
         String dump = "";
         try {
-            if (!Session.fileExists(fname)) {
-                Session.printError("User",
+            if (!InternalCore.fileExists(fname)) {
+                InternalCore.printError("User",
                         "readDictFromFile",
                         "File IO Error",
                         "Apparently the requested file (" + fname + ") does not exist and cannot be created.");
@@ -478,7 +480,7 @@ public class User {
             }
             reader.close();
         } catch (IOException ioe) {
-            Session.printError("User",
+            InternalCore.printError("User",
                     "readDictFromFile",
                     "IOException",
                     "Could not read the file " + fname);
@@ -487,7 +489,7 @@ public class User {
         String [][] dictToReturn = new String[dictPairs.length][3];
         for (int i = 0; i < dictPairs.length; i++) {
             String[] sp = dictPairs[i].split(" : ");
-            if (sp.length != 3) Session.printError("User",
+            if (sp.length != 3) InternalCore.printError("User",
                     "readDictFromFile",
                     "BadDict",
                     "The dictionary entry are not a key/pair & type form");
@@ -507,8 +509,8 @@ public class User {
      */
     private static boolean writeDictToFile(String[][] dict, String fname, boolean overwrite) {
         try {
-            if (!Session.fileExists(fname)) {
-                Session.printError("User",
+            if (!InternalCore.fileExists(fname)) {
+                InternalCore.printError("User",
                         "writeDictToFile",
                         "File IO Error",
                         "Apparently the requested file (" + fname + ") does not exist and cannot be created.");
@@ -525,7 +527,7 @@ public class User {
             }
             printer.close();
         } catch (IOException ioe) {
-            Session.printError("User",
+            InternalCore.printError("User",
                     "writeDictTofile",
                     "IOException",
                     "Could not write to the file " + fname);
@@ -540,34 +542,9 @@ public class User {
      * @param ids   {@code long[]} representing the user ids who's information should be returned
      * @return {@code String[]} representing the user(s) information
      */
-    public static String[] getUserInfo(UserType type, long[] ids) {
-        String fileLoc = (type == UserType.STUDENT)? Session.StudentInfoLoc : (type == UserType.LECTURER)? Session.LecturerInfoLoc : Session.AdminInfoLoc;
-        // not thread safe, but faster than StringBuffer -> in a single thread environment so all good
-        StringBuilder userDump = new StringBuilder();
-        try {
-            if (!Session.fileExists(fileLoc)) {
-                Session.printError("User",
-                        "readUserInfo",
-                        "File IO Error",
-                        "Apparently the requested file (" + fileLoc + ") does not exist and cannot be created.");
-                System.exit(Session.BROKEN_INTERNAL_STATE_FATAL);
-            }
-            BufferedReader reader = new BufferedReader(new FileReader(fileLoc));
-            String currentLine;
-            while((currentLine = reader.readLine()) != null) {
-                String[] userInfo  = currentLine.split(userInfoSeperator);
-                if (ids != null)
-                    if (!LongStream.of(ids).anyMatch(x -> x == Long.parseLong(userInfo[0]))) continue;
-
-                userDump.append(currentLine + "\n");
-            }
-            reader.close();
-        } catch (IOException ioe) {
-            Session.printError("User", "readUserInfo", "IOException", ioe.getMessage());
-            return null;
-        }
-
-        return userDump.toString().split("\n");
+    public static String[][] getUserInfo(UserType type, String[] ids) {
+        String fileLoc = (type == UserType.STUDENT)? InternalCore.StudentInfoLoc : (type == UserType.LECTURER)? InternalCore.LecturerInfoLoc : InternalCore.AdminInfoLoc;
+        return InternalCore.readInfoFile(fileLoc, ids);
     }
 
     /**
@@ -575,48 +552,15 @@ public class User {
      * @return {@code bool} indicating if the update was successful
      */
     public boolean updateUserInfo() {
-        String loc = (this.type.equals(UserType.ADMIN))? Session.AdminInfoLoc : (this.type.equals(UserType.LECTURER))? Session.LecturerInfoLoc : Session.StudentInfoLoc;
-        try {
-            if (!Session.fileExists(loc)) {
-                Session.printError("User",
-                        "updateUserInfo",
-                        "File IO Error",
-                        "Apparently the requested file (" + loc + ") does not exist and cannot be created.");
-                return false;
-            }
-            final File temp = File.createTempFile("tmp", "txt");
-            BufferedReader reader = new BufferedReader(new FileReader(loc));
-            String currentLine;
-            StringBuffer newBuffer = new StringBuffer();
-
-            while ((currentLine = reader.readLine()) != null) {
-                if (currentLine.split(userInfoSeperator)[0].equals(this.userId)) {
-                    newBuffer.append(this.userId).append(userInfoSeperator);
-                    newBuffer.append(this.firstName).append(userInfoSeperator);
-                    newBuffer.append(this.lastname).append(userInfoSeperator);
-                    newBuffer.append(this.middleInitial).append(userInfoSeperator);
-                    newBuffer.append(this.username).append(userInfoSeperator);
-                    newBuffer.append((this.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(this.dateOfBirth) : "");
-                    newBuffer.append("\n");
-                } else {
-                    newBuffer.append(currentLine);
-                    newBuffer.append("\n");
-                }
-            }
-            reader.close();
-
-            BufferedWriter writer = new BufferedWriter(new FileWriter(temp));
-            writer.write(newBuffer.toString());
-            writer.close();
-
-            temp.renameTo(new File(loc));
-        } catch (IOException ioe) {
-            Session.printError("User",
-                    "updateUserInfo",
-                    "IOException",
-                    "Something went wrong updating the user file");
-        }
-        return false;
+        String loc = (this.type.equals(UserType.ADMIN))? InternalCore.AdminInfoLoc : (this.type.equals(UserType.LECTURER))? InternalCore.LecturerInfoLoc : InternalCore.StudentInfoLoc;
+        String[] info = {
+                this.firstName,
+                this.lastname,
+                this.middleInitial,
+                this.username,
+                (this.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(this.dateOfBirth) : ""
+        };
+        return InternalCore.updateInfoFile(loc, Long.toString(this.userId), info);
     }
 
     /**
@@ -628,117 +572,16 @@ public class User {
      * @return {@code boolean} representing if the saving was entirely complete or failed at any stage
      */
     private static User saveNewUser(char[] pword, User them) {
-        String userLoc = (them.type.equals(UserType.ADMIN))? Session.AdminInfoLoc : (them.type.equals(UserType.LECTURER))? Session.LecturerInfoLoc : Session.StudentInfoLoc;
-        try {
-            // save auth creds
-            writeDictToFile(new String[][]{{hashUsername(them.username), hashPassword(pword), them.type.toString()}},
-                    Session.UPLoc,
-                    false);
-
-            // get last line to increment id
-            if (Session.fileExists(userLoc)) {
-                Session.printError("User",
-                        "saveNewUser",
-                        "File IO Error",
-                        "Apparently the requested file (" + userLoc + ") does not exist and cannot be created.");
-                return null;
-            }
-            long id = nextIdForType(them.type);
-            // save user to file
-            PrintWriter writer = new PrintWriter(new BufferedWriter(new FileWriter(userLoc, true)));
-            writer.println(id + userInfoSeperator + them.firstName + userInfoSeperator + them.lastname + userInfoSeperator + them.middleInitial + userInfoSeperator +
-                    them.username + userInfoSeperator +
-                    ((them.dateOfBirth != null)? (new SimpleDateFormat("yyyy-MM-dd").format(them.dateOfBirth)) : " "));
-            writer.close();
-            saveLastIdForType(them.type, id);
-            them.userId = id;
-            return them;
-        } catch (IOException ioe) {
-            Session.printError("User",
-                    "saveNewUser",
-                    "UIException",
-                    "Something went wrong writing to the user file");
-            return null;
-        }
-    }
-    //endregion
-
-    //region Internal State Management
-    /**
-     * The location of the internal state tracker where the last given id is stored for each type
-     */
-    private final static String InternalStateLoc = ".db/internalstate.txt";
-    /**
-     * Returns the key to use based on admin = 0; student = 1; lecturer = 2;
-     */
-    private final static char[] TypeKeys = {'A', 'S', 'L'};
-    /**
-     * Gets the next available id for the specified type. Due to the small file size and manageability
-     * writing is achieved with the FileWriter in order to not have too many class instance creations
-     * @param t {@code UserType} indicating the type for which to get the next given id
-     * @return {@code long} the next available id for the {@code UserType}
-     */
-    private static long nextIdForType(UserType t) {
-        internalStateFileAccessAllowed(t);
-        try {
-            int selector = (t == UserType.ADMIN)? 0 : (t == UserType.STUDENT)? 1 : 2;
-            FileReader fReader = new FileReader(InternalStateLoc);
-            char[] fileChars = new char[120]; // enough to store 39 digit long ids for each type in total!
-            fReader.read(fileChars);
-            int i = 0, j = 0;
-            for ( ; i < fileChars.length; i++) {
-                if (fileChars[i] == TypeKeys[selector]) j = i + 1;
-                if (fileChars[i] == TypeKeys[(selector + 1) % 3] || fileChars[i] == '\u0000') break; // '\u0000' denotes the null char
-            }
-            fReader.close();
-            long lastId = Long.parseLong(Arrays.copyOfRange(fileChars, i, --j).toString());
-            return ++lastId;
-        } catch (FileNotFoundException e) {
-            Session.printError("User", "nextIdForType", "FileNotFoundException", e.getMessage());
-        } catch (IOException e) {
-            Session.printError("User", "nextIdForType", "IOException", e.getMessage());
-        }
-        System.exit(Session.BROKEN_INTERNAL_STATE_FATAL);
-        return -1;
-    }
-
-    /**
-     * Saves the last used id, so that this can be tracked internally.
-     * @param t     {@code UserType} defining the type for which to store the id
-     * @param id    {@code long} denoting the id to store
-     * @return {@code bool} indicating if the save was successful
-     */
-    private static boolean saveLastIdForType(UserType t, long id) {
-        internalStateFileAccessAllowed(t);
-        // Data in the internal state file is stored in 40 char blocks (1 for the type and 39 for the last id)
-        try {
-            int offSetMod = (t == UserType.ADMIN)? 0 : (t == UserType.STUDENT)? 1 : 2;
-            FileWriter fWriter = new FileWriter(InternalStateLoc);
-            char[] toWrite = Long.toString(id).toCharArray();
-            fWriter.write(toWrite, offSetMod * 40 + (40 - toWrite.length), toWrite.length);
-            fWriter.flush();
-            fWriter.close();
-            return true;
-        } catch (FileNotFoundException e) {
-            Session.printError("User", "nextIdForType", "FileNotFoundException", e.getMessage());
-        } catch (IOException e) {
-            Session.printError("User", "nextIdForType", "IOException", e.getMessage());
-        }
-        return false;
-    }
-
-    /**
-     * Checks if the internal file is available and the user type requested is eligible
-     * @param t {@code UserType} indicating the user type requested
-     * @return  {@code boolean} indicates if access is allowed
-     */
-    private static boolean internalStateFileAccessAllowed(UserType t) {
-        if (!Session.fileExists(InternalStateLoc)) System.exit(Session.INTERNALLY_REQUIRED_FILE_CANNOT_EXIST);
-        if (t == UserType.DEFAULT) {
-            Session.printIssue("Accessing invalid UserType", "Tried get next id for DEFAULT");
-            System.exit(Session.BROKEN_INTERNAL_STATE_FATAL);
-        }
-        return true;
+        SEObjectType type = (them.type.equals(UserType.ADMIN))? SEObjectType.ADMIN_USER : (them.type.equals(UserType.LECTURER))? SEObjectType.LECTURER_USER : SEObjectType.STUDENT_USER;
+        String[] userInfo = {
+                them.firstName,
+                them.lastname,
+                them.middleInitial,
+                them.username,
+                (them.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(them.dateOfBirth) : ""
+        };
+        them.userId = InternalCore.addEntryToInfoFile(type, userInfo);
+        return them;
     }
     //endregion
 
@@ -785,15 +628,15 @@ public class User {
      * Prints out the rules for the user to see - should be called before any account creation or password change
      */
     public static void showPasswordRules() {
-        Session.printTitle("Password Rules", '-');
-        Session.println("" +
+        InternalCore.printTitle("Password Rules", '-');
+        InternalCore.println("" +
                 "The password must abide by these rules:\n" +
                 "- Minimum length: " + pwordMinLength + "\n" +
                 "- Maximum length: " + pwordMaxLength + "\n" +
                 "- Minimum amount of numbers: " + pwordMinNumCount + "\n" +
                 "- Minimum amount of special characters: " + pwordMinSpecialCount + "\n" +
                 "- Minimum amount of capitals: " + pwordMinCapitalCount);
-        Session.println(Session.consoleLine('-'));
+        InternalCore.println(InternalCore.consoleLine('-'));
     }
 
     /**
@@ -850,11 +693,11 @@ public class User {
             MessageDigest md = MessageDigest.getInstance("MD5");
             hash = Base64.getEncoder().encodeToString(md.digest(uname.getBytes())).toUpperCase();
         } catch (NoSuchAlgorithmException nsae) {
-            Session.printError("SELECTive.User",
+            InternalCore.printError("SELECTive.User",
                     "hashUsername",
                     "NoSuchAlgorithmException",
                     "The required algorithm is not available. Crashing...");
-            System.exit(Session.REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE);
+            System.exit(InternalCore.REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE);
         }
         return hash;
     }
@@ -871,11 +714,11 @@ public class User {
             MessageDigest sh = MessageDigest.getInstance("SHA-256");
             hash = Base64.getEncoder().encodeToString(sh.digest(new String(pword).getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException nsae) {
-            Session.printError("SELECTive.User",
+            InternalCore.printError("SELECTive.User",
                     "hashUsername",
                     "NoSuchAlgorithmException",
                     "The required algorithm is not available. Crashing...");
-            System.exit(Session.REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE);
+            System.exit(InternalCore.REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE);
         }
         return hash;
     }
@@ -911,11 +754,11 @@ public class User {
         }
         root.type = UserType.ADMIN;
         if (root.saveNewUser(rootUserPass, root) == null) {
-            Session.printError("User",
+            InternalCore.printError("User",
                     "createNew",
                     "FatalError",
                     "Saving the new account failed. Something seems to be seriously wrong. Exiting...");
-            System.exit(Session.USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE);
+            System.exit(InternalCore.USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE);
         }
         return root;
     }
