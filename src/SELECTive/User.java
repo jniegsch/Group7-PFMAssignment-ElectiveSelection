@@ -177,6 +177,27 @@ public class User {
     }
     //endregion
 
+    //region User Stringify
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public String toString() {
+        StringBuilder strRepresentation = new StringBuilder();
+        strRepresentation.append(capitalizeString(this.type.toString()));
+        strRepresentation.append(" ").append(this.userId).append(": ");
+        strRepresentation.append(capitalizeString(this.firstName)).append(" ");
+        strRepresentation.append(capitalizeString(this.middleInitial)).append(" ");
+        strRepresentation.append(capitalizeString(this.lastname)).append(" ");
+        return strRepresentation.toString();
+    }
+
+    private static String capitalizeString(String str) {
+        StringBuilder capitalizedString = new StringBuilder();
+        char[] strArray = str.toLowerCase().toCharArray();
+        capitalizedString.append(Character.toString(strArray[0]).toUpperCase());
+        capitalizedString.append(Arrays.copyOfRange(strArray, 1, strArray.length).toString());
+        return capitalizedString.toString();
+    }
+    //endregion
+
     //region Private user management & session controls
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // password will never be stored on run time, only checked
@@ -208,22 +229,6 @@ public class User {
      * Represents if the authentication file has been loaded into memory and is accessible
      */
     private boolean hasOpenUP = false;
-    /**
-     * The location in the DB folder where the authentication file is stored
-     */
-    private final static String UPLoc = ".db/UPdb.txt";
-    /**
-     * The location in the DB folder where the Admin User Information file is stored
-     */
-    private final static String AdminInfoLoc = ".db/adminuinfo.txt";
-    /**
-     * The location in the DB folder where the Lecturer User Information file is stored
-     */
-    private final static String LecturerInfoLoc = ".db/lectureruinfo.txt";
-    /**
-     * The location in the DB folder where the Student User Information file is stored
-     */
-    private final static String StudentInfoLoc = ".db/studentuinfo.txt";
     //endregion
 
     //region Public Session Management
@@ -306,7 +311,7 @@ public class User {
      * @return {@code boolean}: indicating if authentication was successful
      */
     private boolean authenticateUser(String uname, char[] pword) {
-        if (!hasOpenUP) { uPs = readDictFromFile(UPLoc); hasOpenUP = true; }
+        if (!hasOpenUP) { uPs = readDictFromFile(Session.UPLoc); hasOpenUP = true; }
         String uhash = hashUsername(uname), phash = hashPassword(pword);
         for (int i = 0; i < uPs.length; i++) {
             if (uhash.equals(uPs[i][0])) {
@@ -349,7 +354,7 @@ public class User {
             Session.printIssue("New Password is Invalid", "The password you selected in invalid!");
             return false;
         }
-        if (!hasOpenUP) { uPs = readDictFromFile(UPLoc); hasOpenUP = true; }
+        if (!hasOpenUP) { uPs = readDictFromFile(Session.UPLoc); hasOpenUP = true; }
         boolean changed = false;
         String uhash = hashUsername(uname);
         for (int i = 0; i < uPs.length && !changed; i++) {
@@ -371,12 +376,12 @@ public class User {
             }
         }
         if (changed) {
-            if (writeDictToFile(uPs, UPLoc, true)) {
+            if (writeDictToFile(uPs, Session.UPLoc, true)) {
                 hasOpenUP = false; // has been changed current is invalid
                 return true;
             }
             // error saving, try to revert...
-            if ((uPs = readDictFromFile(UPLoc)) != null) {
+            if ((uPs = readDictFromFile(Session.UPLoc)) != null) {
                 Session.printIssue("An issue occured saving the new password.", "There was a severe issue trying to save your new password. For this reason the change was not saved, and your password was reverted to the old one.");
             } else {
                 Session.printIssue("Fatal Error", "A Fatal error has occured where the current internal user management state is broken. Exiting, as gracefully as possible...");
@@ -394,9 +399,9 @@ public class User {
     public static boolean hasNoUsers() {
         // check if root needs to be created
         if (!userExists(rootUserName)) createRootAdmin();
-        File userFile = new File(UPLoc);
+        File userFile = new File(Session.UPLoc);
         if (userFile.exists()) {
-           String[][] auth = new User().readDictFromFile(UPLoc);
+           String[][] auth = new User().readDictFromFile(Session.UPLoc);
            if (auth.length > 1) return false;
            return true;
         }
@@ -409,9 +414,9 @@ public class User {
      * @return {@code bool} indicating if the user was found
      */
     public static boolean userExists(String username) {
-        File userFile = new File(UPLoc);
+        File userFile = new File(Session.UPLoc);
         if (!userFile.exists()) return false;
-        String[][] auth = new User().readDictFromFile(UPLoc);
+        String[][] auth = new User().readDictFromFile(Session.UPLoc);
         String uHash = hashUsername(username);
         for (int i = 0; i < auth.length; i++) if (auth[i][0].equals(uHash)) return true;
         return false;
@@ -459,7 +464,7 @@ public class User {
     private static String[][] readDictFromFile(String fname) {
         String dump = "";
         try {
-            if (!targetFileExists(fname)) {
+            if (!Session.fileExists(fname)) {
                 Session.printError("User",
                         "readDictFromFile",
                         "File IO Error",
@@ -502,7 +507,7 @@ public class User {
      */
     private static boolean writeDictToFile(String[][] dict, String fname, boolean overwrite) {
         try {
-            if (!targetFileExists(fname)) {
+            if (!Session.fileExists(fname)) {
                 Session.printError("User",
                         "writeDictToFile",
                         "File IO Error",
@@ -535,12 +540,12 @@ public class User {
      * @param ids   {@code long[]} representing the user ids who's information should be returned
      * @return {@code String[]} representing the user(s) information
      */
-    private static String[] getUserInfo(UserType type, long[] ids) {
-        String fileLoc = (type == UserType.STUDENT)? StudentInfoLoc : (type == UserType.LECTURER)? LecturerInfoLoc : AdminInfoLoc;
+    public static String[] getUserInfo(UserType type, long[] ids) {
+        String fileLoc = (type == UserType.STUDENT)? Session.StudentInfoLoc : (type == UserType.LECTURER)? Session.LecturerInfoLoc : Session.AdminInfoLoc;
         // not thread safe, but faster than StringBuffer -> in a single thread environment so all good
         StringBuilder userDump = new StringBuilder();
         try {
-            if (!targetFileExists(fileLoc)) {
+            if (!Session.fileExists(fileLoc)) {
                 Session.printError("User",
                         "readUserInfo",
                         "File IO Error",
@@ -569,10 +574,10 @@ public class User {
      * Updates the users record after anything has changed
      * @return {@code bool} indicating if the update was successful
      */
-    private boolean updateUserInfo() {
-        String loc = (this.type.equals(UserType.ADMIN))? AdminInfoLoc : (this.type.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
+    public boolean updateUserInfo() {
+        String loc = (this.type.equals(UserType.ADMIN))? Session.AdminInfoLoc : (this.type.equals(UserType.LECTURER))? Session.LecturerInfoLoc : Session.StudentInfoLoc;
         try {
-            if (!targetFileExists(loc)) {
+            if (!Session.fileExists(loc)) {
                 Session.printError("User",
                         "updateUserInfo",
                         "File IO Error",
@@ -623,15 +628,15 @@ public class User {
      * @return {@code boolean} representing if the saving was entirely complete or failed at any stage
      */
     private static User saveNewUser(char[] pword, User them) {
-        String userLoc = (them.type.equals(UserType.ADMIN))? AdminInfoLoc : (them.type.equals(UserType.LECTURER))? LecturerInfoLoc : StudentInfoLoc;
+        String userLoc = (them.type.equals(UserType.ADMIN))? Session.AdminInfoLoc : (them.type.equals(UserType.LECTURER))? Session.LecturerInfoLoc : Session.StudentInfoLoc;
         try {
             // save auth creds
             writeDictToFile(new String[][]{{hashUsername(them.username), hashPassword(pword), them.type.toString()}},
-                    UPLoc,
+                    Session.UPLoc,
                     false);
 
             // get last line to increment id
-            if (!targetFileExists(userLoc)) {
+            if (Session.fileExists(userLoc)) {
                 Session.printError("User",
                         "saveNewUser",
                         "File IO Error",
@@ -655,32 +660,6 @@ public class User {
                     "Something went wrong writing to the user file");
             return null;
         }
-    }
-
-    /**
-     * Checks if a file exists at the specified path. If it doesn't the function automatically creates the file.
-     * <b>
-     *     IMPORTANT!
-     *     This function does take action if a file is not found, the {@code boolean} return is mainly there to check
-     *     if file creation failed in the case it wasn't found. By calling this function a missing file will be created
-     *     thus - in a sense - fixing the issue.
-     * </b>
-     * @param fname {@code String} representing the file name/path relative to the current directory
-     * @return {@code boolean} indicating if the file exists after completion of this function
-     */
-    private static boolean targetFileExists(String fname) {
-        File tmp = new File(fname);
-        if (tmp.exists()) return true;
-        try {
-            tmp.createNewFile();
-        } catch (IOException ioe) {
-            Session.printError("User",
-                    "targetFileExists",
-                    "IOException",
-                    "Could not create the file...");
-            return false;
-        }
-        return true;
     }
     //endregion
 
@@ -754,7 +733,7 @@ public class User {
      * @return  {@code boolean} indicates if access is allowed
      */
     private static boolean internalStateFileAccessAllowed(UserType t) {
-        if (!targetFileExists(InternalStateLoc)) System.exit(Session.INTERNALLY_REQUIRED_FILE_CANNOT_EXIST);
+        if (!Session.fileExists(InternalStateLoc)) System.exit(Session.INTERNALLY_REQUIRED_FILE_CANNOT_EXIST);
         if (t == UserType.DEFAULT) {
             Session.printIssue("Accessing invalid UserType", "Tried get next id for DEFAULT");
             System.exit(Session.BROKEN_INTERNAL_STATE_FATAL);

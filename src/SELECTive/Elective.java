@@ -30,7 +30,6 @@ public class Elective {
 
     // region Private Constants
     private static final String invalidCourseID = "invC0iceNegativeWithdrawl";
-    private static final String ELLoc = ".db/electives.txt";
     //endregion
 
     //region Private Properties

@@ -1,5 +1,6 @@
 package SELECTive;
 
+import java.io.File;
 import java.io.IOError;
 import java.io.IOException;
 import java.util.Arrays;
@@ -11,9 +12,77 @@ public class Session {
 
     public static final boolean systemPrintsErrors = true;
 
-    //region Session Properties
+    //region Private Session Properties
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static User sessionUser = null;
+    //endregion
+
+    //region Public Session Properties
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    /**
+     * The location in the DB folder where the authentication file is stored
+     */
+    public final static String UPLoc = ".db/UPdb.txt";
+    /**
+     * The location in the DB folder where the Admin User Information file is stored
+     */
+    public final static String AdminInfoLoc = ".db/adminuinfo.txt";
+    /**
+     * The location in the DB folder where the Lecturer User Information file is stored
+     */
+    public final static String LecturerInfoLoc = ".db/lectureruinfo.txt";
+    /**
+     * The location in the DB folder where the Student User Information file is stored
+     */
+    public final static String StudentInfoLoc = ".db/studentuinfo.txt";
+    /**
+     * The location in the DB Folder where the Elective Information file is stored
+     */
+    public final static String ElectiveInfoLoc = ".db/electives.txt";
+    /**
+     * Checks if a file exists at the specified path. If it doesn't the function automatically creates the file.
+     * <b>
+     *     IMPORTANT!
+     *     This function does take action if a file is not found, the {@code boolean} return is mainly there to check
+     *     if file creation failed in the case it wasn't found. By calling this function a missing file will be created
+     *     thus - in a sense - fixing the issue.
+     * </b>
+     * @param location {@code String} representing the file name/path relative to the current directory
+     * @return {@code boolean} indicating if the file exists after completion of this function
+     */
+    public static boolean fileExists(String location) {
+        String[] locSections = location.split("/");
+        String file = locSections[locSections.length - 1];
+        String[] folders = Arrays.copyOf(locSections, locSections.length - 1);
+
+        //folders
+        for (int i = 0; i < folders.length; i++) {
+            File dir = new File(folders[i]);
+            try{
+                dir.mkdir();
+            }
+            catch(SecurityException se){
+                printError("Session",
+                        "fileExists",
+                        "SecurityException",
+                        "Could not create the folders");
+                return false;
+            }
+        }
+
+        File tmp = new File(file);
+        if (tmp.exists()) return true;
+        try {
+            tmp.createNewFile();
+        } catch (IOException ioe) {
+            printError("Session",
+                    "fileExists",
+                    "IOException",
+                    "Could not create the file...");
+            return false;
+        }
+        return true;
+    }
     //endregion
 
     //region Exit Codes
@@ -47,6 +116,10 @@ public class Session {
         // DEBUG
         long[] a = {1};
         User[] retUsers = User.getUsers(a, UserType.STUDENT);
+
+        for (int i = 0; i < retUsers.length; i++) {
+            println(retUsers[i].toString());
+        }
 
         //TODO: Program continues here....
     }
