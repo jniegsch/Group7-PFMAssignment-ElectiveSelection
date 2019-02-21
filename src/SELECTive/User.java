@@ -83,6 +83,41 @@ public class User {
     }
 
     /**
+     * Creates a new user based on their ID and the specific type of user. Returns a default User instance and prints a
+     * warning in case no user matching the specified ID and type was found.
+     * @param id    a {@code String} representing the id of the user to create
+     * @param ut    a {@code UserType} defining the type of the user to create
+     */
+    public User(String id, UserType ut) {
+        SEObjectType ot = objectTypeForUserType(ut);
+        String[] ids = {id};
+        String[][] userInfo = InternalCore.readInfoFile(ot, ids);
+
+        if (userInfo == null) {
+            InternalCore.printIssue("No such " + ut.toString(),
+                    "The requested " + ut.toString() + " does not exists. Please ensure you are requesting a valid user.");
+            new User();
+        } else {
+            String[] reqUser = userInfo[0];
+            this.userId = Long.parseLong(reqUser[0]);
+            this.firstName = reqUser[1];
+            this.lastname = reqUser[2];
+            this.middleInitial = reqUser[3];
+            this.username = reqUser[4];
+            try {
+                this.dateOfBirth = (reqUser[5] != null)? new SimpleDateFormat().parse(reqUser[5]) : null;
+            } catch (ParseException pe) {
+                InternalCore.printError("User",
+                        "User(String id, UserType ut)",
+                        "ParseException",
+                        "Could not parse passed date...");
+                this.dateOfBirth = null;
+            }
+            this.type = ut;
+        }
+    }
+
+    /**
      * An initial constructor to be used in the defined subclasses to create themselves based upon a user
      * @param copy {@code User} denoting the user to initialize with
      * @param target {@code UserType} the type of user to be created, if this is not the same as the one attached to
@@ -311,7 +346,7 @@ public class User {
      * @return {@code boolean}: indicating if authentication was successful
      */
     private boolean authenticateUser(String uname, char[] pword) {
-        if (!hasOpenUP) { uPs = readDictFromFile(InternalCore.UPLoc); hasOpenUP = true; }
+        if (!hasOpenUP) { uPs = readDictFromAuthFile(); hasOpenUP = true; }
         String uhash = hashUsername(uname), phash = hashPassword(pword);
         for (int i = 0; i < uPs.length; i++) {
             if (uhash.equals(uPs[i][0])) {
@@ -354,7 +389,7 @@ public class User {
             InternalCore.printIssue("New Password is Invalid", "The password you selected in invalid!");
             return false;
         }
-        if (!hasOpenUP) { uPs = readDictFromFile(InternalCore.UPLoc); hasOpenUP = true; }
+        if (!hasOpenUP) { uPs = readDictFromAuthFile(); hasOpenUP = true; }
         boolean changed = false;
         String uhash = hashUsername(uname);
         for (int i = 0; i < uPs.length && !changed; i++) {
@@ -376,12 +411,12 @@ public class User {
             }
         }
         if (changed) {
-            if (writeDictToFile(uPs, InternalCore.UPLoc, true)) {
+            if (writeDictToAuthFile(uPs, true)) {
                 hasOpenUP = false; // has been changed current is invalid
                 return true;
             }
             // error saving, try to revert...
-            if ((uPs = readDictFromFile(InternalCore.UPLoc)) != null) {
+            if ((uPs = readDictFromAuthFile()) != null) {
                 InternalCore.printIssue("An issue occured saving the new password.", "There was a severe issue trying to save your new password. For this reason the change was not saved, and your password was reverted to the old one.");
             } else {
                 InternalCore.printIssue("Fatal Error", "A Fatal error has occured where the current internal user management state is broken. Exiting, as gracefully as possible...");
@@ -401,7 +436,7 @@ public class User {
         if (!userExists(rootUserName)) createRootAdmin();
         File userFile = new File(InternalCore.UPLoc);
         if (userFile.exists()) {
-           String[][] auth = new User().readDictFromFile(InternalCore.UPLoc);
+           String[][] auth = new User().readDictFromAuthFile();
            if (auth.length > 1) return false;
            return true;
         }
@@ -416,7 +451,7 @@ public class User {
     public static boolean userExists(String username) {
         File userFile = new File(InternalCore.UPLoc);
         if (!userFile.exists()) return false;
-        String[][] auth = new User().readDictFromFile(InternalCore.UPLoc);
+        String[][] auth = new User().readDictFromAuthFile();
         String uHash = hashUsername(username);
         for (int i = 0; i < auth.length; i++) if (auth[i][0].equals(uHash)) return true;
         return false;
@@ -460,13 +495,13 @@ public class User {
      * <pre>
      *     [MD5 hash of username] : [SHA256 hash of password] : [Type of user]
      * </pre>
-     * @param fname {@code String} the filename from which to read the specific dictionary
      * @return {@code String[][]} representing the occurances split into their respective sections denoted by the format
      */
-    private static String[][] readDictFromFile(String fname) {
+    private static String[][] readDictFromAuthFile() {
+        String fname = InternalCore.fileLocationForObjectType(SEObjectType.USER_AUTH);
         String dump = "";
         try {
-            if (!InternalCore.fileExists(fname)) {
+            if (!InternalCore.fileExists(SEObjectType.USER_AUTH)) {
                 InternalCore.printError("User",
                         "readDictFromFile",
                         "File IO Error",
@@ -501,15 +536,15 @@ public class User {
     /**
      * Writes a system dict to the specified file. Usually used to update the authentication file. For the format check
      * the reading function defined in `see`
-     * @see #writeDictToFile(String[][], String, boolean)
+     * @see #readDictFromAuthFile()
      * @param dict      {@code String[][]} which is the system dict to write
-     * @param fname     {@code String} representing the file to write to
      * @param overwrite {@code boolean} that indicates if the file should be overwritten or appended to
      * @return {@code bool} representing if the write was successful
      */
-    private static boolean writeDictToFile(String[][] dict, String fname, boolean overwrite) {
+    private static boolean writeDictToAuthFile(String[][] dict, boolean overwrite) {
+        String fname = InternalCore.fileLocationForObjectType(SEObjectType.USER_AUTH);
         try {
-            if (!InternalCore.fileExists(fname)) {
+            if (!InternalCore.fileExists(SEObjectType.USER_AUTH)) {
                 InternalCore.printError("User",
                         "writeDictToFile",
                         "File IO Error",
@@ -543,8 +578,8 @@ public class User {
      * @return {@code String[]} representing the user(s) information
      */
     public static String[][] getUserInfo(UserType type, String[] ids) {
-        String fileLoc = (type == UserType.STUDENT)? InternalCore.StudentInfoLoc : (type == UserType.LECTURER)? InternalCore.LecturerInfoLoc : InternalCore.AdminInfoLoc;
-        return InternalCore.readInfoFile(fileLoc, ids);
+        SEObjectType ot = objectTypeForUserType(type);
+        return InternalCore.readInfoFile(ot, ids);
     }
 
     /**
@@ -552,7 +587,14 @@ public class User {
      * @return {@code bool} indicating if the update was successful
      */
     public boolean updateUserInfo() {
-        String loc = (this.type.equals(UserType.ADMIN))? InternalCore.AdminInfoLoc : (this.type.equals(UserType.LECTURER))? InternalCore.LecturerInfoLoc : InternalCore.StudentInfoLoc;
+        SEObjectType ot = objectTypeForUserType(this.type);
+        if (ot == null) {
+            InternalCore.printError("User",
+                    "updateUserInfo()",
+                    "User with default type",
+                    "The user has the default type, please pass a valid user");
+            return false;
+        }
         String[] info = {
                 this.firstName,
                 this.lastname,
@@ -560,7 +602,7 @@ public class User {
                 this.username,
                 (this.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(this.dateOfBirth) : ""
         };
-        return InternalCore.updateInfoFile(loc, Long.toString(this.userId), info);
+        return InternalCore.updateInfoFile(ot, Long.toString(this.userId), info);
     }
 
     /**
@@ -582,6 +624,20 @@ public class User {
         };
         them.userId = InternalCore.addEntryToInfoFile(type, userInfo);
         return them;
+    }
+
+    private static SEObjectType objectTypeForUserType(UserType ut) {
+        switch (ut) {
+            case ADMIN:
+                return SEObjectType.ADMIN_USER;
+            case STUDENT:
+                return SEObjectType.STUDENT_USER;
+            case LECTURER:
+                return SEObjectType.LECTURER_USER;
+            case DEFAULT:
+                return null;
+        }
+        return null;
     }
     //endregion
 

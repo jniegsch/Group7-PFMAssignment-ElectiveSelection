@@ -17,7 +17,7 @@ public class Admin extends User {
     public boolean addElective() {
         Scanner inpScanner = new Scanner(System.in);
 
-        Session.printTitle("Adding an Elective", '*', false);
+        InternalCore.printTitle("Adding an Elective", '*');
 
         // There are 6 properties to set for an elective
         String electiveCourseID = "", electiveName = "", electiveProgramName = "";
@@ -28,35 +28,35 @@ public class Admin extends User {
             boolean successfulSet = false;
             switch (prop) {
                 case 0:
-                    Session.print("> Elective course ID: ");
+                    InternalCore.print("> Elective course ID: ");
                     if (inpScanner.hasNextLine()) {
                         electiveCourseID = inpScanner.nextLine();
                         successfulSet = true;
                     }
                     break;
                 case 1:
-                    Session.print("> Elective name: ");
+                    InternalCore.print("> Elective name: ");
                     if (inpScanner.hasNextLine()) {
                         electiveName = inpScanner.nextLine();
                         successfulSet = true;
                     }
                     break;
                 case 2:
-                    Session.print("> Elective program name: ");
+                    InternalCore.print("> Elective program name: ");
                     if (inpScanner.hasNextLine()) {
                         electiveProgramName = inpScanner.nextLine();
                         successfulSet = true;
                     }
                     break;
                 case 3:
-                    Session.print("> Elective ECTS: ");
+                    InternalCore.print("> Elective ECTS: ");
                     if (inpScanner.hasNextInt()) {
                         electiveECTS = inpScanner.nextInt();
                         successfulSet = true;
                     }
                     break;
                 case 4:
-                    Session.println("> Elective Keywords (separate each keyword using a ';'): ");
+                    InternalCore.println("> Elective Keywords (separate each keyword using a ';'): ");
                     if (inpScanner.hasNextLine()) {
                         String in = inpScanner.nextLine();
                         electiveKeywords = in.split(";");
@@ -70,7 +70,7 @@ public class Admin extends User {
                     }
                     break;
                 case 5:
-                    Session.println("" +
+                    InternalCore.println("" +
                             "> Lesson days and times (separate the list with ';' using the format <week-day code> @ <hh:mm>): \n" +
                             "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
                     if (inpScanner.hasNextLine()) {
@@ -87,12 +87,12 @@ public class Admin extends User {
 
             if (!successfulSet) prop--;
         }
-        Session.println("\nCreating elective...");
+        InternalCore.println("\nCreating elective...");
 
         // TODO: create new elective instance using passed values
 
-        Session.println("Elective successfully created!");
-        Session.println(Session.consoleLine('*'));
+        InternalCore.println("Elective successfully created!");
+        InternalCore.println(InternalCore.consoleLine('*'));
         return false;
     }
 }

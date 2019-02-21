@@ -1,9 +1,7 @@
 package SELECTive;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 /**
@@ -15,7 +13,8 @@ enum SEObjectType {
     LECTURER_USER,
     ELECTIVE,
     STU_ELECT_RELATION,
-    USER_AUTH
+    USER_AUTH,
+    INTERNAL
 }
 
 public class InternalCore {
@@ -80,10 +79,11 @@ public class InternalCore {
      *     if file creation failed in the case it wasn't found. By calling this function a missing file will be created
      *     thus - in a sense - fixing the issue.
      * </b>
-     * @param location {@code String} representing the file name/path relative to the current directory
+     * @param ot the {@code SEObjectType} defining the type of the object to which to add an entry
      * @return {@code boolean} indicating if the file exists after completion of this function
      */
-    public static boolean fileExists(String location) {
+    public static boolean fileExists(SEObjectType ot) {
+        String location = fileLocationForObjectType(ot);
         String[] locSections = location.split("/");
         String file = locSections[locSections.length - 1];
         String[] folders = Arrays.copyOf(locSections, locSections.length - 1);
@@ -121,15 +121,16 @@ public class InternalCore {
      * Reads information from one of the DB files. Ensure you are passing a correct one, the method does not check
      * the validity and assumes the caller knows what they are accessing. Otherwise a new file (and possibly
      * directories) will be created, thus returning null
-     * @param locString a {@code String} defining the filepath to the file - must be relative to the running dir
-     * @param ids       a list of ids to check for as {@code String}. Pass null if you want all records returned
+     * @param ot    the {@code SEObjectType} defining the type of the object to which to add an entry
+     * @param ids   a list of ids to check for as {@code String}. Pass null if you want all records returned
      * @return  {@code String[][]} representing an array of row (or observation) arrays
      */
-    public static String[][] readInfoFile(String locString, String[] ids) {
+    public static String[][] readInfoFile(SEObjectType ot, String[] ids) {
+        String locString = fileLocationForObjectType(ot);
         // not thread safe, but faster than StringBuffer -> in a single thread environment so all good
         StringBuilder userDump = new StringBuilder();
         try {
-            if (!fileExists(locString)) {
+            if (!fileExists(ot)) {
                 InternalCore.printError("InternalCore",
                         "readInfoFile",
                         "File IO Error",
@@ -175,16 +176,17 @@ public class InternalCore {
      *
      * <b>IMPORTANT:</b> the info does not have to contain the id, the function checks if the first passed info element is the
      * same as the defined id. If not then it will write this first followed by the info.
-     * @param locString a {@code String} defining the filepath to the file - must be relative to the running dir
+     * @param ot        the {@code SEObjectType} defining the type of the object to which to add an entry
      * @param id        a {@code String} representing the id of the object to update
      * @param info      a {@code String[]} defining the info of the object to write to the file
      * @return a {@code boolean} indicating if the update occurred successful
      */
-    public static boolean updateInfoFile(String locString, String id, String[] info) {
+    public static boolean updateInfoFile(SEObjectType ot, String id, String[] info) {
+        String locString = fileLocationForObjectType(ot);
         // take a guess at the capacity required based on the info (* .5 for safety)
         int minCapacity = (int)Math.ceil(info.toString().length() * 1.5);
         try {
-            if (!fileExists(locString)) {
+            if (!fileExists(ot)) {
                 printError("InternalCore",
                         "updateInfoFile",
                         "File IO Error",
@@ -241,7 +243,7 @@ public class InternalCore {
     public static long addEntryToInfoFile(SEObjectType ot, String[] infoToAdd) {
         String locString = fileLocationForObjectType(ot);
         try {
-            if (fileExists(locString)) {
+            if (fileExists(ot)) {
                 printError("InternalCore",
                         "addEntryToInfoFile",
                         "File IO Error",
@@ -292,7 +294,7 @@ public class InternalCore {
      * @return {@code long} the next available id for the {@code UserType}
      */
     private static long nextIdForType(SEObjectType ot) {
-        if (!fileExists(InternalStateLoc)) {
+        if (!fileExists(SEObjectType.INTERNAL)) {
             printIssue("Accessing invalid UserType", "Tried get next id for DEFAULT");
             System.exit(BROKEN_INTERNAL_STATE_FATAL);
         }
@@ -325,7 +327,7 @@ public class InternalCore {
      * @return {@code bool} indicating if the save was successful
      */
     private static boolean saveLastIdForType(SEObjectType ot, long id) {
-        if (!fileExists(InternalStateLoc)) {
+        if (!fileExists(SEObjectType.INTERNAL)) {
             printIssue("Accessing invalid UserType", "Tried to get next id for DEFAULT");
             System.exit(BROKEN_INTERNAL_STATE_FATAL);
         }
@@ -356,6 +358,7 @@ public class InternalCore {
             case ELECTIVE: return ElectiveInfoLoc;
             case STU_ELECT_RELATION: return StudentElectiveRelationLoc;
             case USER_AUTH: return UPLoc;
+            case INTERNAL: return InternalStateLoc;
             default: return null;
         }
     }
