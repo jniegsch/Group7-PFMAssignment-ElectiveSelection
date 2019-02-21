@@ -42,27 +42,27 @@ public class InternalCore {
     /**
      * The location in the DB folder where the authentication file is stored
      */
-    public final static String UPLoc = ".db/UPdb.txt";
+    private final static String UPLoc = ".db/UPdb.txt";
     /**
      * The location in the DB folder where the Admin User Information file is stored
      */
-    public final static String AdminInfoLoc = ".db/adminuinfo.txt";
+    private final static String AdminInfoLoc = ".db/adminuinfo.txt";
     /**
      * The location in the DB folder where the Lecturer User Information file is stored
      */
-    public final static String LecturerInfoLoc = ".db/lectureruinfo.txt";
+    private final static String LecturerInfoLoc = ".db/lectureruinfo.txt";
     /**
      * The location in the DB folder where the Student User Information file is stored
      */
-    public final static String StudentInfoLoc = ".db/studentuinfo.txt";
+    private final static String StudentInfoLoc = ".db/studentuinfo.txt";
     /**
      * The location in the DB Folder where the Elective Information file is stored
      */
-    public final static String ElectiveInfoLoc = ".db/electiveinfo.txt";
+    private final static String ElectiveInfoLoc = ".db/electiveinfo.txt";
     /**
      * The location in the DB Folder where the Student and Elective relation is stored
      */
-    public final static String StudentElectiveRelationLoc = ".db/stuelectrel.txt";
+    private final static String StudentElectiveRelationLoc = ".db/stuelectrel.txt";
     private static final String infoSeperator = " ; ";
     //endregion
 

@@ -12,7 +12,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.LongStream;
 
 /**
  * An enum defining what type of user the subclass is. If something as gone wrong, or the class is just being initialized,
@@ -434,7 +433,7 @@ public class User {
     public static boolean hasNoUsers() {
         // check if root needs to be created
         if (!userExists(rootUserName)) createRootAdmin();
-        File userFile = new File(InternalCore.UPLoc);
+        File userFile = new File(InternalCore.fileLocationForObjectType(SEObjectType.USER_AUTH));
         if (userFile.exists()) {
            String[][] auth = new User().readDictFromAuthFile();
            if (auth.length > 1) return false;
@@ -449,7 +448,7 @@ public class User {
      * @return {@code bool} indicating if the user was found
      */
     public static boolean userExists(String username) {
-        File userFile = new File(InternalCore.UPLoc);
+        File userFile = new File(InternalCore.fileLocationForObjectType(SEObjectType.USER_AUTH));
         if (!userFile.exists()) return false;
         String[][] auth = new User().readDictFromAuthFile();
         String uHash = hashUsername(username);

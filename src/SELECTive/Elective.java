@@ -72,4 +72,17 @@ public class Elective {
         return null; //TODO: this function, delete this call as well it only suppresses error warnings
     }
     //endregion
+
+    //region Misc Lifters
+    private static final String keywordStorageSeperator = "|";
+    private String keywordString() {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < this.keywords.length; i++) builder.append(this.keywords[i]).append(keywordStorageSeperator);
+        return builder.toString();
+    }
+
+    private String[] keywordsFromKeywordString(String keywordStr) {
+        return keywordStr.split(keywordStorageSeperator);
+    }
+    //endregion
 }
