@@ -18,7 +18,7 @@ enum SEObjectType {
     INTERNAL
 }
 
-public class InternalCore {
+public final class InternalCore {
 
     //region General System Constants
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
