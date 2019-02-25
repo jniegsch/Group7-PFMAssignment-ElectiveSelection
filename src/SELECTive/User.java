@@ -292,19 +292,36 @@ public class User {
      * of type admin, they can directly change their password. Otherwise they need to request an admin to change their
      * password since they are the only ones allowed to change passwords without knowledge of the previous password.
      * If successful, an active session is defined.
-     * @param username {@code String} the username of the user attempting to login
-     * @param password {@code char[]} the password of the user attempting to login (char[] for security purposes)
      * @return {@code boolean} representing if the login was successful
      */
-    public boolean login(String username, char[] password) {
-        //TODO: change password reading to use java.io.Console
+    public boolean login() {
         int failedAccessCount = 0;
         boolean authed = false;
+        String uname = "";
+        char[] pword;
         while (failedAccessCount < MAX_LOGIN_ATTEMPTS) {
-            if (authenticateUser(username, password)) { authed = true; break; }
+            Scanner loginScanner = new Scanner(System.in);
+            // Get username
+            InternalCore.print("Username: ");
+            if (loginScanner.hasNextLine()) {
+                uname = loginScanner.nextLine();
+            } else {
+                InternalCore.printIssue("No Username inserted", "Please enter your username!");
+                continue;
+            }
+            // Get password
+            InternalCore.print("Password: ");
+            if (loginScanner.hasNextLine()) {
+                pword = loginScanner.nextLine().toCharArray();
+            } else {
+                InternalCore.printIssue("No Password inserted", "Please enter your password!");
+                continue;
+            }
+            if (authenticateUser(uname, pword)) { authed = true; break; }
+            failedAccessCount++;
         }
         if (authed) {
-            password = null;
+            pword = null;
             loggedIn = true;
             return true;
         }
@@ -316,17 +333,17 @@ public class User {
             if (cPass.hasNextLine()) {
                 choice = cPass.nextLine();
             }
-            cPass.close();
             if (choice.equals("Y")) {
-                String npass;
+                char[] npass;
                 InternalCore.print("What should the new password be: ");
                 if (cPass.hasNextLine()) {
-                    npass = cPass.nextLine();
-                    changePassword(username, null, npass.toCharArray());
+                    npass = cPass.nextLine().toCharArray();
+                    changePassword(username, null, npass);
                 } else {
                     InternalCore.printIssue("Invalid Input.", "The password you typed was incorrect!");
                 }
             }
+            cPass.close();
             InternalCore.printIssue("Password change declined.", "");
             loggedIn = false;
             return false;

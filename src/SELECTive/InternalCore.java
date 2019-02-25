@@ -2,6 +2,7 @@ package SELECTive;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.Scanner;
 import java.util.stream.Stream;
 
 /**
@@ -63,7 +64,15 @@ public class InternalCore {
      * The location in the DB Folder where the Student and Elective relation is stored
      */
     private final static String StudentElectiveRelationLoc = ".db/stuelectrel.txt";
-    private static final String infoSeperator = " ; ";
+    /**
+     * The separator that MUST be used to store the different properties of an instance. This value must always be used
+     * to separate the individual object properties. For example, any row must be something like this:
+     * <pre>
+     *     <object instance id> ; <property 1> ; <property 2> ; <...> ; <property n>
+     * </pre>
+     * Seeing as this class should solely read, update, or write this value is kept privately
+     */
+    private static final String infoSeparator = " ; ";
     //endregion
 
     //region File Access Methods
@@ -140,7 +149,7 @@ public class InternalCore {
             BufferedReader reader = new BufferedReader(new FileReader(locString));
             String currentLine;
             while((currentLine = reader.readLine()) != null) {
-                String[] userInfo  = currentLine.split(infoSeperator);
+                String[] userInfo  = currentLine.split(infoSeparator);
                 if (ids != null)
                     if (!Stream.of(ids).anyMatch(x -> x.equals(userInfo[0]))) continue; // using stream for speed and simplicity
 
@@ -158,7 +167,7 @@ public class InternalCore {
         String[] fileRows = userDump.toString().split("\n");
         String[][] info = new String[fileRows.length][];
         for (int i = 0; i < fileRows.length; i++) {
-            info[i] = fileRows[i].split(infoSeperator);
+            info[i] = fileRows[i].split(infoSeparator);
         }
 
         return info;
@@ -185,6 +194,10 @@ public class InternalCore {
         String locString = fileLocationForObjectType(ot);
         // take a guess at the capacity required based on the info (* .5 for safety)
         int minCapacity = (int)Math.ceil(info.toString().length() * 1.5);
+
+        BufferedReader reader = null;
+        BufferedWriter writer = null;
+
         try {
             if (!fileExists(ot)) {
                 printError("InternalCore",
@@ -194,16 +207,16 @@ public class InternalCore {
                 return false;
             }
             final File temp = File.createTempFile("tmp", "txt");
-            BufferedReader reader = new BufferedReader(new FileReader(locString));
-            BufferedWriter writer = new BufferedWriter(new FileWriter(temp));
+            reader = new BufferedReader(new FileReader(locString));
+            writer = new BufferedWriter(new FileWriter(temp));
             String currentLine;
             StringBuilder newBuffer = new StringBuilder();
             newBuffer.ensureCapacity(minCapacity);
             while ((currentLine = reader.readLine()) != null) {
-                if (currentLine.split(infoSeperator)[0].equals(id)) {
+                if (currentLine.split(infoSeparator)[0].equals(id)) {
                     for (int i = 0; i < info.length; i++) {
-                        if (i == 0) if (!info[i].equals(id)) newBuffer.append(id).append(infoSeperator);
-                        newBuffer.append(info[i]).append(infoSeperator);
+                        if (i == 0) if (!info[i].equals(id)) newBuffer.append(id).append(infoSeparator);
+                        newBuffer.append(info[i]).append(infoSeparator);
                     }
                     newBuffer.append("\n");
                 } else {
@@ -230,8 +243,6 @@ public class InternalCore {
         return true;
     }
 
-    //TODO: Make elective have id and 'CourseCode'?
-
     /**
      * Adds an entry to the file returning the id assigned to the new entry.
      *
@@ -254,9 +265,9 @@ public class InternalCore {
             // save user to file
             StringBuilder str = new StringBuilder();
             BufferedWriter writer = new BufferedWriter(new FileWriter(locString, true));
-            str.append(Long.toString(id)).append(infoSeperator);
+            str.append(Long.toString(id)).append(infoSeparator);
             for (int i = 0; i < infoToAdd.length; i++) {
-                str.append(infoToAdd[i]).append(infoSeperator);
+                str.append(infoToAdd[i]).append(infoSeparator);
                 writer.write(str.toString());
                 str.delete(0, str.length());
             }
@@ -372,6 +383,45 @@ public class InternalCore {
             case STU_ELECT_RELATION: return 4;
             default: return -1;
         }
+    }
+    //endregion
+
+    //region Getting User Input
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public static <T extends java.lang.Object> T getUserInput(Class<T> type, String prompt) {
+        final int maxTries = 5;
+
+        int tryCount = 0;
+        Scanner inputScanner = new Scanner(System.in);
+        while (tryCount < maxTries) {
+            println(consoleLine('-'));
+            println(prompt);
+            if (type.equals(Integer.class)) {
+                if (inputScanner.hasNextInt()) return type.cast(Integer.valueOf(inputScanner.nextInt()));
+                InternalCore.printIssue("Wrong input type.", "An integer input was expected but none received");
+                tryCount++;
+            }
+
+            if (type.equals(String.class)) {
+                if (inputScanner.hasNextLine()) return type.cast(inputScanner.nextLine());
+                InternalCore.printIssue("Wrong input type.", "An integer input was expected but none received");
+                tryCount++;
+            }
+
+            if (type.equals(Long.class)) {
+                if (inputScanner.hasNextLong()) return type.cast(Long.valueOf(inputScanner.nextLong()));
+                InternalCore.printIssue("Wrong input type.", "An integer input was expected but none received");
+                tryCount++;
+            }
+
+            if (type.equals(Double.class)) {
+                if (inputScanner.hasNextDouble()) return type.cast(Double.valueOf(inputScanner.nextDouble()));
+                InternalCore.printIssue("Wrong input type.", "An integer input was expected but none received");
+                tryCount++;
+            }
+        }
+
+        return null;
     }
     //endregion
 
