@@ -19,7 +19,10 @@ public class Session {
     public static void main(String[] args) {
         //TODO: The actual program...
 
-        if (User.hasNoUsers()) createInitialAdmin();
+        if (User.hasNoUsers()) {
+            createInitialAdmin();
+            InternalCore.println("\n \n \n");
+        }
 
         InternalCore.printTitle("Welcome", '*');
         InternalCore.println("Please login to use the system.");
@@ -96,7 +99,7 @@ public class Session {
             Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (1, 2, ..., or 6):");
             if (userChoice == null) break;
             int choice = userChoice.intValue();
-            if (choice < 1 || choice > 7) {
+            if (choice < 0 || choice > 6) {
                 InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
                 continue;
             }
@@ -168,7 +171,12 @@ public class Session {
         if (adminCreationScanner.hasNextLine()) {
             uname = adminCreationScanner.nextLine();
         } else {
-            InternalCore.println("Using default.");
+            InternalCore.println("Account creation failed.");
+            return null;
+        }
+        if (User.userExists(uname)) {
+            InternalCore.println("Account creation failed. The user already exists. Please create a new one.");
+            return null;
         }
         InternalCore.print("Passord: ");
         char[] pword;

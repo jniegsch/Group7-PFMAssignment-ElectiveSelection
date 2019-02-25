@@ -154,7 +154,7 @@ public class Elective {
     //endregion
 
     // This method allows the user to edit the elective
-    public static boolean editElective(User who) {
+    public static boolean editElective(Admin who) {
         // Check access rights
         UserType requestorsType = who.getUserType();
         if (requestorsType != UserType.ADMIN) {
@@ -199,7 +199,7 @@ public class Elective {
         return toEdit.edit(who);
     }
 
-    public boolean edit(User who) {
+    public boolean edit(Admin who) {
         // Check access rights
         UserType requestorsType = who.getUserType();
         if (requestorsType != UserType.ADMIN) {
@@ -217,7 +217,8 @@ public class Elective {
                 "(5) Class times \n" +
                 "(6) Block");
         InternalCore.println(InternalCore.consoleLine('-'));
-        int userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, 3, 4, 5 or 6): ").intValue();
+        Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, 3, 4, 5 or 6): ");
+        if (userChoice == null) return false;
         switch (userChoice) {
             case 1:
                 editElectiveName();
@@ -280,8 +281,6 @@ public class Elective {
 
     }
 
-    //TODO: Add courseCode exists function
-
     // This method asks for the change of the elective ECTS number and saves this in the file
     private boolean editECTS() {
         Integer newECTS = InternalCore.getUserInput(Integer.class, "What is the new ECTS number of this elective?");
@@ -327,7 +326,7 @@ public class Elective {
 
 
     // This method asks for the change of the elective block and saves this in the file
-    public boolean editBlock() {
+    private boolean editBlock() {
         InternalCore.println("Which block is this elective taught?");
         InternalCore.println("(1) Block 1");
         InternalCore.println("(2) Block 2");
@@ -339,9 +338,13 @@ public class Elective {
         return true;
     }
 
+    //region Register For Elective
+    public boolean registerForElective(Student stu) {
+        return false; //TODO
+    }
 
-//    public static void main(String[] args) {
-//        // TODO Auto-generated method stub
-//        editElective();
-//    }
+    public boolean deregisterForElective(Student stu) {
+        return false; //TODO
+    }
+    //endregion
 }

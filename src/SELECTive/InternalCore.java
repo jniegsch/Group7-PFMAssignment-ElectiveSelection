@@ -1,8 +1,10 @@
 package SELECTive;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 /**
@@ -80,6 +82,7 @@ public final class InternalCore {
     //TODO: Change BufferWriter to FileWriter
     //TODO: Possibly change BufferedReader to FileReader
     //TODO: Adapt file accessors to merely handle SEObjectTypes not locations
+    private static boolean settingUpInitial = false;
     /**
      * Checks if a file exists at the specified path. If it doesn't the function automatically creates the file.
      * <b>
@@ -100,6 +103,7 @@ public final class InternalCore {
         //folders
         for (int i = 0; i < folders.length; i++) {
             File dir = new File(folders[i]);
+            if (dir.exists()) continue;
             try{
                 dir.mkdir();
             }
@@ -112,10 +116,17 @@ public final class InternalCore {
             }
         }
 
-        File tmp = new File(file);
+        File tmp = new File(location);
         if (tmp.exists()) return true;
         try {
             tmp.createNewFile();
+            if (location.equals(InternalStateLoc)) {
+                // Create the internal state for all to be 1
+                for (SEObjectType t : SEObjectType.values()) {
+                    if (t == SEObjectType.INTERNAL || t == SEObjectType.USER_AUTH) continue;
+                    saveLastIdForType(t, 0);
+                }
+            }
         } catch (IOException ioe) {
             printError("Session",
                     "fileExists",
@@ -254,29 +265,34 @@ public final class InternalCore {
     public static long addEntryToInfoFile(SEObjectType ot, String[] infoToAdd) {
         String locString = fileLocationForObjectType(ot);
         try {
-            if (fileExists(ot)) {
+            if (!fileExists(ot)) {
                 printError("InternalCore",
                         "addEntryToInfoFile",
                         "File IO Error",
                         "Apparently the requested file (" + locString + ") does not exist and cannot be created.");
                 return -1;
             }
-            long id = nextIdForType(ot);
             // save user to file
             StringBuilder str = new StringBuilder();
             BufferedWriter writer = new BufferedWriter(new FileWriter(locString, true));
-            str.append(Long.toString(id)).append(infoSeparator);
+
+            long id = nextIdForType(ot);
+            if (ot != SEObjectType.USER_AUTH) str.append(Long.toString(id)).append(infoSeparator);
+
             for (int i = 0; i < infoToAdd.length; i++) {
                 str.append(infoToAdd[i]).append(infoSeparator);
                 writer.write(str.toString());
                 str.delete(0, str.length());
             }
+            writer.write("\n");
             writer.close();
-            if (!saveLastIdForType(ot, id)) {
-                printIssue("Fatal Error",
-                        "Could not save the internal state, please reset the system with the root user.");
-                System.exit(FATAL_ERROR_RESET_REQUIRED);
-            };
+            if (ot != SEObjectType.USER_AUTH) {
+                if (!saveLastIdForType(ot, id)) {
+                    printIssue("Fatal Error",
+                            "Could not save the internal state, please reset the system with the root user.");
+                    System.exit(FATAL_ERROR_RESET_REQUIRED);
+                }
+            }
             return id;
         } catch (IOException ioe) {
             printError("User",
@@ -298,6 +314,8 @@ public final class InternalCore {
      * Returns the key to use based on admin = 0; student = 1; lecturer = 2;
      */
     private final static char[] TypeKeys = {'A', 'S', 'L', 'E', 'R'};
+
+    private final static int totalBlocks = 40 * TypeKeys.length;
     /**
      * Gets the next available id for the specified type. Due to the small file size and manageability
      * writing is achieved with the FileWriter in order to not have too many class instance creations
@@ -305,6 +323,7 @@ public final class InternalCore {
      * @return {@code long} the next available id for the {@code UserType}
      */
     private static long nextIdForType(SEObjectType ot) {
+        if (ot == SEObjectType.USER_AUTH) return 0;
         if (!fileExists(SEObjectType.INTERNAL)) {
             printIssue("Accessing invalid UserType", "Tried get next id for DEFAULT");
             System.exit(BROKEN_INTERNAL_STATE_FATAL);
@@ -312,15 +331,15 @@ public final class InternalCore {
         try {
             int selector = selectorForObjectType(ot);
             FileReader fReader = new FileReader(InternalStateLoc);
-            char[] fileChars = new char[240]; // enough to store 39 digit long ids for each type in total!
+            char[] fileChars = new char[totalBlocks]; // enough to store 39 digit long ids for each type in total!
             fReader.read(fileChars);
             int i = 0, j = 0;
             for ( ; i < fileChars.length; i++) {
-                if (fileChars[i] == TypeKeys[selector]) j = i + 2;
-                if (fileChars[i] == TypeKeys[(selector + 1) % 3] || fileChars[i] == '\u0000') break; // '\u0000' denotes the null char
+                if (fileChars[i] == TypeKeys[selector]) j = i + 1;
+                if (fileChars[i] == TypeKeys[(selector + 1) % TypeKeys.length] || fileChars[i] == '\u0000') break; // '\u0000' denotes the null char
             }
             fReader.close();
-            long lastId = Long.parseLong(Arrays.copyOfRange(fileChars, j, i).toString());
+            long lastId = Long.parseLong(new String(Arrays.copyOfRange(fileChars, j, i)));
             return ++lastId;
         } catch (FileNotFoundException e) {
             printError("User", "nextIdForType", "FileNotFoundException", e.getMessage());
@@ -346,10 +365,28 @@ public final class InternalCore {
         try {
             int offSetMod = selectorForObjectType(ot);
             FileWriter fWriter = new FileWriter(InternalStateLoc);
+            BufferedReader fReader = new BufferedReader(new FileReader(InternalStateLoc));
             char[] toWrite = Long.toString(id).toCharArray();
-            fWriter.write(toWrite, offSetMod * 40 + (40 - toWrite.length), toWrite.length);
+            String nLine = fReader.readLine();
+            char[] state = (nLine != null)? nLine.toCharArray() : new char[0];
+            if (state.length < totalBlocks) {
+                state = new char[totalBlocks];
+                // fill with initial 0 and ids
+                for (int i = 0; i < totalBlocks; i++) {
+                    if (i % 40 == 0) {
+                        state[i] = TypeKeys[i / 40];
+                    } else {
+                        state[i] = '0';
+                    }
+                }
+            }
+            for (int i = 0; i < toWrite.length; i++) {
+                state[offSetMod * 40 + (40 - toWrite.length) + i] = toWrite[i];
+            }
+            fWriter.write(state);
             fWriter.flush();
             fWriter.close();
+            fReader.close();
             return true;
         } catch (FileNotFoundException e) {
             printError("User", "nextIdForType", "FileNotFoundException", e.getMessage());
@@ -560,5 +597,10 @@ public final class InternalCore {
         if (!message.equals("")) System.out.println("" +
                 "    " + message + "\n\n");
     }
+    //endregion
+
+    //region iCal Handling
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     //endregion
 }

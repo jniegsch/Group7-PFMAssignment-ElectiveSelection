@@ -404,6 +404,16 @@ public class User {
     private boolean authenticateUser(String uname, char[] pword) {
         if (!hasOpenUP) { uPs = readDictFromAuthFile(); hasOpenUP = true; }
         String uhash = hashUsername(uname), phash = hashPassword(pword);
+        if (uPs.length == 0) {
+            // have to create root >> force
+            InternalCore.printIssue("Setting up internal settings", "");
+            String[][] addingRoot = {{uhash, phash, UserType.ADMIN.toString()}};
+            if (!writeDictToAuthFile(addingRoot, true)){
+                InternalCore.printIssue("Fatal Error", "Could not create the root user, crashing in a blazing inferno of failz. <insert pikachu meme>");
+                System.exit(InternalCore.INITIAL_STATE_SETUP_FAILED_FATALITY);
+            }
+            uPs = readDictFromAuthFile();
+        }
         for (int i = 0; i < uPs.length; i++) {
             if (uhash.equals(uPs[i][0])) {
                 if (phash.equals(uPs[i][1])) {
@@ -579,7 +589,7 @@ public class User {
         String [] dictPairs = dump.split(" \n");
         String [][] dictToReturn = new String[dictPairs.length][3];
         for (int i = 0; i < dictPairs.length; i++) {
-            String[] sp = dictPairs[i].split(" : ");
+            String[] sp = dictPairs[i].split(" ; ");
             if (sp.length != 3) InternalCore.printError("User",
                     "readDictFromFile",
                     "BadDict",
@@ -679,6 +689,8 @@ public class User {
                 (them.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(them.dateOfBirth) : ""
         };
         them.userId = InternalCore.addEntryToInfoFile(type, userInfo);
+        String[] auth = {hashUsername(them.username), hashPassword(pword), them.type.toString()};
+        InternalCore.addEntryToInfoFile(SEObjectType.USER_AUTH, auth);
         return them;
     }
 
@@ -823,8 +835,6 @@ public class User {
         return hash;
     }
     //endregion
-
-    //TODO: implement filtering and searching
 
     //region Root User
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
