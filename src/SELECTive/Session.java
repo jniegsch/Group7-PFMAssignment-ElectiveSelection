@@ -31,15 +31,21 @@ public class Session {
             System.exit(InternalCore.NO_AUTHENTICATION);
         }
 
-        // DEBUG
-        long[] a = {1};
-        User[] retUsers = User.getUsers(a, UserType.STUDENT);
-
-        for (int i = 0; i < retUsers.length; i++) {
-            InternalCore.println(retUsers[i].toString());
+        switch (sessionUser.getUserType()) {
+            case ADMIN:
+                adminDashboard();
+                break;
+            case STUDENT:
+                studentDashboard();
+                break;
+            case LECTURER:
+                lecturerDashboard();
+                break;
+            case DEFAULT:
+                break;
         }
 
-        //TODO: Program continues here....
+        InternalCore.println("Logging out...");
     }
     //endregion
 
@@ -56,48 +62,95 @@ public class Session {
         // Check if initial startup
         if (User.hasNoUsers()) {
             if ((sessionUser = createInitialAdmin()) != null) return true;
-            InternalCore.printIssue("Fatal error occured", "A fatal error occured and the initial user could not be created. Please retry, and if the problem persists inform a rep. of the 'GoodEnoughCloseEnoughCoding corp.'");
+            InternalCore.printIssue("Fatal error occured",
+                    "A fatal error occured and the initial user could not be created. Please retry, and if the problem persists inform a rep. of the 'GoodEnoughCloseEnoughCoding corp.'");
             System.exit(InternalCore.INITIAL_STATE_SETUP_FAILED_FATALITY);
         }
 
-        Scanner lgSelect = new Scanner(System.in);
-        String uname = "";
-        char[] pword = null;
-        InternalCore.print("Username: ");
-        if (lgSelect.hasNextLine()) {
-            uname = lgSelect.nextLine();
-        } else {
-            InternalCore.printIssue("Invalid Username", "You have selected an invalid username. The system will exit.");
-            System.exit(InternalCore.ALL_GOOD_IN_THE_HOOD);
-        }
-        try {
-            if (System.console() != null) {
-                pword = System.console().readPassword();
-            } else {
-                throw new IOError(new IOException("No console"));
-            }
-        } catch (IOError ioe) {
-            InternalCore.printError("Session",
-                    "loginToSession",
-                    "IOError",
-                    "An IO Error occurred when trying to read the password securely. Will use the standard Scanner instead");
-            InternalCore.print("Password: ");
-            if (lgSelect.hasNextLine()) {
-                pword = lgSelect.nextLine().toCharArray();
-            } else {
-                InternalCore.printIssue("Invalid password", "You have selected an invalid password. The system will exit.");
-                pword = null;
-            }
-        }
-        if (pword == null) {
-            InternalCore.printIssue("Invalid Username", "You have selected an invalid username. The system will exit.");
-            System.exit(InternalCore.ALL_GOOD_IN_THE_HOOD);
-        }
-
         sessionUser = new User();
-        if (sessionUser.login(uname, pword)) return true;
+        if (sessionUser.login()) return true;
         return false;
     }
+    //endregion
+
+    //region User Specific Dashboard
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static void adminDashboard() {
+        boolean running = true;
+        while(running) {
+            InternalCore.println(InternalCore.consoleLine('*'));
+            InternalCore.printTitle("Admin Dashboard", '*');
+            InternalCore.println(InternalCore.consoleLine('*'));
+            InternalCore.println("What would you like to do?");
+            InternalCore.println("" +
+                    "- - - User Management:\n" +
+                    " 1) Reset/Change password\n" +
+                    " 2) Create a new user\n" +
+                    " 3) View users\n" +
+                    "- - - Elective Management:\n" +
+                    " 4) Add an elective\n" +
+                    " 5) View elective statistics\n" +
+                    " 6) Find an elective\n" +
+                    "- - - \n" +
+                    " 0) Logout\n");
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (1, 2, ..., or 6):");
+            if (userChoice == null) break;
+            int choice = userChoice.intValue();
+            if (choice < 1 || choice > 7) {
+                InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
+                continue;
+            }
+
+            switch (choice) {
+                case 0:
+                    running = false;
+                    break;
+                case 1:
+                    resetOrChangePasswordOfUser();
+                    break;
+            }
+        }
+    }
+
+    private static void lecturerDashboard() {
+        //TODO:
+    }
+
+    private static void studentDashboard() {
+        //TODO:
+    }
+    //endregion
+
+    //region Admin Actions
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static void resetOrChangePasswordOfUser() {
+        String username = InternalCore.getUserInput(String.class,
+                "What is the username of the user who's password you would like to change: ");
+        if (username == null) return;
+        if (!User.userExists(username))  {
+            InternalCore.printIssue("No such user.", "The user you requested does not seem to exist.");
+            return;
+        }
+
+        User.showPasswordRules();
+        String newPassword = InternalCore.getUserInput(String.class,
+                "Please enter the new password: ");
+        if (sessionUser.changePassword(username, null, newPassword.toCharArray())) {
+            InternalCore.println("> Password successfully changed.\n \n ");
+        } else {
+            InternalCore.println("> Password NOT successfully changed.\n \n ");
+        }
+    }
+    //endregion
+
+    //region Lecturer Actions
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    //endregion
+
+    //region Student Actions
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
     //endregion
 
     //region Initial Admin Setup
@@ -152,7 +205,7 @@ public class Session {
      */
     private static boolean loadRootUser() {
         User u = new User();
-        if (!u.login(User.rootUserName, User.rootUserPass)) return false;
+        if (!u.rootLogin(User.rootUserName, User.rootUserPass)) return false;
         rootUser = new Admin(u);
         return true;
     }

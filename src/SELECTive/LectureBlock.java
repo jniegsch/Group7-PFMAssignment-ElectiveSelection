@@ -31,6 +31,10 @@ public class LectureBlock {
         Date[] range = {startDate, endDate};
         return range;
     }
+
+    public int getBlockNumber() {
+        return (int)this.id + 1;
+    }
     //endregion
 
     //region Constructor
@@ -46,7 +50,8 @@ public class LectureBlock {
                 this.endDate = df.parse(props[2]);
                 return;
             } catch (ParseException pe) {
-                InternalCore.printIssue("Could not parse the date", "Failed to parse the date passed, will try to recreate them");
+                InternalCore.printIssue("Could not parse the date",
+                        "Failed to parse the date passed, will try to recreate them");
             }
         }
 

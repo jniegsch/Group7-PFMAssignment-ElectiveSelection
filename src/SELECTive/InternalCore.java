@@ -404,23 +404,23 @@ public final class InternalCore {
 
             if (type.equals(String.class)) {
                 if (inputScanner.hasNextLine()) return type.cast(inputScanner.nextLine());
-                InternalCore.printIssue("Wrong input type.", "An integer input was expected but none received");
+                InternalCore.printIssue("Wrong input type.", "A string input was expected but none received");
                 tryCount++;
             }
 
             if (type.equals(Long.class)) {
                 if (inputScanner.hasNextLong()) return type.cast(Long.valueOf(inputScanner.nextLong()));
-                InternalCore.printIssue("Wrong input type.", "An integer input was expected but none received");
+                InternalCore.printIssue("Wrong input type.", "A long input was expected but none received");
                 tryCount++;
             }
 
             if (type.equals(Double.class)) {
                 if (inputScanner.hasNextDouble()) return type.cast(Double.valueOf(inputScanner.nextDouble()));
-                InternalCore.printIssue("Wrong input type.", "An integer input was expected but none received");
+                InternalCore.printIssue("Wrong input type.", "A double input was expected but none received");
                 tryCount++;
             }
         }
-
+        inputScanner.close();
         return null;
     }
     //endregion
@@ -528,7 +528,7 @@ public final class InternalCore {
     //region Error and Issue handling
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-    private static final boolean systemPrintsErrors = true;
+    private static final boolean systemPrintsErrors = false;
     /**
      * Print an error
      * @param className {@code String} defining the class in which the error occurred

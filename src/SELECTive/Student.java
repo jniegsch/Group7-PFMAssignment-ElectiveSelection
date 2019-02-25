@@ -8,5 +8,8 @@ public class Student extends User {
     }
 
     // TODO: constructor also creates "empty" entry to Student_Elective_Relation file
+
+    // TODO: Create iCal export and check
+    // TODO: Register to Elective
     //endregion
 }

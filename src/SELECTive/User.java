@@ -82,6 +82,54 @@ public class User {
     }
 
     /**
+     * The constructor for admins to use to edit either a users' details or password
+     * @param uname a {@code String} which is the username of the user who will be edited
+     * @param ut    the {@code UserType} defining what type of user it is
+     * @param admin the {@code User} who wants to edit the other user
+     */
+    public User(String uname, UserType ut, User admin) {
+        if (admin.getUserType() != UserType.ADMIN) {
+            InternalCore.printIssue("Cannot create user", "You do not have the rights to create a user");
+            return;
+        }
+
+        SEObjectType ot = objectTypeForUserType(ut);
+        String[][] users = InternalCore.readInfoFile(ot, null);
+        if (users == null) {
+            InternalCore.printIssue("No users for the requested type",
+                    "No requested " + ut.toString() + "s exist.");
+            return;
+        }
+        int userPosition = -1;
+        for (int i = 0; i < users.length; i++) {
+            if (!users[i][4].equals(uname)) continue;
+            userPosition = i;
+            break;
+        }
+        if (userPosition == -1) {
+            InternalCore.printIssue("No such " + ut.toString(),
+                    "The requested " + ut.toString() + " does not exists. Please ensure you are requesting a valid user.");
+            return;
+        }
+
+        this.userId = Long.parseLong(users[userPosition][0]);
+        this.firstName = users[userPosition][1];
+        this.lastname = users[userPosition][2];
+        this.middleInitial = users[userPosition][3];
+        this.username = users[userPosition][4];
+        try {
+            this.dateOfBirth = (users[userPosition][5] != null)? new SimpleDateFormat().parse(users[userPosition][5]) : null;
+        } catch (ParseException pe) {
+            InternalCore.printError("User",
+                    "User(String id, UserType ut)",
+                    "ParseException",
+                    "Could not parse passed date...");
+            this.dateOfBirth = null;
+        }
+        this.type = ut;
+    }
+
+    /**
      * Creates a new user based on their ID and the specific type of user. Returns a default User instance and prints a
      * warning in case no user matching the specified ID and type was found.
      * @param id    a {@code String} representing the id of the user to create
@@ -95,7 +143,7 @@ public class User {
         if (userInfo == null) {
             InternalCore.printIssue("No such " + ut.toString(),
                     "The requested " + ut.toString() + " does not exists. Please ensure you are requesting a valid user.");
-            new User();
+            return;
         } else {
             String[] reqUser = userInfo[0];
             this.userId = Long.parseLong(reqUser[0]);
@@ -144,21 +192,18 @@ public class User {
      * @param d {@code String} the users date of birth (must be 'yyyy-MM-dd' format)
      * @param t {@code String} the users type
      */
-    public User(String i, String f, String l, String m, String u, String d, String t) {
+    public User(String i, String f, String l, String m, String u, String d, UserType t) {
         this.userId = Long.parseLong(i);
         this.firstName = f;
         this.lastname = l;
         this.middleInitial = m;
         this.username = u;
+        this.type = t;
         try {
             this.dateOfBirth = new SimpleDateFormat("yyyy-MM-dd").parse(d);
-            this.type = UserType.valueOf(t);
         } catch (ParseException pe) {
             InternalCore.printError("User", "User(...)", "ParseException", pe.getMessage());
             this.dateOfBirth = null;
-        } catch (IllegalArgumentException iae) {
-            InternalCore.printError("User", "User(...", "IllegalArgumentException", iae.getMessage());
-            this.type = UserType.DEFAULT;
         }
     }
 
@@ -174,6 +219,13 @@ public class User {
             InternalCore.printIssue("Cannot create user", "You do not have the rights to create a user");
             return null;
         }
+
+        // check if username is unique
+        if (userExists(uname)) {
+            InternalCore.printIssue("Username already taken.",
+                    "The username you chose is already taken. Please choose another");
+        }
+
         Scanner newAdminScanner = new Scanner(System.in);
         InternalCore.println("Please fill in the account details. You can also skip them by pressing `enter`. The user can change these at a later stage");
         InternalCore.print("What is your first name: ");
@@ -224,10 +276,11 @@ public class User {
     }
 
     private static String capitalizeString(String str) {
+        if (str == null || str.equals("") || str.equals(" ")) return "";
         StringBuilder capitalizedString = new StringBuilder();
         char[] strArray = str.toLowerCase().toCharArray();
         capitalizedString.append(Character.toString(strArray[0]).toUpperCase());
-        capitalizedString.append(Arrays.copyOfRange(strArray, 1, strArray.length).toString());
+        capitalizedString.append(String.valueOf(Arrays.copyOfRange(strArray, 1, strArray.length)));
         return capitalizedString.toString();
     }
     //endregion
@@ -301,6 +354,7 @@ public class User {
         char[] pword;
         while (failedAccessCount < MAX_LOGIN_ATTEMPTS) {
             Scanner loginScanner = new Scanner(System.in);
+            InternalCore.printTitle("Attempt " + (failedAccessCount + 1) + " of " + MAX_LOGIN_ATTEMPTS, '-');
             // Get username
             InternalCore.print("Username: ");
             if (loginScanner.hasNextLine()) {
@@ -319,37 +373,23 @@ public class User {
             }
             if (authenticateUser(uname, pword)) { authed = true; break; }
             failedAccessCount++;
+            InternalCore.printIssue("Wrong Password or Username",
+                    "The password or the username you specified was wrong. Or even both...");
         }
         if (authed) {
             pword = null;
             loggedIn = true;
+            InternalCore.println("> Logged in successfully\n \n ");
             return true;
         }
-        InternalCore.printIssue("Reached maximum login tries.", "You have reached the maximum amount of login attempts. ");
-        if (type == UserType.ADMIN) {
-            InternalCore.print("Since you are an Admin, would you like to change the users password (Y/n)? ");
-            Scanner cPass = new Scanner(System.in);
-            String choice = "";
-            if (cPass.hasNextLine()) {
-                choice = cPass.nextLine();
-            }
-            if (choice.equals("Y")) {
-                char[] npass;
-                InternalCore.print("What should the new password be: ");
-                if (cPass.hasNextLine()) {
-                    npass = cPass.nextLine().toCharArray();
-                    changePassword(username, null, npass);
-                } else {
-                    InternalCore.printIssue("Invalid Input.", "The password you typed was incorrect!");
-                }
-            }
-            cPass.close();
-            InternalCore.printIssue("Password change declined.", "");
-            loggedIn = false;
-            return false;
-        }
+        InternalCore.printIssue("Reached maximum login tries.",
+                "You have reached the maximum amount of login attempts. Ask an admin to reset your password.");
         loggedIn = false;
         return false;
+    }
+
+    public boolean rootLogin(String uname, char[] pword) {
+        return authenticateUser(uname, pword);
     }
 
     /**
@@ -493,7 +533,7 @@ public class User {
                     (userInfo[i][3] != null)? userInfo[i][3] : "",
                     (userInfo[i][4] != null)? userInfo[i][4] : "",
                     (userInfo[i][5] != null)? userInfo[i][5] : "",
-                    (userInfo[i][6] != null)? userInfo[i][6] : ""
+                    typeOfUser
             );
             users[i] = n;
         }
@@ -671,26 +711,17 @@ public class User {
     /**
      * The minimum amount of numbers (digits) a valid password must have
      */
-    private static final int pwordMinNumCount = 2;
-    /**
-     * The minimum amount of special characters a valid password must have
-     */
-    private static final int pwordMinSpecialCount = 2;
+    private static final int pwordMinNumCount = 1;
     /**
      * The minimum amount of capital letters a valid password must have
      */
-    private static final int pwordMinCapitalCount = 2;
+    private static final int pwordMinCapitalCount = 1;
 
     // Rules - Regex
     /**
      * Regex definition to match to single digits
      */
     private static final String regexNumCount = "\\d";
-    /**
-     * Regex definition to match to single special characters (anything that is not a digit, lower case character,
-     * or a upper case character)
-     */
-    private static final String regexSpecialCount = "[^\\da-zA-Z]";
     /**
      * Regex definition to match to single upper case characters
      */
@@ -706,9 +737,7 @@ public class User {
                 "- Minimum length: " + pwordMinLength + "\n" +
                 "- Maximum length: " + pwordMaxLength + "\n" +
                 "- Minimum amount of numbers: " + pwordMinNumCount + "\n" +
-                "- Minimum amount of special characters: " + pwordMinSpecialCount + "\n" +
                 "- Minimum amount of capitals: " + pwordMinCapitalCount);
-        InternalCore.println(InternalCore.consoleLine('-'));
     }
 
     /**
@@ -723,7 +752,6 @@ public class User {
         if (pword.length > pwordMaxLength) return false;
         if (!containsAtLeast(regexNumCount, pwordMinNumCount, pword.toString())) return false;
         if (!containsAtLeast(regexCapital, pwordMinCapitalCount, pword.toString())) return false;
-        if (!containsAtLeast(regexSpecialCount, pwordMinSpecialCount, pword.toString())) return false;
         return true;
     }
 

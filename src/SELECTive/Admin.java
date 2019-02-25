@@ -14,23 +14,25 @@ public class Admin extends User {
     //endregion
 
 
-    public boolean addElective() {
+    public boolean addElective(String courseCode) {
         Scanner inpScanner = new Scanner(System.in);
 
         InternalCore.printTitle("Adding an Elective", '*');
 
         // There are 6 properties to set for an elective
-        String electiveCourseID = "", electiveName = "", electiveProgramName = "";
+        String electiveCourseCode = courseCode, electiveName = "", electiveProgramName = "";
         int electiveECTS = 0;
         String[] electiveKeywords;
         LectureTime[] electiveTimes;
-        for (int prop = 0; prop < 6; prop++) {
+
+        int prop = (courseCode == null)? 0 : 1;
+        for (; prop < 6; prop++) {
             boolean successfulSet = false;
             switch (prop) {
                 case 0:
-                    InternalCore.print("> Elective course ID: ");
+                    InternalCore.print("> Elective course code: ");
                     if (inpScanner.hasNextLine()) {
-                        electiveCourseID = inpScanner.nextLine();
+                        electiveCourseCode = inpScanner.nextLine();
                         successfulSet = true;
                     }
                     break;

@@ -2,6 +2,21 @@ package SELECTive;
 
 import java.util.Scanner;
 
+enum MasterProgram {
+    AFM,
+    BIM,
+    FI,
+    GBS,
+    HRM,
+    MI,
+    MM,
+    OCC,
+    SCM,
+    SE,
+    SM,
+    INVLD
+}
+
 public class Elective {
     //region TO DEFINITELY REMOVE SCANNERS
     Scanner userInputInt = new Scanner(System.in);
@@ -9,21 +24,6 @@ public class Elective {
     //endregion
 
     //region Class specific enum declarations
-    public enum MasterProgram {
-        AFM,
-        BIM,
-        FI,
-        GBS,
-        HRM,
-        MI,
-        MM,
-        OCC,
-        SCM,
-        SE,
-        SM,
-        INVLD
-    }
-
     public enum ElectiveFilterType {
         COURSEID, // only equal filter
         ECTS, //TODO: check if electives have diff ects
@@ -93,7 +93,49 @@ public class Elective {
         return allElectives;
     }
 
-    public static Elective[] filterOn(ElectiveFilterType filter, String argument) {
+    public static Elective[] filterOn(ElectiveFilterType filter, String[] argument) {
+        String[][] electiveList = InternalCore.readInfoFile(SEObjectType.ELECTIVE, null);
+        //TODO: REWRITE ARGS
+        // filter on courseID
+        if (filter == ElectiveFilterType.COURSEID) {
+            for (int i = 0; i < electiveList.length; i++) {
+                for (int y = 0; y < argument.length; y++) {
+                    if (electiveList[i][1] == argument[y]) {
+                        InternalCore.print(electiveList[i][1] +
+                                "\t" + electiveList[i][2] +
+                                "\t" + electiveList[i][3] +
+                                "\t" + electiveList[i][4] +
+                                "\t" + electiveList[i][5] +
+                                "\t" + electiveList[i][6] +
+                                "\t" + electiveList[i][7]);
+                    }
+                }
+            }
+
+        } else if (filter == ElectiveFilterType.BLOCK) {
+            for (int i = 0; i < electiveList.length; i++) {
+                for (int y = 0; y < argument.length; y++) {
+                    if (electiveList[i][7] == argument[0]) {
+                        InternalCore.print(electiveList[i][1] +
+                                "\t" + electiveList[i][2] +
+                                "\t" + electiveList[i][3] +
+                                "\t" + electiveList[i][4] +
+                                "\t" + electiveList[i][5] +
+                                "\t" + electiveList[i][6] +
+                                "\t" + electiveList[i][7]);
+                    }
+                }
+            }
+        } else if (filter == ElectiveFilterType.KEYWORDS) {
+            for (int i = 0; i < electiveList.length; i++) {
+                for (int y = 0; y < argument.length; y++) {
+
+                }
+            }
+        } else if (filter == ElectiveFilterType.AVAILABILITY) {
+        //TODO: ical rep
+        }
+
         return null; //TODO: this function, delete this call as well it only suppresses error warnings
     }
     //endregion
@@ -112,18 +154,58 @@ public class Elective {
     //endregion
 
     // This method allows the user to edit the elective
-    public boolean editElective() {
+    public static boolean editElective(User who) {
+        // Check access rights
+        UserType requestorsType = who.getUserType();
+        if (requestorsType != UserType.ADMIN) {
+            InternalCore.printIssue("Invalid Access Rights",
+                    "You do not have the correct access privileges to edit an elective.");
+            return false;
+        }
 
-        InternalCore.println("Which elective do you want to edit? Please enter the course code");
-        String courseCode = userInputString.nextLine();
-
+        // Get course to edit
+        String courseCode = InternalCore.getUserInput(String.class,
+                "Which elective do you want to edit? Please enter the course code");
         String[][] electiveList = InternalCore.readInfoFile(SEObjectType.ELECTIVE, null);
-        String editedElectiveID;
+        int toEditElective = -1;
         for (int i = 0; i < electiveList.length; i++) {
-            if (electiveList[i][1] == courseCode) {
-                editedElectiveID = electiveList[i][1];
+            if (electiveList[i][1].equals(courseCode)) {
+                toEditElective = i;
                 break;
             }
+        }
+
+        // Check if course exists
+        if (toEditElective == -1) {
+            String choice = InternalCore.getUserInput(String.class,
+                    "It seems like the course you want to edit doesn't exist. Would you like to create it? (Y/n)");
+            if (choice.toLowerCase().equals("y")) {
+                Admin adminWho = (Admin) who;
+                return adminWho.addElective(courseCode);
+            }
+            return false;
+        }
+
+        Elective toEdit = new Elective(
+                Long.parseLong(electiveList[toEditElective][0]),
+                electiveList[toEditElective][1],
+                electiveList[toEditElective][2],
+                Integer.parseInt(electiveList[toEditElective][3]),
+                MasterProgram.valueOf(electiveList[toEditElective][4]),
+                keywordsFromKeywordString(electiveList[toEditElective][5]),
+                LectureTime.generateLectureTimeArrayFromStringRepresentation(electiveList[toEditElective][6]),
+                (new LectureBlock(electiveList[toEditElective][7]))
+        );
+        return toEdit.edit(who);
+    }
+
+    public boolean edit(User who) {
+        // Check access rights
+        UserType requestorsType = who.getUserType();
+        if (requestorsType != UserType.ADMIN) {
+            InternalCore.printIssue("Invalid Access Rights",
+                    "You do not have the correct access privileges to edit an elective.");
+            return false;
         }
 
         InternalCore.println("" +
@@ -161,10 +243,10 @@ public class Elective {
                 Long.toString(this.electiveId),
                 this.courseCode,
                 this.electiveName,
-                this.program.toString(),
                 Integer.toString(this.ects),
+                this.program.toString(),
                 keywordString(),
-                this.classTimes.toString(),
+                LectureTime.generateLectureTimeArrayStringRepresentation(this.classTimes),
                 this.block.toString()
         };
 
@@ -172,24 +254,7 @@ public class Elective {
     }
 
     // The file elective is structured this way:
-    // Elective ID | Course Code | Name | Program | ECTS | Keywords | ClassTimes | Block
-
-    // This method asks and returns what the user wants to do
-    //TODO: - DEPRECATED -
-    public int getUserChoice(){
-        InternalCore.println("What do you want to edit?");
-        InternalCore.println("(1) Elective name");
-        InternalCore.println("(2) Program");
-        InternalCore.println("(3) ECTS");
-        InternalCore.println("(4) Keywords");
-        InternalCore.println("(5) Class times");
-        InternalCore.println("(6) Block");
-        InternalCore.println(InternalCore.consoleLine('-'));
-        InternalCore.print("Please enter your choice (1, 2, 3, 4, 5 or 6): ");
-
-        return userInputInt.nextInt();
-    }
-
+    // Elective ID | Course Code | Name | ECTS | Program | Keywords | ClassTimes | Block
 
     // This method asks for the change of the elective name and saves this in the file
     private boolean editElectiveName() {
