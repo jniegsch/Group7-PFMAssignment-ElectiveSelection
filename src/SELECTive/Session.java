@@ -210,10 +210,21 @@ public class Session {
                 courseCodes[i] = courseCodes[i].substring(0, courseCodes[i].length() - 1);
             }
             for (String[] erow : allElectives) {
-                //if (erow[1].equals(courseCodes[i])) electives[i] = new Elective()
+                if (erow[1].equals(courseCodes[i])) {
+                    electives[i] = new Elective(
+                            Long.parseLong(erow[0]),
+                            erow[1],
+                            erow[2],
+                            Integer.parseInt(erow[3]),
+                            MasterProgram.valueOf(erow[4]),
+                            Elective.keywordsFromKeywordString(erow[5]),
+                            LectureTime.generateLectureTimeArrayFromStringRepresentation(erow[6]),
+                            (new LectureBlock(erow[7]))
+                    );
+                }
             }
         }
-        //((Lecturer) sessionUser).dataStats(numElectiveGrade);
+        ((Lecturer) sessionUser).viewStatsForElective(electives);
     }
 
     // Method to find an elective

@@ -26,7 +26,7 @@ public class Student extends User {
         }
     }
 
-    public void viewElectiveProgress(Elective elective) {
+    public void viewElectiveProgress(String courseCode) {
         //TODO
     }
     //endregion

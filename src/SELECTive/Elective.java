@@ -154,7 +154,7 @@ public class Elective {
         return builder.toString();
     }
 
-    private static String[] keywordsFromKeywordString(String keywordStr) {
+    public static String[] keywordsFromKeywordString(String keywordStr) {
         return keywordStr.split(keywordStorageSeparator);
     }
     //endregion
