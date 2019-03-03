@@ -70,6 +70,7 @@ public class User {
     public UserType getUserType() {
         return this.type;
     }
+    public long getUserId() { return this.userId; }
     //endregion
 
     //region Constructors

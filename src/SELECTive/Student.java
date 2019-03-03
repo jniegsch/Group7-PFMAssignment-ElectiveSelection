@@ -15,7 +15,15 @@ public class Student extends User {
 
     //region Enrollment
     public void viewEnrolledElectives() {
-        //TODO
+        InternalCore.println("You are enrolled in the following elective(s):");
+
+        String[] ids = {Long.toString(this.getUserId())};
+        String[][] enrolledElectives = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, ids);
+        if (enrolledElectives != null) {
+            //TODO: print them out
+        } else {
+            //TODO: looks like the student has no electives yet
+        }
     }
 
     public void viewElectiveProgress(Elective elective) {
@@ -28,8 +36,9 @@ public class Student extends User {
         return false; //TODO
     }
 
-    private boolean hasRegistedForElectives() {
-        return false; //TODO
+
+    private long hasRegistedForElectives() {
+        return -1; //TODO
     }
     //endregion
 }

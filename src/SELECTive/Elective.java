@@ -46,6 +46,7 @@ public class Elective {
     private String[] keywords = null;
     private LectureTime[] classTimes = null;
     private LectureBlock block = null;
+    private long lecturerId = -1;
     //TODO: add test method?
     //endregion
 
@@ -65,10 +66,15 @@ public class Elective {
         this.classTimes = times;
         this.block = block;
     }
+
+    //TODO: write constructor to just take course code
     //endregion
 
-    //region Editing
-    //TODO: Fill this in
+    //region Getters
+    public String getElectiveName() { return this.electiveName; }
+    public String getCourseCode() { return this.courseCode; }
+    public LectureBlock getElectiveBlock() { return this.block; }
+    public long getLecturerId() { return this.lecturerId; }
     //endregion
 
     //region Static Access

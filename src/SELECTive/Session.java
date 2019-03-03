@@ -144,6 +144,81 @@ public class Session {
             InternalCore.println("> Password NOT successfully changed.\n \n ");
         }
     }
+
+    // Method to create a new user
+    private static void createNewUser() {
+        // User type to be created
+        int typeCount = 0;
+        for (UserType type : UserType.values()) {
+            if (type == UserType.DEFAULT) continue;
+            InternalCore.println("(" + (typeCount + 1) + ") " + type.toString());
+        }
+        Integer utypeSelection = InternalCore.getUserInput(Integer.class,
+                "Specify the user type (1, 2, etc.): ");
+        int typeSelect = (utypeSelection != null)? utypeSelection.intValue() : UserType.values().length - 1; // Last UserType is default
+
+        // Get user input
+        String uname = InternalCore.getUserInput(String.class,
+                "Enter a username: ");
+        String pword = InternalCore.getUserInput(String.class,
+                "Enter a password: ");
+        if (sessionUser.createNewUser(uname, pword.toCharArray(), UserType.values()[typeSelect]) == null) {
+            InternalCore.printIssue("Coulnd't create the user", "For some reason the user could not be created, please try again.");
+        }
+    }
+
+    // Method to view users
+    private static void viewUsers() {
+        return;
+
+    }
+
+    // Method to add an elective
+    private static void addElective() {
+        if (sessionUser.getUserType() != UserType.ADMIN) {
+            InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
+            return;
+        }
+
+        String courseCode = InternalCore.getUserInput(String.class,
+                "Enter courseCode: ");
+        ((Admin) sessionUser).addElective(courseCode);
+    }
+
+    // Method to view elective statistics
+    private static void viewElectiveStats() {
+        if (sessionUser.getUserType() != UserType.ADMIN && sessionUser.getUserType() != UserType.LECTURER) {
+            InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
+            return;
+        }
+
+        String codes = InternalCore.getUserInput(String.class,
+                "Please enter all the course codes for which you would like to see the statistics, separated by ';'");
+        String[] courseCodes = codes.split(";");
+        Elective[] electives = new Elective[courseCodes.length];
+        String[][] allElectives = InternalCore.readInfoFile(SEObjectType.ELECTIVE, null);
+        for (int i = 0; i < courseCodes.length; i++) {
+            int pos = 0;
+            // strip all beginning whitespace
+            while (pos < courseCodes[i].length()) {
+                if (courseCodes[i].toCharArray()[0] != ' ') break;
+                courseCodes[i] = courseCodes[i].substring(1);
+            }
+            // strip all end whitespace
+            while (pos >= 0) {
+                if (courseCodes[i].toCharArray()[courseCodes[i].length() - 1] != ' ') break;
+                courseCodes[i] = courseCodes[i].substring(0, courseCodes[i].length() - 1);
+            }
+            for (String[] erow : allElectives) {
+                //if (erow[1].equals(courseCodes[i])) electives[i] = new Elective()
+            }
+        }
+        //((Lecturer) sessionUser).dataStats(numElectiveGrade);
+    }
+
+    // Method to find an elective
+    private static void findElective() {
+    }
     //endregion
 
     //region Lecturer Actions
@@ -178,7 +253,7 @@ public class Session {
             InternalCore.println("Account creation failed. The user already exists. Please create a new one.");
             return null;
         }
-        InternalCore.print("Passord: ");
+        InternalCore.print("Password: ");
         char[] pword;
         if (adminCreationScanner.hasNextLine()) {
             pword = adminCreationScanner.nextLine().toCharArray();

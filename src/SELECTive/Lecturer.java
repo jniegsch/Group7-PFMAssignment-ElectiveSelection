@@ -14,7 +14,7 @@ public class Lecturer extends User {
     }
     private Title title = Title.DEFAULT;
 
-    public static void newGradeEntry(){
+    public void newGradeEntry(){
         // Loop to enter student grades until break
         while (true) {
             String studentIdInput = InternalCore.getUserInput(String.class,
@@ -53,7 +53,7 @@ public class Lecturer extends User {
     }
 
     // This method prints out a list of registered students for a particular elective
-    public static void showStudents(String courseCode, LectureBlock block){
+    public void showStudents(String courseCode, LectureBlock block){
         InternalCore.println("The file contains the following registered students: ");
 
         String[][] electiveStudent = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, null);
@@ -67,25 +67,30 @@ public class Lecturer extends User {
     }
 
     // This method prints out a list of student grades for a particular elective
-    public static void showStudentGrades(String courseCode, LectureBlock block){
+    public void showStudentGrades(String courseCode, LectureBlock block){
         InternalCore.println("The file contains the following grades : ");
 
+        double[] grades = getGradesForElective(courseCode, block);
+    }
+
+    private double[] getGradesForElective(String courseCode, LectureBlock block) {
         String[][] electiveGrade = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, null);
         StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < electiveGrade.length; i++) {
             if (!electiveGrade[i][block.getBlockNumber() * 2].equals(courseCode)) continue;
-            buffer.append(electiveGrade[i][2]).append(" ");
+            buffer.append(electiveGrade[i][block.getBlockNumber() * 2 + 1]).append(" ");
         }
-
-        String[] gradeDump = showStudentsEnrolled(buffer.toString());
+        String[] gradeDump = buffer.toString().split(" ");
 
         double[] numElectiveGrade = new double[gradeDump.length];
         for (int j = 0; j < gradeDump.length; j++) {
             numElectiveGrade[j] = Integer.parseInt(gradeDump[j]);
         }
+
+        return numElectiveGrade;
     }
 
-    private static String[] showStudentsEnrolled(String buffer) {
+    private String[] showStudentsEnrolled(String buffer) {
         String[] dump = buffer.split(" ");
         for (int i = 0; i < dump.length; i++) {
             Student temp = new Student(new User(dump[i], UserType.STUDENT));
@@ -94,22 +99,53 @@ public class Lecturer extends User {
         return dump;
     }
 
+    public boolean viewStatsForElective(Elective elective) {
+        if (this.getUserType() != UserType.ADMIN) {
+            if (this.getUserType() == UserType.LECTURER) {
+                if (elective.getLecturerId() != this.getUserId()) {
+                    InternalCore.printIssue("Insufficient rights", "You do not have the rights to view the elective statistics of a course you do not teach.");
+                    return false;
+                }
+            } else {
+                InternalCore.printIssue("Insufficient rights", "You do not have the rights to view elective statistics.");
+                return false;
+            }
+        }
+
+        double[] grades = getGradesForElective(elective.getCourseCode(), elective.getElectiveBlock());
+        InternalCore.println("The grade statistics for " + elective.getElectiveName() + " are:");
+        dataStats(grades);
+        return true;
+    }
+
+    public boolean viewStatsForElective(Elective[] electives) {
+        for (Elective e : electives) {
+            if (!viewStatsForElective(e)) return false;
+            InternalCore.println(" ");
+        }
+        return true;
+    }
+
     // This method prints out the min, max, and the average of the grades
-    public static void dataStats(double[] numElectiveGrade){
+    private void dataStats(double[] numElectiveGrade){
+        if (this.getUserType() != UserType.LECTURER && this.getUserType() != UserType.ADMIN) {
+            InternalCore.printIssue("Insufficient rights", "You do not have the rights to view elective statistics.");
+            return;
+        }
 
         // Call the minArray(), maxArray(), and meanArray() methods and use the local array myArray as input to compute the minimum, maximum, and mean values of all heights in the file
         double minGrade = minGrade(numElectiveGrade);
-        System.out.println("The minimum value of all grades in the file is: " + minGrade);
+        InternalCore.println("The minimum value of all grades is: " + minGrade);
         double maxGrade = maxGrade(numElectiveGrade);
-        System.out.println("The maximum value of all grades in the file is: " + maxGrade);
+        InternalCore.println("The maximum value of all grades is: " + maxGrade);
         double meanGrade = meanGrade(numElectiveGrade);
-        System.out.println("The average value of all grades in the file is: " + meanGrade);
+        InternalCore.println("The average value of all grades is: " + meanGrade);
         double failedGrade = failedGrade(numElectiveGrade);
-        System.out.println("The number of failed grades is: " + failedGrade);
+        InternalCore.println("The number of failed grades are: " + failedGrade);
     }
 
     // This method gets regStudents as input and returns its minimum value
-    public static double minGrade(double[] numElectiveGrade){
+    private double minGrade(double[] numElectiveGrade){
         double minGrade = numElectiveGrade[0];
         for (int i = 0; i < numElectiveGrade.length; i++) {
             if (numElectiveGrade[i] < minGrade) {
@@ -120,7 +156,7 @@ public class Lecturer extends User {
     }
 
     // This method gets regStudents as input and returns its maximum value
-    public static double maxGrade(double[] numElectiveGrade){
+    private double maxGrade(double[] numElectiveGrade){
         double maxGrade = numElectiveGrade[0];
         for (int i = 0; i < numElectiveGrade.length; i++) {
             if (numElectiveGrade[i] > maxGrade) {
@@ -131,7 +167,7 @@ public class Lecturer extends User {
     }
 
     // This method gets regStudents as input and returns its average
-    public static double meanGrade(double[] numElectiveGrade){
+    private double meanGrade(double[] numElectiveGrade){
         double sumGrade = 0;
         for (int i = 0; i < numElectiveGrade.length; i++) {
             sumGrade += numElectiveGrade[i];
@@ -140,7 +176,7 @@ public class Lecturer extends User {
     }
 
     // This method gets regStudents as input and returns the number of failed grades
-    public static double failedGrade(double[] numElectiveGrade){
+    private double failedGrade(double[] numElectiveGrade){
         double failedGrade = 0;
         for (int i = 0; i < numElectiveGrade.length; i++) {
             if(numElectiveGrade[i] < 5.5) {

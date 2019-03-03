@@ -15,6 +15,8 @@ public class Admin extends User {
 
 
     public boolean addElective(String courseCode) {
+        if (this.getUserType() != UserType.ADMIN) return false;
+
         Scanner inpScanner = new Scanner(System.in);
 
         InternalCore.printTitle("Adding an Elective", '*');
