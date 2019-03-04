@@ -284,6 +284,25 @@ public class Session {
     // Method to find an elective
     private static void findElective() {
     }
+
+    private void editAUser() {
+        String uname = InternalCore.getUserInput(String.class,
+                "Enter a username: ");
+        InternalCore.println("What usertype is " + uname + ":\n" +
+                "(1) Lecturer\n" +
+                "(2) Student");
+        Integer utype = InternalCore.getUserInput(Integer.class,
+                "Please enter your choice (1 or 2):");
+        if (utype == null) {
+            InternalCore.println("You entered an invalid Username.");
+            return;
+        }
+        if (utype == 1) {
+            sessionAdmin.editUser(uname, UserType.LECTURER);
+        } if (utype == 2) {
+            sessionAdmin.editUser(uname, UserType.STUDENT);
+        }
+    }
     //endregion
 
     //region Lecturer Actions

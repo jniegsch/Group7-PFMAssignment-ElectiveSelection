@@ -99,4 +99,22 @@ public class Admin extends User {
         InternalCore.println(InternalCore.consoleLine('*'));
         return false;
     }
+
+    //region User Management
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public boolean editUser(String uname, UserType ut) {
+
+        if (ut.equals(UserType.LECTURER)) {
+            Lecturer tempLecturer = new Lecturer(new User(uname, UserType.LECTURER, this));
+            tempLecturer.editLecturer(uname);
+        } if (ut.equals(UserType.STUDENT)) {
+            Student tempStudent = new Student(new User(uname, UserType.STUDENT, this));
+            tempStudent.editStudent(uname);
+        } else {
+            InternalCore.println("You entered an invalid number.");
+        }
+
+        return true;
+    }
+    //endregion
 }

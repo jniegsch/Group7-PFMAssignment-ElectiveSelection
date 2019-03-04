@@ -239,21 +239,13 @@ public class User {
         String minit = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
         InternalCore.print("What is your date of birth (please enter in the format yyyy-MM-dd: ");
         String dobStr = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
-        Date dob = null;
-        try {
-            dob = new SimpleDateFormat("yyyy-MM-dd").parse(dobStr);
-        } catch (ParseException pe) {
-            InternalCore.printError("User",
-                    "createNewUser",
-                    "ParseException",
-                    "Could not parse the passed date (" + dobStr +")");
-        }
+
         User newUser = new User();
         newUser.firstName = fname;
         newUser.lastname = lname;
         newUser.middleInitial = minit;
         newUser.username = uname;
-        newUser.dateOfBirth = dob;
+        newUser.dateOfBirth = parseDOB(dobStr);
         newUser.type = utype;
         if (saveNewUser(pword, newUser) == null) {
             InternalCore.printError("User",
@@ -298,19 +290,19 @@ public class User {
     /**
      * Methods to check if user is of valid Admin type
      */
-    public isValidAdmin() { return (this.type == UserType.ADMIN); }
+    public boolean isValidAdmin() { return (this.type == UserType.ADMIN); }
     /**
      * Methods to check if user is of valid Student type
      */
-    public isValidStudent() { return (this.type == UserType.STUDENT); }
+    public boolean isValidStudent() { return (this.type == UserType.STUDENT); }
     /**
      * Methods to check if user is of valid Lecturer type
      */
-    public isValidLecturer() { return (this.type == UserType.LECTURER); }
+    public boolean isValidLecturer() { return (this.type == UserType.LECTURER); }
     /**
      * Methods to check if user is of valid User type
      */
-    public isValidUser() { return !(this.type == UserType.DEFAULT); }
+    public boolean isValidUser() { return !(this.type == UserType.DEFAULT); }
     /**
      * A loaded memory copy of the authentication DB
      */
@@ -326,6 +318,56 @@ public class User {
      * Represents if the authentication file has been loaded into memory and is accessible
      */
     private boolean hasOpenUP = false;
+    //endregion
+
+    //region User Instance Editing
+    public boolean editUserFName() {
+        String newFirstName = InternalCore.getUserInput(String.class, "What is the new first name of this user?");
+        if (newFirstName == null) return false;
+        this.firstName = newFirstName;
+        return true;
+    }
+
+    public boolean editUserLName() {
+        String newLastName = InternalCore.getUserInput(String.class, "What is the new Last name of this user?");
+        if (newLastName == null) return false;
+        this.lastname = newLastName;
+        return true;
+    }
+
+    public boolean editUserMiddleInitial() {
+        String newMiddleInitial = InternalCore.getUserInput(String.class, "What is the new middle Initial of this user's name?");
+        if (newMiddleInitial == null) return false;
+        this.middleInitial = newMiddleInitial;
+        return true;
+    }
+
+    public boolean editUsername() {
+        String newUsername = InternalCore.getUserInput(String.class, "What is the new username of this user?");
+        if (newUsername == null) return false;
+        this.username = newUsername;
+        return true;
+    }
+
+    public boolean editDateofBirth() {
+        InternalCore.print("What is the new date of birth (please enter in the format yyyy-MM-dd: ");
+        String newDate = InternalCore.getUserInput(String.class, "What is the new date of birth (please enter int he format yyyy-MM-dd: ");
+        this.dateOfBirth = parseDOB(newDate);
+
+        return true;
+    }
+
+    private Date parseDOB(String date) {
+        try {
+            return new SimpleDateFormat("yyyy-MM-dd").parse(date);
+        } catch (ParseException pe) {
+            InternalCore.printError("User",
+                    "createNewUser",
+                    "ParseException",
+                    "Could not parse the passed date (" + date +")");
+            return null;
+        }
+    }
     //endregion
 
     //region Public Session Management
@@ -700,8 +742,15 @@ public class User {
                 (them.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(them.dateOfBirth) : ""
         };
         them.userId = InternalCore.addEntryToInfoFile(type, userInfo);
+        if (them.userId == -1) {
+            InternalCore.printIssue("Could not create user", "The new user could not be saved");
+            return null;
+        }
         String[] auth = {hashUsername(them.username), hashPassword(pword), them.type.toString()};
-        InternalCore.addEntryToInfoFile(SEObjectType.USER_AUTH, auth);
+        if (-1 == InternalCore.addEntryToInfoFile(SEObjectType.USER_AUTH, auth)) {
+            InternalCore.printIssue("Could not create user", "The new user credentials could not be saved");
+            return null;
+        }
         return them;
     }
 
@@ -773,8 +822,8 @@ public class User {
     public static boolean validPassword(char[] pword) {
         if (pword.length < pwordMinLength) return false;
         if (pword.length > pwordMaxLength) return false;
-        if (!containsAtLeast(regexNumCount, pwordMinNumCount, pword.toString())) return false;
-        if (!containsAtLeast(regexCapital, pwordMinCapitalCount, pword.toString())) return false;
+        if (!containsAtLeast(regexNumCount, pwordMinNumCount, String.copyValueOf(pword))) return false;
+        if (!containsAtLeast(regexCapital, pwordMinCapitalCount, String.copyValueOf(pword))) return false;
         return true;
     }
 
@@ -862,7 +911,7 @@ public class User {
      * Creates a new root user
      * @return {@code bool} indicating if the creation was a success
      */
-    private static User createRootAdmin() {
+    private static void createRootAdmin() {
         User root = new User();
         root.firstName = "Progamming";
         root.lastname = "Managers";
@@ -881,7 +930,6 @@ public class User {
                     "Saving the new account failed. Something seems to be seriously wrong. Exiting...");
             System.exit(InternalCore.USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE);
         }
-        return root;
     }
     //endregion
 }
