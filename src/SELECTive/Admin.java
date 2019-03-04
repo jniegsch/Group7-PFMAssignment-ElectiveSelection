@@ -2,6 +2,7 @@ package SELECTive;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Scanner;
 
@@ -22,13 +23,15 @@ public class Admin extends User {
         InternalCore.printTitle("Adding an Elective", '*');
 
         // There are 6 properties to set for an elective
-        String electiveCourseCode = courseCode, electiveName = "", electiveProgramName = "";
+        String electiveCourseCode = courseCode, electiveName = "";
         int electiveECTS = 0;
-        String[] electiveKeywords;
-        LectureTime[] electiveTimes;
+        String[] electiveKeywords = null;
+        MasterProgram electiveProgramName = null;
+        LectureBlock block = null;
+        LectureTime[] electiveTimes = null;
 
         int prop = (courseCode == null)? 0 : 1;
-        for (; prop < 6; prop++) {
+        for (; prop < 7; prop++) {
             boolean successfulSet = false;
             switch (prop) {
                 case 0:
@@ -46,9 +49,17 @@ public class Admin extends User {
                     }
                     break;
                 case 2:
-                    InternalCore.print("> Elective program name: ");
-                    if (inpScanner.hasNextLine()) {
-                        electiveProgramName = inpScanner.nextLine();
+                    InternalCore.println("> To which program does this elective belong?");
+                    int optCount = 1;
+                    for (MasterProgram p : MasterProgram.values()) {
+                        if (p == MasterProgram.INVLD) continue;
+                        InternalCore.print(" (" + optCount + ") " + p.toString() + " ");
+                        optCount++;
+                    }
+                    InternalCore.println(" ");
+                    Integer selection = InternalCore.getUserInput(Integer.class, "The program: ");
+                    if (selection != null) {
+                        electiveProgramName = MasterProgram.values()[selection.intValue() - 1];
                         successfulSet = true;
                     }
                     break;
@@ -60,44 +71,79 @@ public class Admin extends User {
                     }
                     break;
                 case 4:
-                    InternalCore.println("> Elective Keywords (separate each keyword using a ';'): ");
-                    if (inpScanner.hasNextLine()) {
-                        String in = inpScanner.nextLine();
-                        electiveKeywords = in.split(";");
+                    String keys = InternalCore.getUserInput(String.class, "> Elective Keywords (separate each keyword using a ';'): ");
+                    if (keys != null) {
+                        electiveKeywords = keys.split(";");
                         // loop through and strip starting or ending whitespace
                         for (int i = 0 ; i < electiveKeywords.length; i++) {
-                            char[] temp = electiveKeywords[i].toCharArray();
-                            if (temp[0] == ' ') electiveKeywords[i] = electiveKeywords[i].substring(1);
-                            if (temp[electiveKeywords[i].length() - 1] == ' ') electiveKeywords[i] = electiveKeywords[i].substring(0, electiveKeywords[i].length() - 2);
+                            electiveKeywords[i] = stripWhitespace(electiveKeywords[i]);
                         }
                         successfulSet = true;
                     }
                     break;
                 case 5:
-                    InternalCore.println("" +
+                    InternalCore.println("Which block is this elective taught?");
+                    InternalCore.println("(1) Block 1");
+                    InternalCore.println("(2) Block 2");
+                    InternalCore.println("(3) Block 3");
+                    String newBlock = InternalCore.getUserInput(String.class, "Your selection (1, 2, or 3):");
+                    if (newBlock != null) {
+                        block = new LectureBlock(Long.parseLong(newBlock) - 1);
+                        successfulSet = true;
+                    }
+                    break;
+                case 6:
+                    String times = InternalCore.getUserInput(String.class, "" +
                             "> Lesson days and times (separate the list with ';' using the format <week-day code> @ <hh:mm>): \n" +
                             "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
-                    if (inpScanner.hasNextLine()) {
-                        String in = inpScanner.nextLine().replaceAll(" ", ""); // remove all whitespaces
-                        String[] dateTimes = in.split(";");
+                    if (times != null) {
+                        String[] dateTimes = times.split(";");
                         electiveTimes = new LectureTime[dateTimes.length];
                         for (int i = 0 ; i < dateTimes.length; i++) {
                             String[] tmp = dateTimes[i].split("@");
-                            electiveTimes[i] = new LectureTime(tmp[1], Integer.parseInt(tmp[0]));
+                            electiveTimes[i] = new LectureTime(stripWhitespace(tmp[1]),
+                                    Integer.parseInt(stripWhitespace(tmp[0])) - 1);
                         }
                         successfulSet = true;
                     }
+                    break;
             }
 
             if (!successfulSet) prop--;
         }
         InternalCore.println("\nCreating elective...");
 
-        // TODO: create new elective instance using passed values
+        Elective newElective = new Elective(
+                -1,
+                courseCode,
+                electiveName,
+                electiveECTS,
+                electiveProgramName,
+                electiveKeywords,
+                electiveTimes,
+                block
+        );
+        newElective.saveElective(this, true);
 
         InternalCore.println("Elective successfully created!");
         InternalCore.println(InternalCore.consoleLine('*'));
         return false;
+    }
+
+    private String stripWhitespace(String str) {
+        char[] s = str.toCharArray();
+        int b = 0, e = 0;
+        for (int i = 0; i < s.length; i++) {
+            if (s[i] == ' ') continue;
+            b = i;
+            break;
+        }
+        for (int i = s.length - 1; i >= 0; i--) {
+            if (s[i] == ' ') continue;
+            e = i + 1;
+            break;
+        }
+        return String.copyValueOf(Arrays.copyOfRange(s, b, e));
     }
 
     //region User Management

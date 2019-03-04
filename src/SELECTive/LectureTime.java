@@ -21,7 +21,7 @@ public class LectureTime {
 
     //region Constructor
     public LectureTime(String timeString, int day) {
-        this.weekDay = dayFromInt(day);
+        this.weekDay = Day.values()[day];
         this.time = LocalTime.parse(timeString);
     }
 
@@ -61,29 +61,6 @@ public class LectureTime {
         StringBuilder objectRepresentation = new StringBuilder();
         objectRepresentation.append(weekDay.toString()).append("@").append(time.toString());
         return objectRepresentation.toString();
-    }
-    //endregion
-
-    //region Converter
-    private Day dayFromInt(int x) {
-        switch (x) {
-            case 0:
-                return Day.MONDAY;
-            case 1:
-                return Day.TUESDAY;
-            case 2:
-                return Day.WEDNESDAY;
-            case 3:
-                return Day.THURSDAY;
-            case 4:
-                return Day.FRIDAY;
-            case 5:
-                return Day.SATURDAY;
-            case 6:
-                return Day.SUNDAY;
-            default:
-                return Day.MONDAY;
-        }
     }
     //endregion
 }

@@ -98,10 +98,11 @@ public class Session {
                     " 1) Reset/Change password\n" +
                     " 2) Create a new user\n" +
                     " 3) View users\n" +
+                    " 4) Edit user\n" +
                     "- - - Elective Management:\n" +
-                    " 4) Add an elective\n" +
-                    " 5) View elective statistics\n" +
-                    " 6) Find an elective\n" +
+                    " 5) Add an elective\n" +
+                    " 6) View elective statistics\n" +
+                    " 7) Find an elective\n" +
                     "- - - \n" +
                     " 0) Logout\n");
             Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (1, 2, ..., or 6):");
@@ -126,12 +127,15 @@ public class Session {
                     viewUsers();
                     break;
                 case 4:
-                    addElective();
+                    editAUser();
                     break;
                 case 5:
-                    viewElectiveStats();
+                    addElective();
                     break;
                 case 6:
+                    viewElectiveStats();
+                    break;
+                case 7:
                     findElective();
                     break;
             }
@@ -325,7 +329,9 @@ public class Session {
                 }
             }
         }
-        ((Lecturer) sessionUser).viewStatsForElective(electives);
+
+        if (sessionLecturer != null) sessionLecturer.viewStatsForElective(electives);
+        if (sessionAdmin != null) return;
     }
 
     // Method to find an elective
@@ -339,7 +345,7 @@ public class Session {
 
     }
 
-    private void editAUser() {
+    private static void editAUser() {
         String uname = InternalCore.getUserInput(String.class,
                 "Enter a username: ");
         InternalCore.println("What usertype is " + uname + ":\n" +

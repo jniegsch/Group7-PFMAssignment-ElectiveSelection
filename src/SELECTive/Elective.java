@@ -1,5 +1,6 @@
 package SELECTive;
 
+import java.util.Arrays;
 import java.util.Scanner;
 
 enum MasterProgram {
@@ -162,6 +163,31 @@ public class Elective {
     }
     //endregion
 
+    public boolean saveElective(Admin who, boolean newElective) {
+        if (who.getUserType() != UserType.ADMIN) {
+            InternalCore.printIssue("Insufficient access rights", "");
+            return false;
+        }
+        String[] info = {
+                Long.toString(this.electiveId),
+                this.courseCode,
+                this.electiveName,
+                Integer.toString(this.ects),
+                this.program.toString(),
+                keywordString(),
+                LectureTime.generateLectureTimeArrayStringRepresentation(this.classTimes),
+                this.block.toString()
+        };
+
+        if (newElective) {
+            this.electiveId = InternalCore.addEntryToInfoFile(SEObjectType.ELECTIVE, Arrays.copyOfRange(info, 1, info.length));
+            if (this.electiveId != -1) return true;
+            return false;
+        } else {
+            return InternalCore.updateInfoFile(SEObjectType.ELECTIVE, Long.toString(this.electiveId), info);
+        }
+    }
+
     // This method allows the user to edit the elective
     public static boolean editElective(Admin who) {
         // Check access rights
@@ -249,18 +275,7 @@ public class Elective {
                 break;
         }
 
-        String[] info = {
-                Long.toString(this.electiveId),
-                this.courseCode,
-                this.electiveName,
-                Integer.toString(this.ects),
-                this.program.toString(),
-                keywordString(),
-                LectureTime.generateLectureTimeArrayStringRepresentation(this.classTimes),
-                this.block.toString()
-        };
-
-        return InternalCore.updateInfoFile(SEObjectType.ELECTIVE, Long.toString(this.electiveId), info);
+        return saveElective(who, false);
     }
 
     // The file elective is structured this way:
