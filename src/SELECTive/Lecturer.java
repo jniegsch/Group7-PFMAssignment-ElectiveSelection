@@ -25,9 +25,8 @@ public class Lecturer extends User {
                     "(1) First name \n" +
                     "(2) Last name \n" +
                     "(3) Middle Initial name\n" +
-                    "(4) Username \n" +
-                    "(5) Date of Birth \n" +
-                    "(6) Title");
+                    "(4) Date of Birth \n" +
+                    "(5) Title");
 
             InternalCore.println(InternalCore.consoleLine('-'));
             Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, 3, 4, 5 or 6): ");
@@ -44,12 +43,9 @@ public class Lecturer extends User {
                     editUserMiddleInitial();
                     break;
                 case 4:
-                    editUsername();
-                    break;
-                case 5:
                     editDateofBirth();
                     break;
-                case 6:
+                case 5:
                     editTitle();
                     break;
             }

@@ -25,7 +25,6 @@ public class Student extends User {
                     "(1) First name \n" +
                     "(2) Last name \n" +
                     "(3) Middle Initial name\n" +
-                    "(4) Username\n" +
                     "(5) Date of Birth");
 
             InternalCore.println(InternalCore.consoleLine('-'));
@@ -43,9 +42,6 @@ public class Student extends User {
                     editUserMiddleInitial();
                     break;
                 case 4:
-                    editUsername();
-                    break;
-                case 5:
                     editDateofBirth();
                     break;
             }

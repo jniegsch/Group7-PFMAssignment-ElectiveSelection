@@ -342,13 +342,6 @@ public class User {
         return true;
     }
 
-    public boolean editUsername() {
-        String newUsername = InternalCore.getUserInput(String.class, "What is the new username of this user?");
-        if (newUsername == null) return false;
-        this.username = newUsername;
-        return true;
-    }
-
     public boolean editDateofBirth() {
         InternalCore.print("What is the new date of birth (please enter in the format yyyy-MM-dd: ");
         String newDate = InternalCore.getUserInput(String.class, "What is the new date of birth (please enter int he format yyyy-MM-dd: ");
