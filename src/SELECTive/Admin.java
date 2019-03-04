@@ -106,14 +106,20 @@ public class Admin extends User {
 
         if (ut.equals(UserType.LECTURER)) {
             Lecturer tempLecturer = new Lecturer(new User(uname, UserType.LECTURER, this));
-            tempLecturer.editLecturer(uname);
+            if (!tempLecturer.editLecturer(uname)) {
+                InternalCore.printIssue("Could not edit the lecturer", "");
+                return false;
+            }
         } if (ut.equals(UserType.STUDENT)) {
             Student tempStudent = new Student(new User(uname, UserType.STUDENT, this));
-            tempStudent.editStudent(uname);
+            if (!tempStudent.editStudent(uname)) {
+                InternalCore.printIssue("Could not edit the student", "");
+                return false;
+            }
         } else {
             InternalCore.println("You entered an invalid number.");
+            return false;
         }
-
         return true;
     }
     //endregion

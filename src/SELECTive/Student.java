@@ -17,6 +17,7 @@ public class Student extends User {
     public boolean editStudent (String uname) {
         if (!userExists((uname))) {
             InternalCore.println("This username does not exist. Please try again or first create this user.");
+            return false;
         } else {
 
             InternalCore.println("" +
@@ -58,19 +59,33 @@ public class Student extends User {
 
     //region Enrollment
     public void viewEnrolledElectives() {
-        InternalCore.println("You are enrolled in the following elective(s):");
-
         String[] ids = {Long.toString(this.getUserId())};
         String[][] enrolledElectives = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, ids);
         if (enrolledElectives != null) {
-            //TODO: print them out
+            if (!enrolledElectives[0][1].equals(""))
+                InternalCore.println("In block 3 you are enrolled in the following elective: " + enrolledElectives[0][1]);
+            if (!enrolledElectives[0][3].equals(""))
+                InternalCore.println("In block 4 you are enrolled in the following elective: " + enrolledElectives[0][3]);
+            if (!enrolledElectives[0][5].equals(""))
+                InternalCore.println("In block 5 you are enrolled in the following elective: " + enrolledElectives[0][5]);
         } else {
-            //TODO: looks like the student has no electives yet
+            InternalCore.println("You are not yet enrolled in any elective");
         }
     }
 
     public void viewElectiveProgress(String courseCode) {
-        //TODO
+        String[] ids = {Long.toString(this.getUserId())};
+        String[][] enrolledElectives = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, ids);
+        if (enrolledElectives != null) {
+            String userChoice = InternalCore.getUserInput(String.class, "For which elective do you wish to you view your progress?");
+
+            for (int i = 1; i < enrolledElectives.length; i += 2) {
+                if (enrolledElectives[0][i].equals(userChoice))
+                    InternalCore.println("Your progress for " + userChoice + "is: " + enrolledElectives[0][i + 1]);
+            }
+        } else {
+            InternalCore.println("You are not yet enrolled in any elective");
+        }
     }
     //endregion
 
