@@ -172,6 +172,8 @@ public class User {
      *                               the user the type is set to DEFAULT - denoting failure
      */
     public User(User copy, UserType target) {
+        // if non match type; keep default user
+        if (copy.type != target) return;
         this.userId = copy.userId;
         this.firstName = copy.firstName;
         this.lastname = copy.lastname;
@@ -179,7 +181,6 @@ public class User {
         this.username = copy.username;
         this.dateOfBirth = copy.dateOfBirth;
         this.type = copy.type;
-        if (copy.type != target) this.type = UserType.DEFAULT;
     }
 
     /**
@@ -294,14 +295,21 @@ public class User {
      */
     private boolean loggedIn = false;
     /**
-     * A constant representing an invalid session id. All invalid session should be set to this!
+     * Methods to check if user is of valid Admin type
      */
-    private String sessionId = invalidID;
+    public isValidAdmin() { return (this.type == UserType.ADMIN); }
     /**
-     * The date representing after which a session is invalid and no further actions should be taken using the "loggedin"
-     * credentials. As a defualt it takes the current date.
+     * Methods to check if user is of valid Student type
      */
-    private Date sessionExpiration = new Date();
+    public isValidStudent() { return (this.type == UserType.STUDENT); }
+    /**
+     * Methods to check if user is of valid Lecturer type
+     */
+    public isValidLecturer() { return (this.type == UserType.LECTURER); }
+    /**
+     * Methods to check if user is of valid User type
+     */
+    public isValidUser() { return !(this.type == UserType.DEFAULT); }
     /**
      * A loaded memory copy of the authentication DB
      */
