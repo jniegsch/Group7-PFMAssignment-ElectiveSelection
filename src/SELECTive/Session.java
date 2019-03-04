@@ -254,17 +254,23 @@ public class Session {
         User[] lectureUsers = User.getUsers(userIDs, UserType.LECTURER);
 
         // print the users
-        InternalCore.println("> Admins: ");
-        for (User au : adminUsers) {
-            InternalCore.println(au.toString());
+        if (adminUsers != null) {
+            InternalCore.println("> Admins: ");
+            for (User au : adminUsers) {
+                InternalCore.println(au.toString());
+            }
         }
-        InternalCore.println("> Students: ");
-        for (User su : studentUsers) {
-            InternalCore.println(su.toString());
+        if (studentUsers != null) {
+            InternalCore.println("> Students: ");
+            for (User su : studentUsers) {
+                InternalCore.println(su.toString());
+            }
         }
-        InternalCore.println("> Lecturers: ");
-        for (User lu : lectureUsers) {
-            InternalCore.println(lu.toString());
+        if (lectureUsers != null) {
+            InternalCore.println("> Lecturers: ");
+            for (User lu : lectureUsers) {
+                InternalCore.println(lu.toString());
+            }
         }
     }
 
