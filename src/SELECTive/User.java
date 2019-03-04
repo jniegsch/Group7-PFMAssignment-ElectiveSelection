@@ -592,6 +592,10 @@ public class User {
         String[][] userInfo = getUserInfo(typeOfUser, ids);
         User[] users = new User[userInfo.length];
         for (int i = 0; i < users.length; i++) {
+            if (userInfo[i].length < 6) {
+                InternalCore.printIssue("No valid user found", "");
+                continue;
+            }
             User n = new User(
                     (userInfo[i][0] != null)? userInfo[i][0] : "",
                     (userInfo[i][1] != null)? userInfo[i][1] : "",
