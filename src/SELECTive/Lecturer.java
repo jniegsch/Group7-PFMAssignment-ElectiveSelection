@@ -53,13 +53,13 @@ public class Lecturer extends User {
     }
 
     // This method prints out a list of registered students for a particular elective
-    public void showStudents(String courseCode, LectureBlock block){
+    public void showStudents(String courseCode){
         InternalCore.println("The file contains the following registered students: ");
 
         String[][] electiveStudent = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, null);
         StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < electiveStudent.length; i++) {
-            if (!electiveStudent[i][1].equals(courseCode)) continue;
+            if (!electiveStudent[i][1].equals(courseCode) && !electiveStudent[i][3].equals(courseCode) && !electiveStudent[i][5].equals(courseCode)) continue;
             buffer.append(electiveStudent[i][0]).append(" ");
         }
 
@@ -67,18 +67,28 @@ public class Lecturer extends User {
     }
 
     // This method prints out a list of student grades for a particular elective
-    public void showStudentGrades(String courseCode, LectureBlock block){
+    public void showStudentGrades(String courseCode){
         InternalCore.println("The file contains the following grades : ");
 
-        double[] grades = getGradesForElective(courseCode, block);
+        double[] grades = getGradesForElective(courseCode);
     }
 
-    private double[] getGradesForElective(String courseCode, LectureBlock block) {
+    private double[] getGradesForElective(String courseCode) {
         String[][] electiveGrade = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, null);
         StringBuilder buffer = new StringBuilder();
         for (int i = 0; i < electiveGrade.length; i++) {
-            if (!electiveGrade[i][block.getBlockNumber() * 2].equals(courseCode)) continue;
-            buffer.append(electiveGrade[i][block.getBlockNumber() * 2 + 1]).append(" ");
+            if (electiveGrade[i][1].equals(courseCode)) {
+                buffer.append(electiveGrade[i][2]).append(" ");
+                continue;
+            }
+            if (electiveGrade[i][3].equals(courseCode)) {
+                buffer.append(electiveGrade[i][4]).append(" ");
+                continue;
+            }
+            if (electiveGrade[i][5].equals(courseCode)) {
+                buffer.append(electiveGrade[i][6]).append(" ");
+                continue;
+            }
         }
         String[] gradeDump = buffer.toString().split(" ");
 
@@ -112,7 +122,7 @@ public class Lecturer extends User {
             }
         }
 
-        double[] grades = getGradesForElective(elective.getCourseCode(), elective.getElectiveBlock());
+        double[] grades = getGradesForElective(elective.getCourseCode());
         InternalCore.println("The grade statistics for " + elective.getElectiveName() + " are:");
         dataStats(grades);
         return true;

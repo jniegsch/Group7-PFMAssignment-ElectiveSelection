@@ -12,6 +12,9 @@ public class Session {
     //region Private Session Properties
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static User sessionUser = null;
+    private static Admin sessionAdmin = null;
+    private static Lecturer sessionLecturer = null;
+    private static Student sessionStudent = null;
     //endregion
 
     //region _MAIN
@@ -36,15 +39,19 @@ public class Session {
 
         switch (sessionUser.getUserType()) {
             case ADMIN:
+                sessionAdmin = new Admin(sessionUser);
                 adminDashboard();
                 break;
             case STUDENT:
+                sessionStudent = new Student(sessionUser);
                 studentDashboard();
                 break;
             case LECTURER:
+                sessionLecturer = new Lecturer(sessionUser);
                 lecturerDashboard();
                 break;
             case DEFAULT:
+                sessionUser = null;
                 break;
         }
 
@@ -116,7 +123,54 @@ public class Session {
     }
 
     private static void lecturerDashboard() {
-        //TODO:
+        boolean running = true;
+        while (running) {
+            InternalCore.println(InternalCore.consoleLine('*'));
+            InternalCore.printTitle("Lecturer Dashboard", '*');
+            InternalCore.println(InternalCore.consoleLine('*'));
+            InternalCore.println("What would you like to do?");
+            InternalCore.println(""
+                    + "- - - Student Management:\n"
+                    + " 1) Add/change student grades\n"
+                    + " 2) View list of registered students per elective\n"
+                    + " 3) View list of student grades per elective\n"
+                    + " 4) View grade statistics per elective\n"
+                    + "- - - Account Management:\n"
+                    + " 5) Reset/Change password\\n"
+                    + "- - - \n"
+                    + " 0) Logout\n");
+
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (1, 2, ..., or 5):");
+            if (userChoice == null)
+                break;
+            int choice = userChoice.intValue();
+            if (choice < 0 || choice > 5) {
+                InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
+                continue;
+            }
+
+            switch (choice) {
+                case 0:
+                    running = false;
+                    break;
+                case 1:
+                    addOrChangeStudentGrade();
+                    break;
+                case 2:
+                    viewRegisteredStudentsPerElective();
+                    break;
+                case 3:
+                    viewStudentGradesPerElectice();
+                    break;
+                case 4:
+                    viewGradeStatsPerElective();
+                    break;
+                case 5:
+                    changeLecturerPassword();
+                    break;
+
+            }
+        }
     }
 
     private static void studentDashboard() {
@@ -138,7 +192,7 @@ public class Session {
         User.showPasswordRules();
         String newPassword = InternalCore.getUserInput(String.class,
                 "Please enter the new password: ");
-        if (sessionUser.changePassword(username, null, newPassword.toCharArray())) {
+        if (sessionAdmin.changePassword(username, null, newPassword.toCharArray())) {
             InternalCore.println("> Password successfully changed.\n \n ");
         } else {
             InternalCore.println("> Password NOT successfully changed.\n \n ");
@@ -162,8 +216,8 @@ public class Session {
                 "Enter a username: ");
         String pword = InternalCore.getUserInput(String.class,
                 "Enter a password: ");
-        if (sessionUser.createNewUser(uname, pword.toCharArray(), UserType.values()[typeSelect]) == null) {
-            InternalCore.printIssue("Coulnd't create the user", "For some reason the user could not be created, please try again.");
+        if (sessionAdmin.createNewUser(uname, pword.toCharArray(), UserType.values()[typeSelect]) == null) {
+            InternalCore.printIssue("Couldn't create the user", "For some reason the user could not be created, please try again.");
         }
     }
 
@@ -234,7 +288,43 @@ public class Session {
 
     //region Lecturer Actions
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Method to add or change a student grade
+    private static void addOrChangeStudentGrade() {
+        sessionLecturer.newGradeEntry();
+    }
 
+    // Method to view registered students for an elective
+    private static void viewRegisteredStudentsPerElective() {
+        String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the registered students: ");
+        sessionLecturer.showStudents(courseCode); // REMOVE ", LectureBlock block" as input for the showStudents method from line 56 in class Lecturer since it is not used there
+    }
+
+    // Method to view student grades for an elective
+    private static void viewStudentGradesPerElectice() {
+        String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the registered students: ");
+        sessionLecturer.showStudentGrades(courseCode);
+    }
+
+    // Method to print grade statistics for an elective AND number of students that failed the elective
+    private static void viewGradeStatsPerElective() {
+        String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the grade statistics: ");
+        sessionLecturer.viewStatsForElective(new Elective(courseCode));
+    }
+
+
+    // Method to change sessionUser password
+    private static void changeLecturerPassword() {
+        User.showPasswordRules();
+        String username = sessionLecturer.getUsername();
+        String oldPassword = InternalCore.getUserInput(String.class, "Please enter the old password: ");
+        String newPassword = InternalCore.getUserInput(String.class, "Please enter the new password: ");
+        if (sessionUser.changePassword(username, oldPassword.toCharArray(), newPassword.toCharArray())) {
+            InternalCore.println("> Password successfully changed.\n \n ");
+        } else {
+            InternalCore.println("> Password NOT successfully changed.\n \n ");
+        }
+
+    }
     //endregion
 
     //region Student Actions
@@ -264,25 +354,31 @@ public class Session {
             InternalCore.println("Account creation failed. The user already exists. Please create a new one.");
             return null;
         }
-        InternalCore.print("Password: ");
-        char[] pword;
-        if (adminCreationScanner.hasNextLine()) {
-            pword = adminCreationScanner.nextLine().toCharArray();
-            InternalCore.print("Repeat password: ");
-            if (adminCreationScanner.hasNextLine()) {
-                if (!Arrays.equals(pword, adminCreationScanner.nextLine().toCharArray())) {
-                    InternalCore.println("Account creation failed.");
-                    return null;
-                }
-            } else {
-                InternalCore.println("Account creation failed.");
-                return null;
+
+        int numTries = 0;
+        while(numTries < User.MAX_LOGIN_ATTEMPTS) {
+            User.showPasswordRules();
+            String pass = InternalCore.getUserInput(String.class, "Password: ");
+            if (pass == null) return null;
+            char[] pword = pass.toCharArray();
+            pass = null; // try and get pass GCed
+
+            if (!User.validPassword(pword)) {
+                InternalCore.println("Invalid password!");
+                numTries++;
+                continue;
             }
-        } else {
-            InternalCore.println("Account creation failed.");
-            return null;
+
+            String pass2 = InternalCore.getUserInput(String.class, "Repeat Password: ");
+            if (!Arrays.equals(pword, pass2.toCharArray())) {
+                InternalCore.println("Account creation failed.");
+                numTries++;
+                continue;
+            }
+            return new Admin(rootUser.createNewUser(uname, pword, UserType.ADMIN));
         }
-        return new Admin(rootUser.createNewUser(uname, pword, UserType.ADMIN));
+        InternalCore.println("Account creation failed.");
+        return null;
     }
     //endregion
 

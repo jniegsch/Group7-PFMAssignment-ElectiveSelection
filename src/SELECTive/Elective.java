@@ -68,6 +68,9 @@ public class Elective {
     }
 
     //TODO: write constructor to just take course code
+    public Elective(String courseCode) {
+
+    }
     //endregion
 
     //region Getters

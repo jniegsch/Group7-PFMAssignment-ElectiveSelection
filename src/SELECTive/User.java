@@ -71,6 +71,7 @@ public class User {
         return this.type;
     }
     public long getUserId() { return this.userId; }
+    public String getUsername() { return  this.username; }
     //endregion
 
     //region Constructors
@@ -312,7 +313,7 @@ public class User {
     /**
      * Defines the amount of times a user can attempt a login, until precautionary measures should be taken
      */
-    private final static int MAX_LOGIN_ATTEMPTS = 3;
+    public final static int MAX_LOGIN_ATTEMPTS = 3;
     /**
      * Represents if the authentication file has been loaded into memory and is accessible
      */
@@ -416,6 +417,7 @@ public class User {
             uPs = readDictFromAuthFile();
         }
         for (int i = 0; i < uPs.length; i++) {
+
             if (uhash.equals(uPs[i][0])) {
                 if (phash.equals(uPs[i][1])) {
                     username = uname;
@@ -590,7 +592,7 @@ public class User {
         String [] dictPairs = dump.split(" \n");
         String [][] dictToReturn = new String[dictPairs.length][3];
         for (int i = 0; i < dictPairs.length; i++) {
-            String[] sp = dictPairs[i].split(" ; ");
+            String[] sp = dictPairs[i].split(" : ");
             if (sp.length != 3) InternalCore.printError("User",
                     "readDictFromFile",
                     "BadDict",
