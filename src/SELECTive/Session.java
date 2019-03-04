@@ -230,7 +230,7 @@ public class Session {
         }
         Integer utypeSelection = InternalCore.getUserInput(Integer.class,
                 "Specify the user type (1, 2, etc.): ");
-        int typeSelect = (utypeSelection != null)? utypeSelection.intValue() : UserType.values().length - 1; // Last UserType is default
+        int typeSelect = (utypeSelection != null)? utypeSelection.intValue() - 1 : UserType.values().length - 1; // Last UserType is default
 
         // Get user input
         String uname = InternalCore.getUserInput(String.class,
