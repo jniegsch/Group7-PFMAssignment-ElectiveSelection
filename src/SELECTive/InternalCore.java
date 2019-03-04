@@ -166,7 +166,7 @@ public final class InternalCore {
             while((currentLine = reader.readLine()) != null) {
                 String[] userInfo  = currentLine.split(infoSeparator);
                 if (ids != null)
-                    if (!Stream.of(ids).anyMatch(x -> x.equals(userInfo[0]))) continue; // using stream for speed and simplicity
+                    for (int i = 0; i < ids.length; i++) if (!ids[i].equals(userInfo[0])) continue;
 
                 userDump.append(currentLine + "\n");
             }
@@ -429,6 +429,7 @@ public final class InternalCore {
 
     //region Getting User Input
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // TODO: DOCS!!!
     public static <T extends java.lang.Object> T getUserInput(Class<T> type, String prompt) {
         final int maxTries = 5;
 
