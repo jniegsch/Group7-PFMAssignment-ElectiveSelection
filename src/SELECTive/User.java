@@ -591,11 +591,9 @@ public class User {
 
         String[][] userInfo = getUserInfo(typeOfUser, ids);
         User[] users = new User[userInfo.length];
-        for (int i = 0; i < users.length; i++) {
-            if (userInfo[i].length < 6) {
-                InternalCore.printIssue("No valid user found", "");
-                continue;
-            }
+        int i = 0;
+        for (; i < users.length; i++) {
+            if (userInfo[i].length < 6) break;
             User n = new User(
                     (userInfo[i][0] != null)? userInfo[i][0] : "",
                     (userInfo[i][1] != null)? userInfo[i][1] : "",
@@ -607,7 +605,7 @@ public class User {
             );
             users[i] = n;
         }
-        if (users.length > 0) return users;
+        if (users.length > 0 && i > 0) return users;
         return null;
     }
     //endregion
@@ -754,7 +752,7 @@ public class User {
             return null;
         }
         String[][] auth = {{hashUsername(them.username), hashPassword(pword), them.type.toString()}};
-        if (!writeDictToAuthFile(auth, true)) {
+        if (!writeDictToAuthFile(auth, false)) {
             InternalCore.printIssue("Could not create user", "The new user credentials could not be saved");
             return null;
         }
@@ -920,7 +918,7 @@ public class User {
      */
     private static void createRootAdmin() {
         User root = new User();
-        root.firstName = "Progamming";
+        root.firstName = "Programming";
         root.lastname = "Managers";
         root.middleInitial = "4";
         root.username = rootUserName;

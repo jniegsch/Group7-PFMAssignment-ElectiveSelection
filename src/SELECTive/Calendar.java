@@ -33,6 +33,11 @@ final public class Calendar {
             }
         }
 
+        for (Elective el : electives) {
+            // TODO
+        }
+
+
         return false;
     }
     //endregion

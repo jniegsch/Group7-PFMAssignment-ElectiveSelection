@@ -230,6 +230,7 @@ public final class InternalCore {
             while ((currentLine = reader.readLine()) != null) {
                 if (currentLine.split(infoSeparator)[0].equals(id)) {
                     for (int i = 0; i < info.length; i++) {
+                        if (info[i].equals("")) info[i] = " "; // make space instead of empty otherwise reading issues will occur
                         if (i == 0) if (!info[i].equals(id)) newBuffer.append(id).append(infoSeparator);
                         newBuffer.append(info[i]).append(infoSeparator);
                     }
@@ -284,6 +285,7 @@ public final class InternalCore {
             if (ot != SEObjectType.USER_AUTH) str.append(Long.toString(id)).append(infoSeparator);
 
             for (int i = 0; i < infoToAdd.length; i++) {
+                if (infoToAdd[i].equals("")) infoToAdd[i] = " ";
                 str.append(infoToAdd[i]).append(infoSeparator);
                 writer.write(str.toString());
                 str.delete(0, str.length());

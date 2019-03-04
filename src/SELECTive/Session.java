@@ -246,7 +246,8 @@ public class Session {
 
         }
 
-        InternalCore.println("Here is a list of all users: ");
+        InternalCore.println(" \n ");
+        InternalCore.printTitle("Here is a list of all users", '-');
 
         long[] userIDs = null;
         User[] adminUsers = User.getUsers(userIDs, UserType.ADMIN);
@@ -255,23 +256,22 @@ public class Session {
 
         // print the users
         if (adminUsers != null) {
-            InternalCore.println("> Admins: ");
             for (User au : adminUsers) {
                 InternalCore.println(au.toString());
             }
         }
         if (studentUsers != null) {
-            InternalCore.println("> Students: ");
             for (User su : studentUsers) {
                 InternalCore.println(su.toString());
             }
         }
         if (lectureUsers != null) {
-            InternalCore.println("> Lecturers: ");
             for (User lu : lectureUsers) {
                 InternalCore.println(lu.toString());
             }
         }
+        InternalCore.println(InternalCore.consoleLine('-') + "\n \n ");
+
     }
 
     // Method to add an elective
