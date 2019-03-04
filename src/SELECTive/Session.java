@@ -245,7 +245,7 @@ public class Session {
 
         }
 
-        System.out.println("Here is a list of all users: ");
+        InternalCore.println("Here is a list of all users: ");
 
         long[] userIDs = null;
         User[] adminUsers = User.getUsers(userIDs, UserType.ADMIN);
