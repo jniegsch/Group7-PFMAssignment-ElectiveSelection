@@ -749,8 +749,8 @@ public class User {
             InternalCore.printIssue("Could not create user", "The new user could not be saved");
             return null;
         }
-        String[] auth = {hashUsername(them.username), hashPassword(pword), them.type.toString()};
-        if (-1 == InternalCore.addEntryToInfoFile(SEObjectType.USER_AUTH, auth)) {
+        String[][] auth = {{hashUsername(them.username), hashPassword(pword), them.type.toString()}};
+        if (!writeDictToAuthFile(auth, true)) {
             InternalCore.printIssue("Could not create user", "The new user credentials could not be saved");
             return null;
         }
