@@ -25,10 +25,10 @@ public class Student extends User {
                     "(1) First name \n" +
                     "(2) Last name \n" +
                     "(3) Middle Initial name\n" +
-                    "(5) Date of Birth");
+                    "(4) Date of Birth");
 
             InternalCore.println(InternalCore.consoleLine('-'));
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, 3, 4 or 5): ");
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, 3 or 4): ");
 
             if (userChoice == null) return false;
             switch (userChoice) {
