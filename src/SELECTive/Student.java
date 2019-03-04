@@ -13,41 +13,92 @@ public class Student extends User {
     // TODO: Register to Elective
     //endregion
 
-    //region Instance Editing
-    public boolean editStudent (String uname) {
-        if (!userExists((uname))) {
-            InternalCore.println("This username does not exist. Please try again or first create this user.");
-            return false;
-        } else {
+    //region Elective Registration
+    public boolean registerToElective(String courseCode) {
+        String[] ids = {Long.toString(this.getUserId())};
+        String[][] enrolledElectives = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, ids);
+        String[][] electiveList = InternalCore.readInfoFile(SEObjectType.ELECTIVE, null);
+        int courseBlock = 0;
 
-            InternalCore.println("" +
-                    "What do you want to edit? \n" +
-                    "(1) First name \n" +
-                    "(2) Last name \n" +
-                    "(3) Middle Initial name\n" +
-                    "(4) Date of Birth");
-
-            InternalCore.println(InternalCore.consoleLine('-'));
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, 3 or 4): ");
-
-            if (userChoice == null) return false;
-            switch (userChoice) {
-                case 1:
-                    editUserFName();
-                    break;
-                case 2:
-                    editUserLName();
-                    break;
-                case 3:
-                    editUserMiddleInitial();
-                    break;
-                case 4:
-                    editDateofBirth();
-                    break;
+        for (int i = 1; i < electiveList.length; i++) {
+            if (electiveList[i][0].equals(courseCode)) {
+                courseBlock = Integer.parseInt(electiveList[i][7]);
             }
+        }
 
-            updateUserInfo();
-
+        switch(courseBlock) {
+            case 3:
+                if (!(enrolledElectives[0][1].equals(""))) {
+                    enrolledElectives[0][1] = courseCode;
+                }
+                else {
+                    Integer userRegistrationChoice = InternalCore.getUserInput(Integer.class, "You are already registered for: "
+                            + enrolledElectives[0][1] + " in block: " + courseBlock  + ". Do you want to change your elective choice to: " + courseCode + "?\n "
+                            + "(1) Yes"
+                            + "(2) No");
+                    if (userRegistrationChoice == null) {
+                        InternalCore.printIssue("Invalid input.", "Your input was invalid too many times.");
+                        return false;
+                    }
+                    switch(userRegistrationChoice) {
+                        case 1:
+                            enrolledElectives[0][1] = courseCode;
+                            InternalCore.println("You are now registered for: " + courseCode);
+                            break;
+                        case 2:
+                            InternalCore.println("You are now registered for: " + enrolledElectives[0][1]);
+                            break;
+                    }
+                }
+                break;
+            case 4:
+                if (!(enrolledElectives[0][3].equals(""))) {
+                    enrolledElectives[0][3] = courseCode;
+                }
+                else {
+                    Integer userRegistrationChoice = InternalCore.getUserInput(Integer.class, "You are already registered for: "
+                            + enrolledElectives[0][3] + " in block: " + courseBlock + ". Do you want to change your elective choice to: " + courseCode + "?\n "
+                            + "(1) Yes"
+                            + "(2) No");
+                    if (userRegistrationChoice == null) {
+                        InternalCore.printIssue("Invalid input.", "Your input was invalid too many times.");
+                        return false;
+                    }
+                    switch(userRegistrationChoice) {
+                        case 1:
+                            enrolledElectives[0][3] = courseCode;
+                            InternalCore.println("You are now registered for: " + courseCode);
+                            break;
+                        case 2:
+                            InternalCore.println("You are now registered for: " + enrolledElectives[0][3]);
+                            break;
+                    }
+                }
+                break;
+            case 5:
+                if (!(enrolledElectives[0][5].equals(""))) {
+                    enrolledElectives[0][5] = courseCode;
+                }
+                else {
+                    Integer userRegistrationChoice = InternalCore.getUserInput(Integer.class, "You are already registered for: "
+                            + enrolledElectives[0][5] + " in block: " + courseBlock + ". Do you want to change your elective choice to: " + courseCode + "?\n "
+                            + "(1) Yes"
+                            + "(2) No");
+                    if (userRegistrationChoice == null) {
+                        InternalCore.printIssue("Invalid input.", "Your input was invalid too many times.");
+                        return false;
+                    }
+                    switch(userRegistrationChoice) {
+                        case 1:
+                            enrolledElectives[0][5] = courseCode;
+                            InternalCore.println("You are now registered for: " + courseCode);
+                            break;
+                        case 2:
+                            InternalCore.println("You are now registered for: " + enrolledElectives[0][5]);
+                            break;
+                    }
+                }
+                break;
         }
         return true;
     }

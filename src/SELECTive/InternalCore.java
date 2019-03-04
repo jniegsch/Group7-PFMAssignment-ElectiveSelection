@@ -569,6 +569,42 @@ public final class InternalCore {
     }
     //endregion
 
+    //region Misc
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    /**
+     * Trips the whitespace that might be at the beginning or end of a string if a user does not use the exact separator
+     * + spacing as expected
+     * @param str the {@code String} to strip the whitespace of
+     * @return the {@code String} with whitespace removed at the beginning and the end
+     */
+    public static String stripWhitespace(String str) {
+        char[] s = str.toCharArray();
+        int b = 0, e = 0;
+        for (int i = 0; i < s.length; i++) {
+            if (s[i] == ' ') continue;
+            b = i;
+            break;
+        }
+        for (int i = s.length - 1; i >= 0; i--) {
+            if (s[i] == ' ') continue;
+            e = i + 1;
+            break;
+        }
+        return String.copyValueOf(Arrays.copyOfRange(s, b, e));
+    }
+
+    /**
+     * Applies the {@code stripWhitespace(String str)} to a {@code String} array
+     * @param strArr the {@code String[]} representing the {@code String}s to strip
+     * @return a {@code String[]} where all {@code String} of the array have been stripped
+     */
+    public static String[] stripWhitespaceOfArray(String[] strArr) {
+        for (int i = 0; i < strArr.length; i++) strArr[i] = stripWhitespace(strArr[i]);
+        return strArr;
+    }
+    //endregion
+
     //region Error and Issue handling
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

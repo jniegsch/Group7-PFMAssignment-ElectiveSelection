@@ -101,11 +101,12 @@ public class Session {
                     " 4) Edit user\n" +
                     "- - - Elective Management:\n" +
                     " 5) Add an elective\n" +
-                    " 6) View elective statistics\n" +
-                    " 7) Find an elective\n" +
+                    " 6) Edit an elective\n" +
+                    " 7) View elective statistics\n" +
+                    " 8) Find an elective\n" +
                     "- - - \n" +
                     " 0) Logout\n");
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (1, 2, ..., or 6):");
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 6):");
             if (userChoice == null) break;
             int choice = userChoice.intValue();
             if (choice < 0 || choice > 6) {
@@ -118,7 +119,7 @@ public class Session {
                     running = false;
                     break;
                 case 1:
-                    resetOrChangePasswordOfUser();
+                    resetOrChangePasswordOfUser(null);
                     break;
                 case 2:
                     createNewUser();
@@ -133,9 +134,12 @@ public class Session {
                     addElective();
                     break;
                 case 6:
-                    viewElectiveStats();
+                    Elective.editElective(sessionAdmin);
                     break;
                 case 7:
+                    viewElectiveStats();
+                    break;
+                case 8:
                     findElective();
                     break;
             }
@@ -160,7 +164,7 @@ public class Session {
                     + "- - - \n"
                     + " 0) Logout\n");
 
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (1, 2, ..., or 5):");
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 5):");
             if (userChoice == null)
                 break;
             int choice = userChoice.intValue();
@@ -186,7 +190,7 @@ public class Session {
                     viewGradeStatsPerElective();
                     break;
                 case 5:
-                    changeLecturerPassword();
+                    resetOrChangePasswordOfUser(sessionLecturer);
                     break;
 
             }
@@ -194,31 +198,61 @@ public class Session {
     }
 
     private static void studentDashboard() {
-        //TODO:
+        boolean running = true;
+        while (running) {
+            InternalCore.println(InternalCore.consoleLine('*'));
+            InternalCore.printTitle("Student Dashboard", '*');
+            InternalCore.println(InternalCore.consoleLine('*'));
+            InternalCore.println("What would you like to do?");
+            InternalCore.println(""
+                    + "- - - Elective Management:\n"
+                    + " 1) Register to an elective\n"
+                    + " 2) View a list of your enrolled electives\n"
+                    + " 3) View your grade for a specific elective\n"
+                    + " 4) Create ICal export\n"
+                    + "- - - Account Management:\n"
+                    + " 5) Reset/Change password\\n"
+                    + "- - - \n"
+                    + " 0) Logout\n");
+
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 5):");
+            if (userChoice == null)
+                break;
+            int choice = userChoice.intValue();
+            if (choice < 0 || choice > 5) {
+                InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
+                continue;
+            }
+
+            switch (choice) {
+                case 0:
+                    running = false;
+                    break;
+                case 1:
+                    String courseCode = InternalCore.getUserInput(String.class, "For which elective do you want to register? Please give the course code:");
+                    sessionStudent.registerToElective(courseCode);
+                    break;
+                case 2:
+                    sessionStudent.viewEnrolledElectives();
+                    break;
+                case 3:
+                    String courseCodeProgress = InternalCore.getUserInput(String.class, "For which elective do you want to register? Please give the course code:");
+                    sessionStudent.viewElectiveProgress(courseCodeProgress);;
+                    break;
+                case 4:
+                    sessionStudent.exportCalForElectives();
+                    break;
+                case 5:
+                    resetOrChangePasswordOfUser(sessionStudent);
+                    break;
+
+            }
+        }
     }
     //endregion
 
     //region Admin Actions
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    private static void resetOrChangePasswordOfUser() {
-        String username = InternalCore.getUserInput(String.class,
-                "What is the username of the user who's password you would like to change: ");
-        if (username == null) return;
-        if (!User.userExists(username))  {
-            InternalCore.printIssue("No such user.", "The user you requested does not seem to exist.");
-            return;
-        }
-
-        User.showPasswordRules();
-        String newPassword = InternalCore.getUserInput(String.class,
-                "Please enter the new password: ");
-        if (sessionAdmin.changePassword(username, null, newPassword.toCharArray())) {
-            InternalCore.println("> Password successfully changed.\n \n ");
-        } else {
-            InternalCore.println("> Password NOT successfully changed.\n \n ");
-        }
-    }
-
     // Method to create a new user
     private static void createNewUser() {
         // User type to be created
@@ -358,9 +392,9 @@ public class Session {
             return;
         }
         if (utype == 1) {
-            sessionAdmin.editUser(uname, UserType.LECTURER);
+            sessionAdmin.editSpecificUser(uname, UserType.LECTURER);
         } if (utype == 2) {
-            sessionAdmin.editUser(uname, UserType.STUDENT);
+            sessionAdmin.editSpecificUser(uname, UserType.STUDENT);
         }
     }
     //endregion
@@ -389,26 +423,89 @@ public class Session {
         String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the grade statistics: ");
         sessionLecturer.viewStatsForElective(new Elective(courseCode));
     }
+    //endregion
+
+    //region All User Actions
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static void resetOrChangePasswordOfUser(User u) {
+        String username = null, oldPassword = null;
+        if (u == null) {
+            username = InternalCore.getUserInput(String.class,
+                    "What is the username of the user who's password you would like to change: ");
+            if (username == null) return;
+            if (!User.userExists(username))  {
+                InternalCore.printIssue("No such user.", "The user you requested does not seem to exist.");
+                return;
+            }
+        } else {
+            username = u.getUsername();
+            oldPassword = InternalCore.getUserInput(String.class, "Please enter the old password: ");
+            if (oldPassword == null) {
+                InternalCore.printIssue("Invalid password entered.", "");
+                return;
+            }
+        }
 
 
-    // Method to change sessionUser password
-    private static void changeLecturerPassword() {
         User.showPasswordRules();
-        String username = sessionLecturer.getUsername();
-        String oldPassword = InternalCore.getUserInput(String.class, "Please enter the old password: ");
-        String newPassword = InternalCore.getUserInput(String.class, "Please enter the new password: ");
-        if (sessionUser.changePassword(username, oldPassword.toCharArray(), newPassword.toCharArray())) {
+        String newPassword = InternalCore.getUserInput(String.class,
+                "Please enter the new password: ");
+        if (newPassword == null) {
+            InternalCore.printIssue("Invalid password entered.", "");
+            return;
+        }
+        if (sessionAdmin.changePassword(username, (u == null)? null : oldPassword.toCharArray(), newPassword.toCharArray())) {
             InternalCore.println("> Password successfully changed.\n \n ");
         } else {
             InternalCore.println("> Password NOT successfully changed.\n \n ");
         }
-
     }
-    //endregion
 
-    //region Student Actions
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static boolean filterElectives() {
+        // Print filter options
+        int optId = 1;
+        InternalCore.printTitle("Available Filter Options: ", '-');
+        for (Elective.ElectiveFilterType eft : Elective.ElectiveFilterType.values()) {
+            InternalCore.println(" (" + optId + ") " + eft.name());
+        }
+        Integer userFilterTypeChoice = InternalCore.getUserInput(Integer.class,
+                "Please enter your choice of the available filters: ");
+        if (userFilterTypeChoice == null) return false;
+        Elective.ElectiveFilterType userFilterType = Elective.ElectiveFilterType.values()[userFilterTypeChoice - 1];
 
+        Elective[] electives = null;
+        switch (userFilterType) {
+            case COURSEID:
+                String courseCodes = InternalCore.getUserInput(String.class,
+                        "Please enter the course codes you would like to filter on separated by a ';': ");
+                if (courseCodes == null) return false;
+                String[] codes = courseCodes.split(";");
+                electives = Elective.filterOn(Elective.ElectiveFilterType.COURSEID, InternalCore.stripWhitespaceOfArray(codes));
+                break;
+            case ECTS:
+                String ectsString = InternalCore.getUserInput(String.class,
+                        "Please enter the ects you would like to filter on separated by a ';': ");
+                if (ectsString == null) return false;
+                String[] ectsArr = ectsString.split(";");
+                electives = Elective.filterOn(Elective.ElectiveFilterType.ECTS, InternalCore.stripWhitespaceOfArray(ectsArr));
+                break;
+            case BLOCK:
+                String keywordStr = InternalCore.getUserInput(String.class,
+                        "Please enter the keywords you would like to filter on separated by a ';': ");
+                if (keywordStr == null) return false;
+                String[] keywords = keywordStr.split(";");
+                electives = Elective.filterOn(Elective.ElectiveFilterType.ECTS, InternalCore.stripWhitespaceOfArray(keywords));
+                break;
+                //TODO Availability˚
+        }
+
+        InternalCore.println("\nThe electives that match your search are: ");
+        for (Elective elect : electives) {
+            InternalCore.println(elect.toString());
+        }
+
+        return true;
+    }
     //endregion
 
     //region Initial Admin Setup

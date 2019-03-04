@@ -14,50 +14,14 @@ public class Lecturer extends User {
     }
     private Title title = Title.DEFAULT;
 
-    //region Instance Editing
-    public boolean editLecturer (String uname) {
-        if (!userExists((uname))) {
-            InternalCore.println("This username does not exist. Please try again or first create this user.");
-        } else {
-
-            InternalCore.println("" +
-                    "What do you want to edit? \n" +
-                    "(1) First name \n" +
-                    "(2) Last name \n" +
-                    "(3) Middle Initial name\n" +
-                    "(4) Date of Birth \n" +
-                    "(5) Title");
-
-            InternalCore.println(InternalCore.consoleLine('-'));
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, 3, 4, 5 or 6): ");
-
-            if (userChoice == null) return false;
-            switch (userChoice) {
-                case 1:
-                    editUserFName();
-                    break;
-                case 2:
-                    editUserLName();
-                    break;
-                case 3:
-                    editUserMiddleInitial();
-                    break;
-                case 4:
-                    editDateofBirth();
-                    break;
-                case 5:
-                    editTitle();
-                    break;
-            }
-
-
-            //TODO: update Lecturer
-            updateUserInfo(); //Can I use this method? --> it doesn't include title
-        }
-        return true;
+    //region Getters
+    public Title getTitle() {
+        return this.title;
     }
+    //endregion
 
-    private boolean editTitle() {
+    //region Instance Editing
+    public boolean editTitle() {
         Title newTitle = InternalCore.getUserInput(Title.class, "What is the new title of this lecturer?");
         if (newTitle == null) return false;
         this.title = newTitle;

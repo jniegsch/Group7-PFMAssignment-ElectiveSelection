@@ -1,5 +1,6 @@
 package SELECTive;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -103,50 +104,108 @@ public class Elective {
         return allElectives;
     }
 
+    /**
+     * Returns the electives given a certain filter and arguments. The possible arguments for the filters are:
+     * <pre>
+     *     > COURSEID
+     *     args: a {@code String[]} of the course ids to look for
+     *     > ECTS
+     *     args: a {@code String[]} of ints of ects to consider
+     *     > BLOCK
+     *     args: a {@code String[]} of ints representing the blocks to search for
+     *     > AVAILABILITY
+     *     args: a {@code String[]} where only the first is the file path to an ical file
+     *     > KEYWORDS
+     *     args: a {@code String[]} of keyword strings
+     * </pre>
+     * @param filter
+     * @param argument
+     * @return
+     */
     public static Elective[] filterOn(ElectiveFilterType filter, String[] argument) {
-        String[][] electiveList = InternalCore.readInfoFile(SEObjectType.ELECTIVE, null);
-        //TODO: REWRITE ARGS
-        // filter on courseID
-        if (filter == ElectiveFilterType.COURSEID) {
-            for (int i = 0; i < electiveList.length; i++) {
-                for (int y = 0; y < argument.length; y++) {
-                    if (electiveList[i][1] == argument[y]) {
-                        InternalCore.print(electiveList[i][1] +
-                                "\t" + electiveList[i][2] +
-                                "\t" + electiveList[i][3] +
-                                "\t" + electiveList[i][4] +
-                                "\t" + electiveList[i][5] +
-                                "\t" + electiveList[i][6] +
-                                "\t" + electiveList[i][7]);
-                    }
-                }
-            }
+        Elective[] allElectives = getAllAvailableElectives();
 
-        } else if (filter == ElectiveFilterType.BLOCK) {
-            for (int i = 0; i < electiveList.length; i++) {
-                for (int y = 0; y < argument.length; y++) {
-                    if (electiveList[i][7] == argument[0]) {
-                        InternalCore.print(electiveList[i][1] +
-                                "\t" + electiveList[i][2] +
-                                "\t" + electiveList[i][3] +
-                                "\t" + electiveList[i][4] +
-                                "\t" + electiveList[i][5] +
-                                "\t" + electiveList[i][6] +
-                                "\t" + electiveList[i][7]);
-                    }
-                }
-            }
-        } else if (filter == ElectiveFilterType.KEYWORDS) {
-            for (int i = 0; i < electiveList.length; i++) {
-                for (int y = 0; y < argument.length; y++) {
-
-                }
-            }
-        } else if (filter == ElectiveFilterType.AVAILABILITY) {
-        //TODO: ical rep
+        switch (filter) {
+            case COURSEID:
+                return electivesFilteredOnCourseCode(allElectives, argument);
+            case ECTS:
+                return electivesFilteredOnEcts(allElectives, argument);
+            case BLOCK:
+                return electivesFilteredOnBlock(allElectives, argument);
+            case KEYWORDS:
+                return electivesFilteredOnKeywords(allElectives, argument);
+            case AVAILABILITY:
+                return null;
+            default:
+                return null;
         }
+    }
 
-        return null; //TODO: this function, delete this call as well it only suppresses error warnings
+    /*
+    IMPORTANT: comparing the array of Elective to the String array of the argument, the larger is most probably the
+    elective. However, since we need to check on a property of elective not an entire elective a HashSet will not
+    be beneficial when it comes to performance. Furthermore, the ArrayList (even if it is probably coded efficiently)
+    will not save much time compared to a generic foor loop approach. Changing String[] to ArrayList<String> will
+    probably mitigate this performance increase.
+     */
+    //TODO: Add parrellism for filters and file reading?
+    private static Elective[] electivesFilteredOnCourseCode(Elective[] electives, String[] argument) {
+        ArrayList<Elective> finalElectives = new ArrayList<>();
+        for (Elective elect : electives) {
+            for (String arg : argument) {
+                if (elect.courseCode.equals(arg)) {
+                    finalElectives.add(elect);
+                    break;
+                }
+            }
+        }
+        return (Elective[])finalElectives.toArray();
+    }
+
+    private static Elective[] electivesFilteredOnEcts(Elective[] electives, String[] argument) {
+        ArrayList<Elective> finalElectives = new ArrayList<>();
+        for (Elective elect : electives) {
+            for (String arg : argument) {
+                if (elect.ects == Integer.parseInt(arg)) {
+                    finalElectives.add(elect);
+                    break;
+                }
+            }
+        }
+        return (Elective[])finalElectives.toArray();
+    }
+
+    private static Elective[] electivesFilteredOnBlock(Elective[] electives, String[] argument) {
+        ArrayList<Elective> finalElectives = new ArrayList<>();
+        for (Elective elect : electives) {
+            for (String arg : argument) {
+                if (elect.block.getBlockNumber() == Integer.parseInt(arg)) {
+                    finalElectives.add(elect);
+                    break;
+                }
+            }
+        }
+        return (Elective[])finalElectives.toArray();
+    }
+
+    private  static Elective[] electivesFilteredOnKeywords(Elective[] electives, String[] argument) {
+        ArrayList<Elective> finalElectives = new ArrayList<>();
+        for (Elective elect : electives) {
+            boolean earlyExit = false;
+            for (String arg : argument) {
+                for (String key : elect.keywords) {
+                    if (key.equals(arg)) {
+                        finalElectives.add(elect);
+                        earlyExit = true;
+                        break;
+                    }
+                }
+                if (earlyExit) {
+                    break;
+                }
+            }
+        }
+        return (Elective[])finalElectives.toArray();
     }
     //endregion
 

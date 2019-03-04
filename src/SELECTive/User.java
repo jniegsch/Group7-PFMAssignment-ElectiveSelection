@@ -321,6 +321,63 @@ public class User {
     //endregion
 
     //region User Instance Editing
+    public boolean editUser(boolean lecturerInstance) {
+        InternalCore.println("" +
+                "What do you want to edit? \n" +
+                "(1) First name \n" +
+                "(2) Last name \n" +
+                "(3) Middle Initial name\n" +
+                "(4) Date of Birth" +
+                ((lecturerInstance)? "\n(5) Title" : ""));
+
+        InternalCore.println(InternalCore.consoleLine('-'));
+        Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice: ");
+        if (userChoice == null) return false;
+        switch (userChoice) {
+            case 1:
+                if (!editUserFName()) {
+                    InternalCore.printIssue("Could not change the first name", "");
+                    return false;
+                }
+                break;
+            case 2:
+                if (!editUserLName()) {
+                    InternalCore.printIssue("Could not change the last name", "");
+                    return false;
+                }
+                break;
+            case 3:
+                if (!editUserMiddleInitial()) {
+                    InternalCore.printIssue("Could not change the middle initial(s)", "");
+                    return false;
+                }
+                break;
+            case 4:
+                if (!editDateofBirth()) {
+                    InternalCore.printIssue("Could not change the DOB", "");
+                    return false;
+                }
+                break;
+            case 5:
+                if (!lecturerInstance) {
+                    InternalCore.printIssue("Invalid option.", "");
+                    return false;
+                }
+                if (this.getUserType() == UserType.LECTURER) {
+                    if (!((Lecturer)this).editTitle()) {
+                        InternalCore.printIssue("Could not change the title", "");
+                        return false;
+                    }
+                }
+                break;
+            default:
+                InternalCore.printIssue("Invalid option.", "");
+                return false;
+        }
+
+        return updateUserInfo(lecturerInstance);
+    }
+
     public boolean editUserFName() {
         String newFirstName = InternalCore.getUserInput(String.class, "What is the new first name of this user?");
         if (newFirstName == null) return false;
@@ -702,7 +759,7 @@ public class User {
      * Updates the users record after anything has changed
      * @return {@code bool} indicating if the update was successful
      */
-    public boolean updateUserInfo() {
+    public boolean updateUserInfo(boolean lecturerInstance) {
         SEObjectType ot = objectTypeForUserType(this.type);
         if (ot == null) {
             InternalCore.printError("User",
@@ -716,9 +773,10 @@ public class User {
                 this.lastname,
                 this.middleInitial,
                 this.username,
-                (this.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(this.dateOfBirth) : ""
+                (this.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(this.dateOfBirth) : "",
+                (lecturerInstance)? ((Lecturer)this).getTitle().toString() : ""
         };
-        return InternalCore.updateInfoFile(ot, Long.toString(this.userId), info);
+        return InternalCore.updateInfoFile(ot, Long.toString(this.userId), (lecturerInstance)? info : Arrays.copyOfRange(info, 0, info.length - 1));
     }
 
     /**

@@ -76,7 +76,7 @@ public class Admin extends User {
                         electiveKeywords = keys.split(";");
                         // loop through and strip starting or ending whitespace
                         for (int i = 0 ; i < electiveKeywords.length; i++) {
-                            electiveKeywords[i] = stripWhitespace(electiveKeywords[i]);
+                            electiveKeywords[i] = InternalCore.stripWhitespace(electiveKeywords[i]);
                         }
                         successfulSet = true;
                     }
@@ -101,8 +101,8 @@ public class Admin extends User {
                         electiveTimes = new LectureTime[dateTimes.length];
                         for (int i = 0 ; i < dateTimes.length; i++) {
                             String[] tmp = dateTimes[i].split("@");
-                            electiveTimes[i] = new LectureTime(stripWhitespace(tmp[1]),
-                                    Integer.parseInt(stripWhitespace(tmp[0])) - 1);
+                            electiveTimes[i] = new LectureTime(InternalCore.stripWhitespace(tmp[1]),
+                                    Integer.parseInt(InternalCore.stripWhitespace(tmp[0])) - 1);
                         }
                         successfulSet = true;
                     }
@@ -129,38 +129,40 @@ public class Admin extends User {
         InternalCore.println(InternalCore.consoleLine('*'));
         return false;
     }
-
-    private String stripWhitespace(String str) {
-        char[] s = str.toCharArray();
-        int b = 0, e = 0;
-        for (int i = 0; i < s.length; i++) {
-            if (s[i] == ' ') continue;
-            b = i;
-            break;
-        }
-        for (int i = s.length - 1; i >= 0; i--) {
-            if (s[i] == ' ') continue;
-            e = i + 1;
-            break;
-        }
-        return String.copyValueOf(Arrays.copyOfRange(s, b, e));
-    }
+    //endregion
 
     //region User Management
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    public boolean editUser(String uname, UserType ut) {
+    public boolean editSpecificUser(String uname, UserType ut) {
 
         if (ut.equals(UserType.LECTURER)) {
             Lecturer tempLecturer = new Lecturer(new User(uname, UserType.LECTURER, this));
-            if (!tempLecturer.editLecturer(uname)) {
+            if (!tempLecturer.editUser(true)) {
                 InternalCore.printIssue("Could not edit the lecturer", "");
                 return false;
             }
-        } if (ut.equals(UserType.STUDENT)) {
+        } else if (ut.equals(UserType.STUDENT)) {
             Student tempStudent = new Student(new User(uname, UserType.STUDENT, this));
-            if (!tempStudent.editStudent(uname)) {
+            if (!tempStudent.editUser(false)) {
                 InternalCore.printIssue("Could not edit the student", "");
                 return false;
+            }
+        } else if (ut.equals(UserType.ADMIN)) {
+            if (uname == this.getUsername()) {
+                if (!this.editUser(false)) {
+                    InternalCore.printIssue("Could not edit yourself", "");
+                    return false;
+                }
+            } else {
+                if (uname.equals("sudo")) {
+                    InternalCore.printIssue("You may not edit the root user!", "");
+                    return false;
+                }
+                Admin tempAdmin = new Admin(new User(uname, UserType.ADMIN, this));
+                if (!tempAdmin.editUser(false)) {
+                    InternalCore.printIssue("Could not edit the admin", "");
+                    return false;
+                }
             }
         } else {
             InternalCore.println("You entered an invalid number.");
