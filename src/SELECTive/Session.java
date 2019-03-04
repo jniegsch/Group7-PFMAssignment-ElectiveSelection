@@ -118,6 +118,21 @@ public class Session {
                 case 1:
                     resetOrChangePasswordOfUser();
                     break;
+                case 2:
+                    createNewUser();
+                    break;
+                case 3:
+                    viewUsers();
+                    break;
+                case 4:
+                    addElective();
+                    break;
+                case 5:
+                    viewElectiveStats();
+                    break;
+                case 6:
+                    findElective();
+                    break;
             }
         }
     }
@@ -223,8 +238,32 @@ public class Session {
 
     // Method to view users
     private static void viewUsers() {
-        return;
+        if (sessionUser.getUserType() != UserType.ADMIN) {
+            InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
+            return;
 
+        }
+
+        System.out.println("Here is a list of all users: ");
+
+        long[] userIDs = null;
+        User[] adminUsers = User.getUsers(userIDs, UserType.ADMIN);
+        User[] studentUsers = User.getUsers(userIDs, UserType.STUDENT);
+        User[] lectureUsers = User.getUsers(userIDs, UserType.LECTURER);
+
+        // print the users
+        InternalCore.println("> Admins: ");
+        for (User au : adminUsers) {
+            InternalCore.println(au.toString());
+        }
+        InternalCore.println("> Students: ");
+        for (User su : studentUsers) {
+            InternalCore.println(su.toString());
+        }
+        InternalCore.println("> Lecturers: ");
+        for (User lu : lectureUsers) {
+            InternalCore.println(lu.toString());
+        }
     }
 
     // Method to add an elective
@@ -283,6 +322,13 @@ public class Session {
 
     // Method to find an elective
     private static void findElective() {
+        if (sessionUser.getUserType() != UserType.ADMIN) {
+            InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
+            return;
+        }
+        String codes = InternalCore.getUserInput(String.class,
+                "Please enter the course code for the elective you would like to find: ");
+
     }
 
     private void editAUser() {

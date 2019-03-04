@@ -583,8 +583,11 @@ public class User {
      * @return {@code User[]} the created user objects
      */
     public static User[] getUsers(long[] userIDs, UserType typeOfUser) {
-        String[] ids = new String[userIDs.length];
-        for (int i = 0; i < userIDs.length; i++) ids[i] = Long.toString(userIDs[i]);
+        String[] ids = null;
+        if (userIDs != null) {
+            ids = new String[userIDs.length];
+            for (int i = 0; i < userIDs.length; i++) ids[i] = Long.toString(userIDs[i]);
+        }
 
         String[][] userInfo = getUserInfo(typeOfUser, ids);
         User[] users = new User[userInfo.length];
