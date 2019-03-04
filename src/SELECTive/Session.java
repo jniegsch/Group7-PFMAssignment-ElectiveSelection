@@ -23,7 +23,8 @@ public class Session {
         //TODO: The actual program...
 
         if (User.hasNoUsers()) {
-            createInitialAdmin();
+            sessionUser = createInitialAdmin();
+            sessionAdmin = (Admin)sessionUser;
             InternalCore.println("\n \n \n");
         }
 
