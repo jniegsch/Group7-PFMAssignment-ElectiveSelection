@@ -79,6 +79,10 @@ public final class InternalCore {
 
     //region File Access Methods
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Important: All file accessors that search will not use binarySearch since the arrays read are not guaranteed to
+    // be sorted. Thus, applying binarySearch would require a sort first resulting in worst case of O(n log(n)), compared
+    // to which a linear search in O(n) is better.
+    
     //TODO: Change BufferWriter to FileWriter
     //TODO: Possibly change BufferedReader to FileReader
     //TODO: Adapt file accessors to merely handle SEObjectTypes not locations
