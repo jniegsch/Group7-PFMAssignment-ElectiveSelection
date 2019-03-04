@@ -283,7 +283,7 @@ public class Session {
 
         String courseCode = InternalCore.getUserInput(String.class,
                 "Enter courseCode: ");
-        ((Admin) sessionUser).addElective(courseCode);
+        sessionAdmin.addElective(courseCode);
     }
 
     // Method to view elective statistics
