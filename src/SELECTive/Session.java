@@ -221,6 +221,7 @@ public class Session {
         for (UserType type : UserType.values()) {
             if (type == UserType.DEFAULT) continue;
             InternalCore.println("(" + (typeCount + 1) + ") " + type.toString());
+            typeCount++;
         }
         Integer utypeSelection = InternalCore.getUserInput(Integer.class,
                 "Specify the user type (1, 2, etc.): ");
