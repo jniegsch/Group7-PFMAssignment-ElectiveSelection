@@ -66,14 +66,14 @@ public class Elective {
         this.electiveName = name;
     }
 
-    public Elective(long id, String code, String name, int e, MasterProgram prog, String[] keys, LectureTime[] times, LectureBlock block) {
+    public Elective(long id, String code, String name, int e, MasterProgram prog, String[] keys, Day day, int block) {
         this.electiveId = id;
         this.courseCode = code;
         this.electiveName = name;
         this.ects = e;
         this.program = prog;
         this.keywords = keys;
-        this.classTimes = times;
+        this.lectureDay = day;
         this.block = block;
     }
 
@@ -90,16 +90,13 @@ public class Elective {
     public String getCourseCode() {
         return this.courseCode;
     }
-    public LectureBlock getElectiveBlock() {
-        return this.block;
-    }
     public long getLecturerId() {
         return this.lecturerId;
     }
-    public LectureTime[] getLectureTimes() {
-        return this.classTimes;
+    public Day getLectureDay() {
+        return this.lectureDay;
     }
-    public LectureBlock getBlock() {
+    public int getBlock() {
         return this.block;
     }
 
@@ -118,8 +115,7 @@ public class Elective {
                     Integer.parseInt(electiveList[i][3]),
                     (electiveList[i][4] != "")? MasterProgram.valueOf(electiveList[i][4]) : MasterProgram.INVLD,
                     keywordsFromKeywordString(electiveList[i][5]),
-                    LectureTime.generateLectureTimeArrayFromStringRepresentation(electiveList[i][6]),
-                    new LectureBlock(electiveList[i][7])
+                    new block(electiveList[i][7])
             );
             allElectives[i] = temp;
         }
@@ -261,7 +257,6 @@ public class Elective {
                 Integer.toString(this.ects),
                 this.program.toString(),
                 keywordString(),
-                LectureTime.generateLectureTimeArrayStringRepresentation(this.classTimes),
                 this.block.toString()
         };
 
@@ -314,8 +309,7 @@ public class Elective {
                 Integer.parseInt(electiveList[toEditElective][3]),
                 MasterProgram.valueOf(electiveList[toEditElective][4]),
                 keywordsFromKeywordString(electiveList[toEditElective][5]),
-                LectureTime.generateLectureTimeArrayFromStringRepresentation(electiveList[toEditElective][6]),
-                (new LectureBlock(electiveList[toEditElective][7]))
+                (new Block(electiveList[toEditElective][7]))
         );
         return toEdit.edit(who);
     }
@@ -338,7 +332,7 @@ public class Elective {
                 "(5) Class times \n" +
                 "(6) Block");
         InternalCore.println(InternalCore.consoleLine('-'));
-        Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, 3, 4, 5 or 6): ");
+        Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, 3, 4, or 5): ");
         if (userChoice == null) return false;
         switch (userChoice) {
             case 1:
@@ -354,9 +348,6 @@ public class Elective {
                 editKeywords();
                 break;
             case 5:
-                editClassTimes();
-                break;
-            case 6:
                 editBlock();
                 break;
         }
@@ -415,36 +406,16 @@ public class Elective {
     }
 
 
-    // This method asks for the change of the elective class times and saves this in the file
-    private boolean editClassTimes() {
-        String in = InternalCore.getUserInput(String.class,
-                "What is the new class times of this elective?" +
-                        "> Lesson days and times (separate the list with ';' using the format <week-day code> @ <hh:mm>): \n" +
-                        "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
-        if (in == null) return false;
-        in.replaceAll(" ", ""); // remove all whitespaces
-        String[] dateTimes = in.split(";");
-        this.classTimes = new LectureTime[dateTimes.length];
-        for (int i = 0 ; i < dateTimes.length; i++) {
-            String[] tmp = dateTimes[i].split("@");
-            this.classTimes[i] = new LectureTime(tmp[1], Integer.parseInt(tmp[0]));
-        }
-
-        //TODO: get the new times in the info array
-        return true;
-    }
-
-
     // This method asks for the change of the elective block and saves this in the file
     private boolean editBlock() {
         InternalCore.println("Which block is this elective taught?");
-        InternalCore.println("(1) Block 1");
-        InternalCore.println("(2) Block 2");
-        InternalCore.println("(3) Block 3");
+        InternalCore.println("(1) Block 4");
+        InternalCore.println("(2) Block 5");
+        InternalCore.println("(3) Block 6");
         InternalCore.println(InternalCore.consoleLine('-'));
         String newBlock = InternalCore.getUserInput(String.class, "Your selection (1, 2, or 3:");
         if (newBlock == null) return false;
-        this.block = new LectureBlock(Long.parseLong(newBlock) - 1);
+        this.block = new Block(Long.parseLong(newBlock) - 1);
         return true;
     }
 
