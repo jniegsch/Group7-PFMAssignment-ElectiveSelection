@@ -76,10 +76,25 @@ public class Elective {
     //endregion
 
     //region Getters
-    public String getElectiveName() { return this.electiveName; }
-    public String getCourseCode() { return this.courseCode; }
-    public LectureBlock getElectiveBlock() { return this.block; }
-    public long getLecturerId() { return this.lecturerId; }
+    public String getElectiveName() {
+        return this.electiveName;
+    }
+    public String getCourseCode() {
+        return this.courseCode;
+    }
+    public LectureBlock getElectiveBlock() {
+        return this.block;
+    }
+    public long getLecturerId() {
+        return this.lecturerId;
+    }
+    public LectureTime[] getLectureTimes() {
+        return this.classTimes;
+    }
+    public LectureBlock getBlock() {
+        return this.block;
+    }
+
     //endregion
 
     //region Static Access

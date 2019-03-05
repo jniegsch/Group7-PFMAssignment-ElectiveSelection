@@ -13,11 +13,19 @@ public class LectureBlock {
     /**
      * Defines the start date of a block in String format
      */
-    private static final String sDates[] = {"2019-01-28", "2019-03-18", "2019-05-06"};
+    public static final String sDates[] = {"2019-01-28", "2019-03-18", "2019-05-06"};
     /**
      * Defines the end date of a block in String format
      */
-    private static final String eDates[] = {"2019-03-15", "2019-05-03", "2019-06-21"};
+    public static final String eDates[] = {"2019-03-15", "2019-05-03", "2019-06-21"};
+    /**
+     * Defines the start day of the week for the blocks
+     */
+    public static final LectureTime.Day beginDay= LectureTime.Day.MONDAY;
+    /**
+     * Defines the end day of the week for the blocks
+     */
+    public static final LectureTime.Day endDay = LectureTime.Day.FRIDAY;
     //endregion
 
     //region Private properties
