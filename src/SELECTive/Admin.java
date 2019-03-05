@@ -121,7 +121,8 @@ public class Admin extends User {
                 electiveProgramName,
                 electiveKeywords,
                 electiveTimes,
-                block
+                block,
+                -1 //TODO: Lecturer ID!
         );
         newElective.saveElective(this, true);
 

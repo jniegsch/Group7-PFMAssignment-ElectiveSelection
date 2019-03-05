@@ -29,6 +29,11 @@ enum UserType {
  * functions are prepared for extra functionality of specific uber classes, but the class does ensure rights are checked.
  */
 public class User {
+    //region Static Private Properties
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static User[] allStudents = null;
+    private static boolean hasValidStudentUsers = false;
+    //endregion
     //region Private Property Definitions
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
@@ -62,7 +67,6 @@ public class User {
     //endregion
 
     //region Property getters
-
     /**
      * Gets the current users {@code USerType}
      * @return {@code UserType} of the current user
@@ -80,7 +84,7 @@ public class User {
      * An empty constructor.
      */
     public User() {
-        // Do nothing
+        // nothing special
     }
 
     /**
@@ -89,7 +93,7 @@ public class User {
      * @param ut    the {@code UserType} defining what type of user it is
      * @param admin the {@code User} who wants to edit the other user
      */
-    public User(String uname, UserType ut, User admin) {
+    private User(String uname, UserType ut, User admin) {
         if (admin.getUserType() != UserType.ADMIN) {
             InternalCore.printIssue("Cannot create user", "You do not have the rights to create a user");
             return;
@@ -137,7 +141,7 @@ public class User {
      * @param id    a {@code String} representing the id of the user to create
      * @param ut    a {@code UserType} defining the type of the user to create
      */
-    public User(String id, UserType ut) {
+    private User(String id, UserType ut) {
         SEObjectType ot = objectTypeForUserType(ut);
         String[] ids = {id};
         String[][] userInfo = InternalCore.readInfoFile(ot, ids);
@@ -750,7 +754,7 @@ public class User {
      * @param ids   {@code long[]} representing the user ids who's information should be returned
      * @return {@code String[]} representing the user(s) information
      */
-    public static String[][] getUserInfo(UserType type, String[] ids) {
+    private static String[][] getUserInfo(UserType type, String[] ids) {
         SEObjectType ot = objectTypeForUserType(type);
         return InternalCore.readInfoFile(ot, ids);
     }
