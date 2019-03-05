@@ -123,10 +123,9 @@ public class Student extends User {
     public void viewElectiveProgress(String courseCode) {
         String[] ids = {Long.toString(this.getUserId())};
         String[][] enrolledElectives = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, ids);
-        if (enrolledElectives != null) {
-            String userChoice = InternalCore.getUserInput(String.class, "For which elective do you wish to you view your progress?");
-
-            for (int i = 1; i < enrolledElectives.length; i += 2) {
+        if (enrolledElectives == null) return; // an error occured
+        if (enrolledElectives[0].length > 1) {
+            for (int i = 1; i < enrolledElectives[0].length; i += 2) {
                 if (enrolledElectives[0][i].equals(userChoice))
                     InternalCore.println("Your progress for " + userChoice + "is: " + enrolledElectives[0][i + 1]);
             }
