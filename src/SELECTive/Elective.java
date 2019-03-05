@@ -165,7 +165,7 @@ public class Elective {
      */
     //TODO: Add parrellism for filters and file reading?
     private static Elective[] electivesFilteredOnCourseCode(Elective[] electives, String[] argument) {
-        ArrayList<Elective> finalElectives = new ArrayList<>();
+        ArrayList<Elective> finalElectives = new ArrayList<Elective>();
         for (Elective elect : electives) {
             for (String arg : argument) {
                 if (elect.courseCode.equals(arg)) {
@@ -174,7 +174,8 @@ public class Elective {
                 }
             }
         }
-        return (Elective[])finalElectives.toArray();
+        Elective[] filteredElectives = new Elective[finalElectives.size()];
+        return finalElectives.toArray(filteredElectives);
     }
 
     private static Elective[] electivesFilteredOnEcts(Elective[] electives, String[] argument) {
@@ -187,7 +188,8 @@ public class Elective {
                 }
             }
         }
-        return (Elective[])finalElectives.toArray();
+        Elective[] filteredElectives = new Elective[finalElectives.size()];
+        return finalElectives.toArray(filteredElectives);
     }
 
     private static Elective[] electivesFilteredOnBlock(Elective[] electives, String[] argument) {
@@ -200,7 +202,8 @@ public class Elective {
                 }
             }
         }
-        return (Elective[])finalElectives.toArray();
+        Elective[] filteredElectives = new Elective[finalElectives.size()];
+        return finalElectives.toArray(filteredElectives);
     }
 
     private  static Elective[] electivesFilteredOnKeywords(Elective[] electives, String[] argument) {
@@ -220,7 +223,8 @@ public class Elective {
                 }
             }
         }
-        return (Elective[])finalElectives.toArray();
+        Elective[] filteredElectives = new Elective[finalElectives.size()];
+        return finalElectives.toArray(filteredElectives);
     }
     //endregion
 

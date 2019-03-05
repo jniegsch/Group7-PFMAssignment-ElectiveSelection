@@ -106,10 +106,10 @@ public class Session {
                     " 8) Find an elective\n" +
                     "- - - \n" +
                     " 0) Logout\n");
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 6):");
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 8):");
             if (userChoice == null) break;
             int choice = userChoice.intValue();
-            if (choice < 0 || choice > 6) {
+            if (choice < 0 || choice > 8) {
                 InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
                 continue;
             }
@@ -140,7 +140,7 @@ public class Session {
                     viewElectiveStats();
                     break;
                 case 8:
-                    findElective();
+                    filterElectives();
                     break;
             }
         }
@@ -159,17 +159,19 @@ public class Session {
                     + " 2) View list of registered students per elective\n"
                     + " 3) View list of student grades per elective\n"
                     + " 4) View grade statistics per elective\n"
+                    + "- - - Elective Management:\n"
+                    + " 5) Find an elective"
                     + "- - - Account Management:\n"
-                    + " 5) Reset/Change password\\n"
+                    + " 6) Reset/Change password\\n"
                     + "- - - \n"
                     + " 0) Logout\n");
 
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 5):");
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 6):");
             if (userChoice == null)
                 break;
             int choice = userChoice.intValue();
-            if (choice < 0 || choice > 5) {
-                InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
+            if (choice < 0 || choice > 6) {
+                InternalCore.printIssue("Invalid input", "Please specify one of the available options.");
                 continue;
             }
 
@@ -190,6 +192,9 @@ public class Session {
                     viewGradeStatsPerElective();
                     break;
                 case 5:
+                    filterElectives();
+                    break;
+                case 6:
                     resetOrChangePasswordOfUser(sessionLecturer);
                     break;
 
@@ -206,20 +211,21 @@ public class Session {
             InternalCore.println("What would you like to do?");
             InternalCore.println(""
                     + "- - - Elective Management:\n"
-                    + " 1) Register to an elective\n"
-                    + " 2) View a list of your enrolled electives\n"
-                    + " 3) View your grade for a specific elective\n"
-                    + " 4) Create ICal export\n"
+                    + " 1) Find an elective\n"
+                    + " 2) Register to an elective\n"
+                    + " 3) View a list of your enrolled electives\n"
+                    + " 4) View your grade for a specific elective\n"
+                    + " 5) Create ICal export\n"
                     + "- - - Account Management:\n"
-                    + " 5) Reset/Change password\\n"
+                    + " 6) Reset/Change password\\n"
                     + "- - - \n"
                     + " 0) Logout\n");
 
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 5):");
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 6):");
             if (userChoice == null)
                 break;
             int choice = userChoice.intValue();
-            if (choice < 0 || choice > 5) {
+            if (choice < 0 || choice > 6) {
                 InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
                 continue;
             }
@@ -229,20 +235,23 @@ public class Session {
                     running = false;
                     break;
                 case 1:
+                    filterElectives();
+                    break;
+                case 2:
                     String courseCode = InternalCore.getUserInput(String.class, "For which elective do you want to register? Please give the course code:");
                     sessionStudent.registerToElective(courseCode);
                     break;
-                case 2:
+                case 3:
                     sessionStudent.viewEnrolledElectives();
                     break;
-                case 3:
+                case 4:
                     String courseCodeProgress = InternalCore.getUserInput(String.class, "For which elective do you want to register? Please give the course code:");
                     sessionStudent.viewElectiveProgress(courseCodeProgress);;
                     break;
-                case 4:
+                case 5:
                     sessionStudent.exportCalForElectives();
                     break;
-                case 5:
+                case 6:
                     resetOrChangePasswordOfUser(sessionStudent);
                     break;
 
@@ -368,23 +377,13 @@ public class Session {
         if (sessionAdmin != null) return;
     }
 
-    // Method to find an elective
-    private static void findElective() {
-        if (sessionUser.getUserType() != UserType.ADMIN) {
-            InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
-            return;
-        }
-        String codes = InternalCore.getUserInput(String.class,
-                "Please enter the course code for the elective you would like to find: ");
-
-    }
-
     private static void editAUser() {
         String uname = InternalCore.getUserInput(String.class,
                 "Enter a username: ");
         InternalCore.println("What usertype is " + uname + ":\n" +
                 "(1) Lecturer\n" +
-                "(2) Student");
+                "(2) Student\n" +
+                "(3) Admin");
         Integer utype = InternalCore.getUserInput(Integer.class,
                 "Please enter your choice (1 or 2):");
         if (utype == null) {
@@ -393,8 +392,10 @@ public class Session {
         }
         if (utype == 1) {
             sessionAdmin.editSpecificUser(uname, UserType.LECTURER);
-        } if (utype == 2) {
+        } else if (utype == 2) {
             sessionAdmin.editSpecificUser(uname, UserType.STUDENT);
+        } else if (utype == 3) {
+            sessionAdmin.editSpecificUser(uname, UserType.ADMIN);
         }
     }
     //endregion
@@ -467,6 +468,7 @@ public class Session {
         InternalCore.printTitle("Available Filter Options: ", '-');
         for (Elective.ElectiveFilterType eft : Elective.ElectiveFilterType.values()) {
             InternalCore.println(" (" + optId + ") " + eft.name());
+            optId++;
         }
         Integer userFilterTypeChoice = InternalCore.getUserInput(Integer.class,
                 "Please enter your choice of the available filters: ");
@@ -496,7 +498,7 @@ public class Session {
                 String[] keywords = keywordStr.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.ECTS, InternalCore.stripWhitespaceOfArray(keywords));
                 break;
-                //TODO Availability˚
+                //TODO Availability
         }
 
         InternalCore.println("\nThe electives that match your search are: ");
