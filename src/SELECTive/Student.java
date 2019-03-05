@@ -126,8 +126,8 @@ public class Student extends User {
         if (enrolledElectives == null) return; // an error occured
         if (enrolledElectives[0].length > 1) {
             for (int i = 1; i < enrolledElectives[0].length; i += 2) {
-                if (enrolledElectives[0][i].equals(userChoice))
-                    InternalCore.println("Your progress for " + userChoice + "is: " + enrolledElectives[0][i + 1]);
+                if (enrolledElectives[0][i].equals(courseCode))
+                    InternalCore.println("Your progress for " + courseCode + "is: " + enrolledElectives[0][i + 1]);
             }
         } else {
             InternalCore.println("You are not yet enrolled in any elective");
