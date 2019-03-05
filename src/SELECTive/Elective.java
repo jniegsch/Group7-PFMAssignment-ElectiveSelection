@@ -19,6 +19,14 @@ enum MasterProgram {
     INVLD
 }
 
+enum Day {
+    MONDAY,
+    TUESDAY,
+    WEDNESDAY,
+    THURSDAY,
+    FRIDAY
+}
+
 public class Elective {
     //region TO DEFINITELY REMOVE SCANNERS
     Scanner userInputInt = new Scanner(System.in);
@@ -46,8 +54,8 @@ public class Elective {
     private int ects = 0;
     private MasterProgram program = MasterProgram.INVLD;
     private String[] keywords = null;
-    private LectureTime[] classTimes = null;
-    private LectureBlock block = null;
+    private Day lectureDay = null;
+    private int block = 0;
     private long lecturerId = -1;
     //TODO: add test method?
     //endregion
