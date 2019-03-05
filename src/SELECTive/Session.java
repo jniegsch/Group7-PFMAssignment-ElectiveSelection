@@ -102,14 +102,13 @@ public class Session {
                     "- - - Elective Management:\n" +
                     " 5) Add an elective\n" +
                     " 6) Edit an elective\n" +
-                    " 7) View elective statistics\n" +
-                    " 8) Find an elective\n" +
+                    " 7) Filter on an elective\n" +
                     "- - - \n" +
                     " 0) Logout\n");
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 8):");
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 7):");
             if (userChoice == null) break;
             int choice = userChoice.intValue();
-            if (choice < 0 || choice > 8) {
+            if (choice < 0 || choice > 7) {
                 InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
                 continue;
             }
@@ -137,9 +136,6 @@ public class Session {
                     Elective.editElective(sessionAdmin);
                     break;
                 case 7:
-                    viewElectiveStats();
-                    break;
-                case 8:
                     filterElectives();
                     break;
             }
@@ -160,7 +156,7 @@ public class Session {
                     + " 3) View list of student grades per elective\n"
                     + " 4) View grade statistics per elective\n"
                     + "- - - Elective Management:\n"
-                    + " 5) Find an elective"
+                    + " 5) Filter on an elective"
                     + "- - - Account Management:\n"
                     + " 6) Reset/Change password\\n"
                     + "- - - \n"
@@ -211,7 +207,7 @@ public class Session {
             InternalCore.println("What would you like to do?");
             InternalCore.println(""
                     + "- - - Elective Management:\n"
-                    + " 1) Find an elective\n"
+                    + " 1) Filter on an elective\n"
                     + " 2) Register to an elective\n"
                     + " 3) View a list of your enrolled electives\n"
                     + " 4) View your grade for a specific elective\n"
