@@ -83,10 +83,10 @@ public class Admin extends User {
                     break;
                 case 5:
                     InternalCore.println("Which block is this elective taught?");
-                    InternalCore.println("(1) Block 1");
-                    InternalCore.println("(2) Block 2");
-                    InternalCore.println("(3) Block 3");
-                    String newBlock = InternalCore.getUserInput(String.class, "Your selection (1, 2, or 3):");
+                    InternalCore.println("(1) Block 3");
+                    InternalCore.println("(2) Block 4");
+                    InternalCore.println("(3) Block 5");
+                    String newBlock = InternalCore.getUserInput(String.class, "Your selection (3, 4, or 5):");
                     if (newBlock != null) {
                         block = new LectureBlock(Long.parseLong(newBlock) - 1);
                         successfulSet = true;
