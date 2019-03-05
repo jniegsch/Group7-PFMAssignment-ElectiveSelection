@@ -365,9 +365,7 @@ public class Session {
                             erow[2],
                             Integer.parseInt(erow[3]),
                             MasterProgram.valueOf(erow[4]),
-                            Elective.keywordsFromKeywordString(erow[5]),
-                            LectureTime.generateLectureTimeArrayFromStringRepresentation(erow[6]),
-                            (new LectureBlock(erow[7]))
+                            Elective.keywordsFromKeywordString(erow[5])
                     );
                 }
             }
