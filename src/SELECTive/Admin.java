@@ -23,8 +23,9 @@ public class Admin extends User {
         int electiveECTS = 0;
         String[] electiveKeywords = null;
         MasterProgram electiveProgramName = null;
-        LectureBlock block = null;
-        LectureTime[] electiveTimes = null;
+        Day lectureDay = null;
+		int block = 0;
+		long lecturerId = -1;
 
         int prop = (courseCode == null)? 0 : 1;
         for (; prop < 7; prop++) {
@@ -84,7 +85,7 @@ public class Admin extends User {
                     InternalCore.println("(3) Block 5");
                     String newBlock = InternalCore.getUserInput(String.class, "Your selection (3, 4, or 5):");
                     if (newBlock != null) {
-                        block = new LectureBlock(Long.parseLong(newBlock) - 1);
+                        block = Integer.parseInt(newBlock);
                         successfulSet = true;
                     }
                     break;
