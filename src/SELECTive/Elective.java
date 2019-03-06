@@ -39,7 +39,6 @@ public class Elective {
         ECTS, //TODO: check if electives have diff ects
         BLOCK, // equal or selection
         KEYWORDS, // any match, (single)
-        AVAILABILITY // ical rep
     }
     //endregion
 
@@ -57,7 +56,6 @@ public class Elective {
     private Day lectureDay = null;
     private int block = 0;
     private long lecturerId = -1;
-    //TODO: add test method?
     //endregion
 
     //region Constructors
@@ -115,7 +113,8 @@ public class Elective {
                     Integer.parseInt(electiveList[i][3]),
                     (electiveList[i][4] != "")? MasterProgram.valueOf(electiveList[i][4]) : MasterProgram.INVLD,
                     keywordsFromKeywordString(electiveList[i][5]),
-                    new block(electiveList[i][7])
+                    (electiveList[i][6] != "")? Day.valueof(electiveList[i][6]) : Day.INVLD,
+                    Integer.parseInt(electiveList[i][7])
             );
             allElectives[i] = temp;
         }
@@ -132,8 +131,6 @@ public class Elective {
      *     args: a {@code String[]} of ints of ects to consider
      *     > BLOCK
      *     args: a {@code String[]} of ints representing the blocks to search for
-     *     > AVAILABILITY
-     *     args: a {@code String[]} where only the first is the file path to an ical file
      *     > KEYWORDS
      *     args: a {@code String[]} of keyword strings
      * </pre>
@@ -153,8 +150,6 @@ public class Elective {
                 return electivesFilteredOnBlock(allElectives, argument);
             case KEYWORDS:
                 return electivesFilteredOnKeywords(allElectives, argument);
-            case AVAILABILITY:
-                return null;
             default:
                 return null;
         }
@@ -200,7 +195,7 @@ public class Elective {
         ArrayList<Elective> finalElectives = new ArrayList<>();
         for (Elective elect : electives) {
             for (String arg : argument) {
-                if (elect.block.getBlockNumber() == Integer.parseInt(arg)) {
+                if (elect.block == Integer.parseInt(arg)) {
                     finalElectives.add(elect);
                     break;
                 }
@@ -257,6 +252,7 @@ public class Elective {
                 Integer.toString(this.ects),
                 this.program.toString(),
                 keywordString(),
+                this.lectureDay.toString(),
                 this.block.toString()
         };
 
@@ -309,7 +305,8 @@ public class Elective {
                 Integer.parseInt(electiveList[toEditElective][3]),
                 MasterProgram.valueOf(electiveList[toEditElective][4]),
                 keywordsFromKeywordString(electiveList[toEditElective][5]),
-                (new Block(electiveList[toEditElective][7]))
+                Day.valueOf(electiveList[toEditElective][6]),
+                Integer.parseInt(electiveList[toEditElective][7])
         );
         return toEdit.edit(who);
     }
@@ -323,13 +320,14 @@ public class Elective {
             return false;
         }
 
+        //TODO: Edit class day
         InternalCore.println("" +
                 "What do you want to edit? \n" +
                 "(1) Elective name \n" +
                 "(2) Program \n" +
                 "(3) ECTS \n" +
                 "(4) Keywords \n" +
-                "(5) Class times \n" +
+                "(5) Class day \n" +
                 "(6) Block");
         InternalCore.println(InternalCore.consoleLine('-'));
         Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, 3, 4, or 5): ");
