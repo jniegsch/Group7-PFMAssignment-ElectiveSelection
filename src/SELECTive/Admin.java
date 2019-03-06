@@ -23,9 +23,9 @@ public class Admin extends User {
         int electiveECTS = 0;
         String[] electiveKeywords = null;
         MasterProgram electiveProgramName = null;
-        Day lectureDay = null;
-		int block = 0;
-		long lecturerId = -1;
+        Day[] lectureDay = null;
+	int block = 0;
+	long lecturerId = -1;
 
         int prop = (courseCode == null)? 0 : 1;
         for (; prop < 7; prop++) {
@@ -90,20 +90,25 @@ public class Admin extends User {
                     }
                     break;
                 case 6:
-                    String times = InternalCore.getUserInput(String.class, "" +
-                            "> Lesson days and times (separate the list with ';' using the format <week-day code> @ <hh:mm>): \n" +
+                    String lectureDay = InternalCore.getUserInput(String.class, "" +
+                            "> Lesson days and times (separate the list with ';'): \n" +
                             "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
-                    if (times != null) {
-                        String[] dateTimes = times.split(";");
-                        electiveTimes = new LectureTime[dateTimes.length];
-                        for (int i = 0 ; i < dateTimes.length; i++) {
-                            String[] tmp = dateTimes[i].split("@");
-                            electiveTimes[i] = new LectureTime(InternalCore.stripWhitespace(tmp[1]),
-                                    Integer.parseInt(InternalCore.stripWhitespace(tmp[0])) - 1);
-                        }
+                    if (lectureDay != null) {
+                        String[] dateTimes = lectureDay.split(";");
+                        classTimes = new Day[dateTimes.length];
+                        for (int i = 0 ; i < classTimes.length; i++) {
+				InternalCore.stripWhitespace(Day.toString(classTimes[i]));
+			}
                         successfulSet = true;
                     }
                     break;
+		case 7:
+			String lecturerIdElective = InternalCore.getUserInput(String.class, "Which lecturer teaches this elective? Please enter the lecturerId:");
+			if (lecturerIdElective != null) {
+				lecturerId = Integer.parseInt(lecturerIdElective);
+				successfulSet = true;
+			}
+			break;
             }
 
             if (!successfulSet) prop--;
@@ -117,8 +122,9 @@ public class Admin extends User {
                 electiveECTS,
                 electiveProgramName,
                 electiveKeywords,
-                electiveTimes,
-                block
+                classTimes,
+                block,
+		lecturerId
         );
         newElective.saveElective(this, true);
 
