@@ -14,6 +14,7 @@ public class Lecturer extends User {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static Lecturer[] lecturers = null;
     private static boolean hasvalidLecturers = false;
+    private static boolean isLoading = false;
     //endregion
 
     //region Private Properties
@@ -43,9 +44,11 @@ public class Lecturer extends User {
     //region Static Init
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static boolean loadLecturers() {
-        if (hasvalidLecturers && lecturers != null) return true;
+        if (hasvalidLecturers) return true;
+        if (isLoading) return false;
+        isLoading = true;
         String[][] lects = InternalCore.readInfoFile(SEObjectType.LECTURER_USER, null);
-        if (lects.length < 1) return false;
+        if (lects == null) return true;
         lecturers = new Lecturer[lects.length];
         for (int i = 0; i < lects.length; i++) {
             User tmp = new User(
@@ -86,6 +89,12 @@ public class Lecturer extends User {
         }
         return null;
     }
+
+    public static Lecturer[] getAllLecturers(Admin admin) {
+        if (!admin.isValidAdmin()) return null;
+        hasvalidLecturers = loadLecturers();
+        return lecturers;
+    }
     //endregion
 
     //region Instance Editing
@@ -95,6 +104,15 @@ public class Lecturer extends User {
         if (newTitle == null) return false;
         this.title = newTitle;
         return true;
+    }
+    //endregion
+
+    //region Stringify Override
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public String toString() {
+        String userRep = super.toString();
+        userRep.replaceAll("] ", "] " + title.toString() + ". ");
+        return userRep;
     }
     //endregion
 
@@ -172,9 +190,12 @@ public class Lecturer extends User {
 
     // This method prints out a list of student grades for a particular elective
     public void showStudentGrades(String courseCode){
-
-        InternalCore.println("The grades for the following course are: ");
-
+        Elective elective = Elective.getElectiveWithCourseCode(courseCode);
+        Registration[] registrations = Registration.registrationsForCourse(elective);
+        InternalCore.println("The grades for the students enrolled in the course " + courseCode + " are: ");
+        for (Registration registration : registrations) {
+            InternalCore.println("> " + registration.getStudent().toString() + " got a " + registration.getGrade(elective));
+        }
     }
 
     private double[] getGradesForElective(String courseCode) {
@@ -204,48 +225,35 @@ public class Lecturer extends User {
         return numElectiveGrade;
     }
 
-    public boolean viewStatsForElective(Elective elective) {
+    public void viewStatsForElective(String courseCode) {
+        Elective elective = Elective.getElectiveWithCourseCode(courseCode);
+
         if (this.getUserType() != UserType.ADMIN) {
             if (this.getUserType() == UserType.LECTURER) {
                 if (elective.getLecturerId() != this.getUserId()) {
                     InternalCore.printIssue("Insufficient rights", "You do not have the rights to view the elective statistics of a course you do not teach.");
-                    return false;
+                    return;
                 }
             } else {
                 InternalCore.printIssue("Insufficient rights", "You do not have the rights to view elective statistics.");
-                return false;
+                return;
             }
         }
 
-        double[] grades = getGradesForElective(elective.getCourseCode());
-        InternalCore.println("The grade statistics for " + elective.getElectiveName() + " are:");
-        dataStats(grades);
-        return true;
-    }
-
-    public boolean viewStatsForElective(Elective[] electives) {
-        for (Elective e : electives) {
-            if (!viewStatsForElective(e)) return false;
-            InternalCore.println(" ");
-        }
-        return true;
-    }
-
-    // This method prints out the min, max, and the average of the grades
-    private void dataStats(double[] numElectiveGrade){
-        if (this.getUserType() != UserType.LECTURER && this.getUserType() != UserType.ADMIN) {
-            InternalCore.printIssue("Insufficient rights", "You do not have the rights to view elective statistics.");
-            return;
+        Registration[] registrations = Registration.registrationsForCourse(elective);
+        double[] grades = new double[registrations.length];
+        for (int i = 0; i < grades.length; i++) {
+            grades[i] = registrations[i].getGrade(elective);
         }
 
-        // Call the minArray(), maxArray(), and meanArray() methods and use the local array myArray as input to compute the minimum, maximum, and mean values of all heights in the file
-        double minGrade = minGrade(numElectiveGrade);
+        InternalCore.printTitle("Stats for " + elective.getCourseCode(), '-');
+        double minGrade = minGrade(grades);
         InternalCore.println("The minimum value of all grades is: " + minGrade);
-        double maxGrade = maxGrade(numElectiveGrade);
+        double maxGrade = maxGrade(grades);
         InternalCore.println("The maximum value of all grades is: " + maxGrade);
-        double meanGrade = meanGrade(numElectiveGrade);
+        double meanGrade = meanGrade(grades);
         InternalCore.println("The average value of all grades is: " + meanGrade);
-        double failedGrade = failedGrade(numElectiveGrade);
+        double failedGrade = failedGrade(grades);
         InternalCore.println("The number of failed grades are: " + failedGrade);
     }
 

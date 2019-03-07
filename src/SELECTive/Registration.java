@@ -34,7 +34,7 @@ public class Registration {
 
     public double getGrade(Elective elect) {
         if (isNotRegistrationForElective(elect.getCourseCode())) return -1.0;
-        return grades[elect.getBlock().getBlockNumber() - 3];
+        return grades[elect.getBlock() - 3];
     }
 
     public boolean isNotRegistrationForElective(Elective elective) {
@@ -102,7 +102,7 @@ public class Registration {
         hasValidRegistrations = loadRegistrations();
         ArrayList<Registration> validRegs = new ArrayList<>();
         for (Registration registration : registrations) {
-            if (registration.electives[elect.getBlock().getBlockNumber() - 3].getCourseCode().equals(elect.getCourseCode())) validRegs.add(registration);
+            if (registration.electives[elect.getBlock() - 3].getCourseCode().equals(elect.getCourseCode())) validRegs.add(registration);
         }
         if (validRegs.size() < 1) return null;
         Registration[] regsToReturn = new Registration[validRegs.size()];
@@ -118,7 +118,7 @@ public class Registration {
                     "This registration is not for the requested student");
             return false;
         }
-        if (this.electives[elect.getBlock().getBlockNumber() - 3] != null) {
+        if (this.electives[elect.getBlock() - 3] != null) {
 
         }
         return false;
@@ -139,7 +139,7 @@ public class Registration {
             return false;
         }
 
-        grades[elect.getBlock().getBlockNumber() - 3] = grade;
+        grades[elect.getBlock() - 3] = grade;
 
         String[] newInfo = {
                 electives[0].getCourseCode(),
@@ -174,11 +174,11 @@ public class Registration {
             Elective[] els = new Elective[3];
             double[] grs = new double[3];
 
-            els[0] = new Elective(reg[1]);
+            els[0] = Elective.getElectiveWithCourseCode(reg[1]);
             grs[0] = Double.parseDouble(reg[2]);
-            els[0] = new Elective(reg[3]);
+            els[0] = Elective.getElectiveWithCourseCode(reg[3]);
             grs[0] = Double.parseDouble(reg[4]);
-            els[0] = new Elective(reg[5]);
+            els[0] = Elective.getElectiveWithCourseCode(reg[5]);
             grs[0] = Double.parseDouble(reg[6]);
 
             registrations[i]= new Registration(tmpStudent, els, grs);
