@@ -7,6 +7,7 @@ public class Admin extends User {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static Admin[] admins = null;
     private static boolean hasValidAdmins = false;
+    private static boolean isLoading = false;
     //endregion
 
     //region Constructor
@@ -24,9 +25,11 @@ public class Admin extends User {
     //region Static Init
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static boolean loadAdmins() {
-        if (hasValidAdmins && admins != null) return true;
+        if (hasValidAdmins) return true;
+        if (isLoading) return false;
+        isLoading = true;
         String[][] ads = InternalCore.readInfoFile(SEObjectType.ADMIN_USER, null);
-        if (ads.length < 1) return false;
+        if (ads == null) return true;
         admins = new Admin[ads.length];
         for (int i = 0; i < ads.length; i++) {
             User tmp = new User(
@@ -66,6 +69,12 @@ public class Admin extends User {
         }
         return null;
     }
+
+    public static Admin[] getAllAdmins(Admin admin) {
+        if (!admin.isValidAdmin()) return null;
+        hasValidAdmins = loadAdmins();
+        return admins;
+    }
     //endregion
 
     //region Adding Electives
@@ -74,14 +83,13 @@ public class Admin extends User {
         if (this.getUserType() != UserType.ADMIN) return false;
         InternalCore.printTitle("Adding an Elective", '*');
 
-        // There are 7 properties to set for an elective
+        // There are 8 properties to set for an elective
         String electiveCourseCode = courseCode, electiveName = "";
-        int electiveECTS = 0;
+        int electiveECTS = 0, block = 0;
         String[] electiveKeywords = null;
         MasterProgram electiveProgramName = null;
         Day lectureDay = null;
-	int block = 0;
-	long lecturerId = -1;
+	    long lecturerId = -1;
 
         int prop = (courseCode == null)? 0 : 1;
         for (; prop < 7; prop++) {
@@ -167,9 +175,9 @@ public class Admin extends User {
                 electiveECTS,
                 electiveProgramName,
                 electiveKeywords,
-                classTimes,
+                lectureDay,
                 block,
-		            lecturerId
+                lecturerId
         );
         newElective.saveElective(this, true);
 
