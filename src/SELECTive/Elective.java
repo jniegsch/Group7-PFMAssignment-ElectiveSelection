@@ -298,7 +298,7 @@ public class Elective {
                 elect.ects = this.ects;
                 elect.program = this.program;
                 elect.keywords = this.keywords;
-                elect.block = this.block;
+                elect.lectureDay = this.lectureDay;
                 elect.block = this.block;
                 elect.lecturerId = this.lecturerId;
                 updateSuccessful = true;
