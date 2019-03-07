@@ -220,7 +220,7 @@ public class Session {
             if (userChoice == null)
                 break;
             int choice = userChoice.intValue();
-            if (choice < 0 || choice > 6) {
+            if (choice < 0 || choice > 5) {
                 InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
                 continue;
             }
@@ -464,7 +464,6 @@ public class Session {
                 String[] keywords = keywordStr.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.ECTS, InternalCore.stripWhitespaceOfArray(keywords));
                 break;
-                //TODO Availability
         }
 
         InternalCore.println("\nThe electives that match your search are: ");
