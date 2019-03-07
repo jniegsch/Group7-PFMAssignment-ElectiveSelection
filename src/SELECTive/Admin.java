@@ -48,7 +48,7 @@ public class Admin extends User {
         admins[currLength] = admin;
     }
     //endregion
-
+  
     //region Student Getter
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public static Admin getAdminWithId(long id) {
@@ -74,13 +74,14 @@ public class Admin extends User {
         if (this.getUserType() != UserType.ADMIN) return false;
         InternalCore.printTitle("Adding an Elective", '*');
 
-        // There are 6 properties to set for an elective
+        // There are 7 properties to set for an elective
         String electiveCourseCode = courseCode, electiveName = "";
         int electiveECTS = 0;
         String[] electiveKeywords = null;
         MasterProgram electiveProgramName = null;
-        LectureBlock block = null;
-        LectureTime[] electiveTimes = null;
+        Day lectureDay = null;
+	int block = 0;
+	long lecturerId = -1;
 
         int prop = (courseCode == null)? 0 : 1;
         for (; prop < 7; prop++) {
@@ -128,33 +129,33 @@ public class Admin extends User {
                     }
                     break;
                 case 5:
-                    InternalCore.println("Which block is this elective taught?");
+                    InternalCore.println("> Which block is this elective taught?");
                     InternalCore.println("(1) Block 3");
                     InternalCore.println("(2) Block 4");
                     InternalCore.println("(3) Block 5");
                     String newBlock = InternalCore.getUserInput(String.class, "Your selection (3, 4, or 5):");
                     if (newBlock != null) {
-                        block = new LectureBlock(Long.parseLong(newBlock) - 1);
+                        block = Integer.parseInt(newBlock);
                         successfulSet = true;
                     }
                     break;
                 case 6:
-                    String times = InternalCore.getUserInput(String.class, "" +
-                            "> Lesson days and times (separate the list with ';' using the format <week-day code> @ <hh:mm>): \n" +
-                            "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
-                    if (times != null) {
-                        String[] dateTimes = times.split(";");
-                        electiveTimes = new LectureTime[dateTimes.length];
-                        for (int i = 0 ; i < dateTimes.length; i++) {
-                            String[] tmp = dateTimes[i].split("@");
-                            electiveTimes[i] = new LectureTime(InternalCore.stripWhitespace(tmp[1]),
-                                    Integer.parseInt(InternalCore.stripWhitespace(tmp[0])) - 1);
-                        }
-                        successfulSet = true;
-                    }
-                    break;
+		                Integer classDay = InternalCore.getUserInput(Integer.class, "" +
+				                "> On which day is the lesson taught: \n" +
+				                "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
+		               if (classDay != null) {
+			                  lectureDay = Day.values()[classDay - 1];
+			                  successfulSet = true;
+                   }
+                   break;
+		            case 7:
+			              Long lecturerIdElective = InternalCore.getUserInput(Long.class, "> Which lecturer teaches this elective? Please enter the lecturerId:");
+			              if (lecturerIdElective != null) {
+				                lecturerId = lecturerIdElective;
+				                successfulSet = true;
+			              }
+			              break;
             }
-
             if (!successfulSet) prop--;
         }
         InternalCore.println("\nCreating elective...");
@@ -166,9 +167,9 @@ public class Admin extends User {
                 electiveECTS,
                 electiveProgramName,
                 electiveKeywords,
-                electiveTimes,
+                classTimes,
                 block,
-                -1 //TODO: Lecturer ID!
+		            lecturerId
         );
         newElective.saveElective(this, true);
 

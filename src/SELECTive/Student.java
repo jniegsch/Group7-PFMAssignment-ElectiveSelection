@@ -77,7 +77,7 @@ public class Student extends User {
         int courseBlock = 0;
 
         for (int i = 1; i < electiveList.length; i++) {
-            if (electiveList[i][0].equals(courseCode)) {
+            if (electiveList[i][1].equals(courseCode)) {
                 courseBlock = Integer.parseInt(electiveList[i][7]);
             }
         }

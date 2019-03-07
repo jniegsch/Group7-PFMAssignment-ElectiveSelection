@@ -102,7 +102,7 @@ public class Session {
                     "- - - Elective Management:\n" +
                     " 5) Add an elective\n" +
                     " 6) Edit an elective\n" +
-                    " 7) Filter on an elective\n" +
+                    " 7) Find an elective\n" +
                     "- - - \n" +
                     " 0) Logout\n");
             Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 7):");
@@ -156,7 +156,7 @@ public class Session {
                     + " 3) View list of student grades per elective\n"
                     + " 4) View grade statistics per elective\n"
                     + "- - - Elective Management:\n"
-                    + " 5) Filter on an elective"
+                    + " 5) Find an elective"
                     + "- - - Account Management:\n"
                     + " 6) Reset/Change password\\n"
                     + "- - - \n"
@@ -207,7 +207,7 @@ public class Session {
             InternalCore.println("What would you like to do?");
             InternalCore.println(""
                     + "- - - Elective Management:\n"
-                    + " 1) Filter on an elective\n"
+                    + " 1) Find an elective\n"
                     + " 2) Register to an elective\n"
                     + " 3) View a list of your enrolled electives\n"
                     + " 4) View your grade for a specific elective\n"
