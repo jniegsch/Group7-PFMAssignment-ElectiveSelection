@@ -1,19 +1,75 @@
 package SELECTive;
 
+import java.util.Arrays;
+
 public class Student extends User {
+    //region Static Properties
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static Student[] students = null;
+    private static boolean hasValidStudents = false;
+    //endregion
 
     //region Constructor
-    public Student(User base) {
-        super(base, UserType.STUDENT);
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public Student() {
+        hasValidStudents = loadStudents();
     }
 
-    // TODO: constructor also creates "empty" entry to Student_Elective_Relation file
+    public Student(User base) {
+        super(base, UserType.STUDENT);
+        hasValidStudents = loadStudents();
+    }
+    //endregion
 
-    // TODO: Create iCal export and check
-    // TODO: Register to Elective
+    //region Student Getter
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public static Student getStudentWithId(long id) {
+        hasValidStudents = loadStudents();
+        for (Student stu : students) {
+            if (stu.getUserId() == id) return stu;
+        }
+        return null;
+    }
+
+    public static Student getStudentWithUsername(String uname) {
+        hasValidStudents = loadStudents();
+        for (Student stu : students) {
+            if (stu.getUsername().equals(uname)) return stu;
+        }
+        return null;
+    }
+    //endregion
+
+    //region Static Init
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static boolean loadStudents() {
+        if (hasValidStudents && students != null) return true;
+        String[][] stus = InternalCore.readInfoFile(SEObjectType.STUDENT_USER, null);
+        if (stus.length < 1) return false;
+        students = new Student[stus.length];
+        for (int i = 0; i < stus.length; i++) {
+            User tmp = new User(
+                    stus[i][0],
+                    stus[i][1],
+                    stus[i][2],
+                    stus[i][3],
+                    stus[i][4],
+                    stus[i][5],
+                    UserType.STUDENT);
+            students[i] = new Student(tmp);
+        }
+        return true;
+    }
+
+    public static void addStudent(Student student) {
+        int currLength = students.length;
+        students = Arrays.copyOf(students, currLength + 1);
+        students[currLength] = student;
+    }
     //endregion
 
     //region Elective Registration
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public boolean registerToElective(String courseCode) {
         String[] ids = {Long.toString(this.getUserId())};
         String[][] enrolledElectives = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, ids);
@@ -105,6 +161,7 @@ public class Student extends User {
     //endregion
 
     //region Enrollment
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public void viewEnrolledElectives() {
         String[] ids = {Long.toString(this.getUserId())};
         String[][] enrolledElectives = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, ids);
@@ -132,17 +189,6 @@ public class Student extends User {
         } else {
             InternalCore.println("You are not yet enrolled in any elective");
         }
-    }
-    //endregion
-
-    //region Time Management
-    public boolean exportCalForElectives() {
-        return false; //TODO
-    }
-
-
-    private long hasRegistedForElectives() {
-        return -1; //TODO
     }
     //endregion
 }

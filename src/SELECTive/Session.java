@@ -102,14 +102,13 @@ public class Session {
                     "- - - Elective Management:\n" +
                     " 5) Add an elective\n" +
                     " 6) Edit an elective\n" +
-                    " 7) View elective statistics\n" +
-                    " 8) Find an elective\n" +
+                    " 7) Find an elective\n" +
                     "- - - \n" +
                     " 0) Logout\n");
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 8):");
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 7):");
             if (userChoice == null) break;
             int choice = userChoice.intValue();
-            if (choice < 0 || choice > 8) {
+            if (choice < 0 || choice > 7) {
                 InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
                 continue;
             }
@@ -134,12 +133,9 @@ public class Session {
                     addElective();
                     break;
                 case 6:
-                    Elective.editElective(sessionAdmin);
+                    editElective();
                     break;
                 case 7:
-                    viewElectiveStats();
-                    break;
-                case 8:
                     filterElectives();
                     break;
             }
@@ -333,6 +329,21 @@ public class Session {
         sessionAdmin.addElective(courseCode);
     }
 
+    private static void editElective() {
+        if (sessionUser.getUserType() != UserType.ADMIN) {
+            InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
+            return;
+        }
+
+        String code = InternalCore.getUserInput(String.class,
+                "Enter the course code for the elective you would like to edit: ");
+        if (code == null) return;
+
+        Elective toEdit = new Elective(InternalCore.stripWhitespace(code));
+        if (toEdit.getElectiveId() == -1) return;
+        toEdit.edit(sessionAdmin);
+    }
+
     // Method to view elective statistics
     private static void viewElectiveStats() {
         if (sessionUser.getUserType() != UserType.ADMIN && sessionUser.getUserType() != UserType.LECTURER) {
@@ -342,33 +353,12 @@ public class Session {
 
         String codes = InternalCore.getUserInput(String.class,
                 "Please enter all the course codes for which you would like to see the statistics, separated by ';'");
+        if (codes == null) return;
         String[] courseCodes = codes.split(";");
         Elective[] electives = new Elective[courseCodes.length];
-        String[][] allElectives = InternalCore.readInfoFile(SEObjectType.ELECTIVE, null);
         for (int i = 0; i < courseCodes.length; i++) {
-            int pos = 0;
-            // strip all beginning whitespace
-            while (pos < courseCodes[i].length()) {
-                if (courseCodes[i].toCharArray()[0] != ' ') break;
-                courseCodes[i] = courseCodes[i].substring(1);
-            }
-            // strip all end whitespace
-            while (pos >= 0) {
-                if (courseCodes[i].toCharArray()[courseCodes[i].length() - 1] != ' ') break;
-                courseCodes[i] = courseCodes[i].substring(0, courseCodes[i].length() - 1);
-            }
-            for (String[] erow : allElectives) {
-                if (erow[1].equals(courseCodes[i])) {
-                    electives[i] = new Elective(
-                            Long.parseLong(erow[0]),
-                            erow[1],
-                            erow[2],
-                            Integer.parseInt(erow[3]),
-                            MasterProgram.valueOf(erow[4]),
-                            Elective.keywordsFromKeywordString(erow[5])
-                    );
-                }
-            }
+            courseCodes[i] = InternalCore.stripWhitespace(courseCodes[i]);
+            electives[i] = new Elective(courseCodes[i]);
         }
 
         if (sessionLecturer != null) sessionLecturer.viewStatsForElective(electives);
