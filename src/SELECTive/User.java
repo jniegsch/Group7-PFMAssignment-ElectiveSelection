@@ -232,6 +232,7 @@ public class User {
         if (userExists(uname)) {
             InternalCore.printIssue("Username already taken.",
                     "The username you chose is already taken. Please choose another");
+            return null;
         }
 
         Scanner newAdminScanner = new Scanner(System.in);
