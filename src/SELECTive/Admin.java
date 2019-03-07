@@ -158,9 +158,9 @@ public class Admin extends User {
                     break;
                 case 5:
                     InternalCore.println("> Which block is this elective taught?");
-                    InternalCore.println("(1) Block 3");
-                    InternalCore.println("(2) Block 4");
-                    InternalCore.println("(3) Block 5");
+                    InternalCore.println("(3) Block 3");
+                    InternalCore.println("(4) Block 4");
+                    InternalCore.println("(5) Block 5");
                     String newBlock = InternalCore.getUserInput(String.class, "Your selection (3, 4, or 5):");
                     if (newBlock != null) {
                         block = Integer.parseInt(newBlock);
