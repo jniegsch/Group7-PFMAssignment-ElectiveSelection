@@ -108,7 +108,7 @@ public class Admin extends User {
 	    long lecturerId = -1;
 
         int prop = (courseCode == null)? 0 : 1;
-        for (; prop < 7; prop++) {
+        for (; prop < 8; prop++) {
             boolean successfulSet = false;
             switch (prop) {
                 case 0:
