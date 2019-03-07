@@ -113,6 +113,11 @@ public class Admin extends User {
                 case 0:
                     electiveCourseCode = InternalCore.getUserInput(String.class, "Elective course code: ");
                     if (electiveCourseCode != null) successfulSet = true;
+                    if (Elective.getElectiveWithCourseCode(electiveCourseCode) != null) {
+                        InternalCore.printIssue("Elective already exists",
+                                "Please edit the elective if you need to change anything");
+                        return false;
+                    }
                     break;
                 case 1:
                     electiveName = InternalCore.getUserInput(String.class, "Elective name: ");

@@ -213,7 +213,7 @@ public class Session {
                     + " 3) View a list of your enrolled electives\n"
                     + " 4) View your grade for a specific elective\n"
                     + "- - - Account Management:\n"
-                    + " 5) Reset/Change password\\n"
+                    + " 5) Reset/Change password\n"
                     + "- - - \n"
                     + " 0) Logout\n");
 

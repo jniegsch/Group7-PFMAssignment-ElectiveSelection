@@ -42,6 +42,7 @@ public class Elective {
 
     private static Elective[] electives = null;
     private static boolean hasValidElectives = false;
+    private static boolean isLoading = false;
     //endregion
 
     //region Private Properties
@@ -122,9 +123,11 @@ public class Elective {
 
     //region Static I/O Access
     private static boolean loadElectives() {
-        if (electives != null && hasValidElectives) return true;
-
+        if (hasValidElectives) return true;
+        if (isLoading) return false;
+        isLoading = true;
         String[][] electiveList = InternalCore.readInfoFile(SEObjectType.ELECTIVE, null);
+        if (electiveList == null) return true;
         int electiveCount = electiveList.length;
         Elective[] allElectives = new Elective[electiveCount];
         for (int i = 0; i < electiveCount; i++) {
@@ -144,6 +147,29 @@ public class Elective {
         return true;
     }
 
+    public static void addElective(Elective elective) {
+        if (alreadyHasLoaded(elective)) return;
+        int currLength = 0;
+        if (electives != null) {
+            currLength = electives.length;
+            electives = Arrays.copyOf(electives, currLength + 1);
+        } else {
+            electives = new Elective[1];
+        }
+        electives[currLength] = elective;
+    }
+
+    private static boolean alreadyHasLoaded(Elective elective) {
+        hasValidElectives = loadElectives();
+        if (electives == null) return false;
+        for (Elective ele : electives) {
+            if (ele.equals(elective)) return true;
+        }
+        return false;
+    }
+    //endregion
+
+    //region Filters
     /**
      * Returns the electives given a certain filter and arguments. The possible arguments for the filters are:
      * <pre>
@@ -285,6 +311,12 @@ public class Elective {
         }
 
         if (!storeSuccessful) return false;
+
+        if (newElective) {
+            addElective(this);
+            return true;
+        }
+
         for (Elective elect : electives) {
             if (elect.electiveId == this.electiveId) {
                 elect.courseCode = this.courseCode;
