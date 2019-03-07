@@ -60,6 +60,10 @@ public class Elective {
     public Elective() {
         hasValidElectives = loadElectives();
     }
+	
+    public Elective(String code) {
+    	this.courseCode = code;
+    }
 
     public Elective(String code, String name) {
         this();
@@ -298,7 +302,7 @@ public class Elective {
                 elect.ects = this.ects;
                 elect.program = this.program;
                 elect.keywords = this.keywords;
-                elect.classTimes = this.classTimes;
+                elect.lectureDay = this.lectureDay;
                 elect.block = this.block;
                 elect.lecturerId = this.lecturerId;
                 updateSuccessful = true;
