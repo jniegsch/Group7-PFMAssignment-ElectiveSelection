@@ -167,9 +167,9 @@ public class Admin extends User {
                 electiveECTS,
                 electiveProgramName,
                 electiveKeywords,
-                classTimes,
+                lectureDay,
                 block,
-		            lecturerId
+		lecturerId
         );
         newElective.saveElective(this, true);
 
