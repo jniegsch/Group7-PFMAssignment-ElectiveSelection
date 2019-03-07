@@ -761,9 +761,9 @@ public class User {
             return null;
         }
 
-        if (them.type == UserType.ADMIN) Admin.addAdmin((Admin)them);
-        if (them.type == UserType.STUDENT) Student.addStudent((Student)them);
-        if (them.type == UserType.LECTURER) Lecturer.addLecturer((Lecturer)them);
+        if (them.type == UserType.ADMIN) Admin.addAdmin(new Admin(them));
+        if (them.type == UserType.STUDENT) Student.addStudent(new Student(them));
+        if (them.type == UserType.LECTURER) Lecturer.addLecturer(new Lecturer(them));
         return them;
     }
 
