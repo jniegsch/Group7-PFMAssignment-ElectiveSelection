@@ -250,8 +250,8 @@ public class Elective {
                 this.program.toString(),
                 keywordString(),
                 this.lectureDay.toString(),
-		Integer.toString(this.block),
-                Long.toString(this.lecturerId),
+                Long.toString(this.block),
+                Long.toString(this.lecturerId)
         };
 
         if (newElective) {
