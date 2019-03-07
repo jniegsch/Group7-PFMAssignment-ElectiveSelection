@@ -266,8 +266,7 @@ public class User {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public String toString() {
         StringBuilder strRepresentation = new StringBuilder();
-        strRepresentation.append(capitalizeString(this.type.toString()));
-        strRepresentation.append(" ").append(this.userId).append(": ");
+        strRepresentation.append("[id: ").append(this.userId).append("] ");
         strRepresentation.append(capitalizeString(this.firstName)).append(" ");
         strRepresentation.append(capitalizeString(this.middleInitial)).append(" ");
         strRepresentation.append(capitalizeString(this.lastname)).append(" ");
@@ -778,9 +777,9 @@ public class User {
                 this.middleInitial,
                 this.username,
                 (this.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(this.dateOfBirth) : "",
-                (lecturerInstance)? ((Lecturer)this).getTitle().toString() : ""
+                (this.type == UserType.LECTURER)? ((Lecturer)this).getTitle().toString() : ""
         };
-        return InternalCore.updateInfoFile(ot, Long.toString(this.userId), (lecturerInstance)? info : Arrays.copyOfRange(info, 0, info.length - 1));
+        return InternalCore.updateInfoFile(ot, Long.toString(this.userId), (lecturerInstance)? info : Arrays.copyOfRange(info, 0, 5));
     }
 
     /**
@@ -798,9 +797,10 @@ public class User {
                 them.lastname,
                 them.middleInitial,
                 them.username,
-                (them.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(them.dateOfBirth) : ""
+                (them.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(them.dateOfBirth) : "",
+                (them.type == UserType.LECTURER)? ((Lecturer)them).getTitle().toString() : ""
         };
-        them.userId = InternalCore.addEntryToInfoFile(type, userInfo);
+        them.userId = InternalCore.addEntryToInfoFile(type, (them.type == UserType.LECTURER)? userInfo : Arrays.copyOfRange(userInfo, 0, 5));
         if (them.userId == -1) {
             InternalCore.printIssue("Could not create user", "The new user could not be saved");
             return null;
@@ -810,6 +810,10 @@ public class User {
             InternalCore.printIssue("Could not create user", "The new user credentials could not be saved");
             return null;
         }
+
+        if (them.type == UserType.ADMIN) Admin.addAdmin((Admin)them);
+        if (them.type == UserType.STUDENT) Student.addStudent((Student)them);
+        if (them.type == UserType.LECTURER) Lecturer.addLecturer((Lecturer)them);
         return them;
     }
 

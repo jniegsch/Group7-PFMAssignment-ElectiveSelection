@@ -20,11 +20,6 @@ enum MasterProgram {
 }
 
 public class Elective {
-    //region TO DEFINITELY REMOVE SCANNERS
-    Scanner userInputInt = new Scanner(System.in);
-    Scanner userInputString = new Scanner(System.in);
-    //endregion
-
     //region Class specific enum declarations
     public enum ElectiveFilterType {
         COURSEID, // only equal filter
@@ -37,6 +32,9 @@ public class Elective {
 
     // region Private Constants
     private static final String invalidCourseID = "invC0iceNegativeWithdrawl";
+
+    private static Elective[] electives = null;
+    private static boolean hasValidElectives = false;
     //endregion
 
     //region Private Properties
@@ -49,16 +47,21 @@ public class Elective {
     private LectureTime[] classTimes = null;
     private LectureBlock block = null;
     private long lecturerId = -1;
-    //TODO: add test method?
     //endregion
 
     //region Constructors
+    public Elective() {
+        hasValidElectives = loadElectives();
+    }
+
     public Elective(String code, String name) {
+        this();
         this.courseCode = code;
         this.electiveName = name;
     }
 
-    public Elective(long id, String code, String name, int e, MasterProgram prog, String[] keys, LectureTime[] times, LectureBlock block) {
+    public Elective(long id, String code, String name, int e, MasterProgram prog, String[] keys, LectureTime[] times, LectureBlock block, long lecturer) {
+        this();
         this.electiveId = id;
         this.courseCode = code;
         this.electiveName = name;
@@ -67,15 +70,63 @@ public class Elective {
         this.keywords = keys;
         this.classTimes = times;
         this.block = block;
+        this.lecturerId = lecturer;
+    }
+    //endregion
+
+    //region Accessors
+    public static Elective getElectiveWithCourseCode(String courseCode) {
+        hasValidElectives = loadElectives();
+        for (Elective elective : electives) {
+            if (elective.courseCode.equals(courseCode)) return elective;
+        }
+        return null;
     }
 
-    //TODO: write constructor to just take course code
-    public Elective(String courseCode) {
+    public static Elective[] getAllElectivesForLecturer(Lecturer lecturer) {
+        hasValidElectives = loadElectives();
+        ArrayList<Elective> validElectives = new ArrayList<>();
+        for (Elective elective : electives) {
+            if (elective.lecturerId == lecturer.getUserId()) validElectives.add(elective);
+        }
+        if (validElectives.size() == 0) return null;
+        Elective[] electivesToReturn = new Elective[validElectives.size()];
+        return validElectives.toArray(electivesToReturn);
+    }
 
+    public Elective(String courseCode) {
+        this();
+        String[] code = {courseCode};
+        Elective[] tempEls = electivesFilteredOnCourseCode(code);
+        if (tempEls.length == 0) {
+            InternalCore.printIssue("An Elective with this course code does not exist", "");
+            return;
+        }
+        if (tempEls.length > 1) {
+            InternalCore.printError(
+                    "Elective",
+                    "<constructor>(String courseCode)",
+                    "Fatal",
+                    "");
+            System.exit(InternalCore.BROKEN_INTERNAL_STATE_FATAL);
+        }
+        Elective tmp = tempEls[0];
+        this.electiveId = tmp.electiveId;
+        this.courseCode = tmp.courseCode;
+        this.electiveName = tmp.electiveName;
+        this.ects = tmp.ects;
+        this.program = tmp.program;
+        this.keywords = tmp.keywords;
+        this.classTimes = tmp.classTimes;
+        this.block = tmp.block;
+        this.lecturerId = tmp.lecturerId;
     }
     //endregion
 
     //region Getters
+    public long getElectiveId() {
+        return this.electiveId;
+    }
     public String getElectiveName() {
         return this.electiveName;
     }
@@ -94,11 +145,15 @@ public class Elective {
     public LectureBlock getBlock() {
         return this.block;
     }
-
+    public Elective[] getAllElectives() {
+        return electives;
+    }
     //endregion
 
-    //region Static Access
-    public static Elective[] getAllAvailableElectives() {
+    //region Static I/O Access
+    private static boolean loadElectives() {
+        if (electives != null && hasValidElectives) return true;
+
         String[][] electiveList = InternalCore.readInfoFile(SEObjectType.ELECTIVE, null);
         int electiveCount = electiveList.length;
         Elective[] allElectives = new Elective[electiveCount];
@@ -111,12 +166,12 @@ public class Elective {
                     (electiveList[i][4] != "")? MasterProgram.valueOf(electiveList[i][4]) : MasterProgram.INVLD,
                     keywordsFromKeywordString(electiveList[i][5]),
                     LectureTime.generateLectureTimeArrayFromStringRepresentation(electiveList[i][6]),
-                    new LectureBlock(electiveList[i][7])
+                    new LectureBlock(electiveList[i][7]),
+                    Long.parseLong(electiveList[i][8])
             );
             allElectives[i] = temp;
         }
-
-        return allElectives;
+        return true;
     }
 
     /**
@@ -138,17 +193,15 @@ public class Elective {
      * @return
      */
     public static Elective[] filterOn(ElectiveFilterType filter, String[] argument) {
-        Elective[] allElectives = getAllAvailableElectives();
-
         switch (filter) {
             case COURSEID:
-                return electivesFilteredOnCourseCode(allElectives, argument);
+                return electivesFilteredOnCourseCode(argument);
             case ECTS:
-                return electivesFilteredOnEcts(allElectives, argument);
+                return electivesFilteredOnEcts(argument);
             case BLOCK:
-                return electivesFilteredOnBlock(allElectives, argument);
+                return electivesFilteredOnBlock(argument);
             case KEYWORDS:
-                return electivesFilteredOnKeywords(allElectives, argument);
+                return electivesFilteredOnKeywords(argument);
             case AVAILABILITY:
                 return null;
             default:
@@ -160,12 +213,11 @@ public class Elective {
     IMPORTANT: comparing the array of Elective to the String array of the argument, the larger is most probably the
     elective. However, since we need to check on a property of elective not an entire elective a HashSet will not
     be beneficial when it comes to performance. Furthermore, the ArrayList (even if it is probably coded efficiently)
-    will not save much time compared to a generic foor loop approach. Changing String[] to ArrayList<String> will
+    will not save much time compared to a generic for loop approach. Changing String[] to ArrayList<String> will
     probably mitigate this performance increase.
      */
-    //TODO: Add parrellism for filters and file reading?
-    private static Elective[] electivesFilteredOnCourseCode(Elective[] electives, String[] argument) {
-        ArrayList<Elective> finalElectives = new ArrayList<Elective>();
+    private static Elective[] electivesFilteredOnCourseCode(String[] argument) {
+        ArrayList<Elective> finalElectives = new ArrayList<>();
         for (Elective elect : electives) {
             for (String arg : argument) {
                 if (elect.courseCode.equals(arg)) {
@@ -178,7 +230,7 @@ public class Elective {
         return finalElectives.toArray(filteredElectives);
     }
 
-    private static Elective[] electivesFilteredOnEcts(Elective[] electives, String[] argument) {
+    private static Elective[] electivesFilteredOnEcts(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
         for (Elective elect : electives) {
             for (String arg : argument) {
@@ -192,7 +244,7 @@ public class Elective {
         return finalElectives.toArray(filteredElectives);
     }
 
-    private static Elective[] electivesFilteredOnBlock(Elective[] electives, String[] argument) {
+    private static Elective[] electivesFilteredOnBlock(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
         for (Elective elect : electives) {
             for (String arg : argument) {
@@ -206,7 +258,7 @@ public class Elective {
         return finalElectives.toArray(filteredElectives);
     }
 
-    private  static Elective[] electivesFilteredOnKeywords(Elective[] electives, String[] argument) {
+    private  static Elective[] electivesFilteredOnKeywords(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
         for (Elective elect : electives) {
             boolean earlyExit = false;
@@ -254,62 +306,39 @@ public class Elective {
                 this.program.toString(),
                 keywordString(),
                 LectureTime.generateLectureTimeArrayStringRepresentation(this.classTimes),
-                this.block.toString()
+                this.block.toString(),
+                Long.toString(this.lecturerId)
         };
 
+        boolean storeSuccessful = false, updateSuccessful = false;
         if (newElective) {
             this.electiveId = InternalCore.addEntryToInfoFile(SEObjectType.ELECTIVE, Arrays.copyOfRange(info, 1, info.length));
-            if (this.electiveId != -1) return true;
-            return false;
+            if (this.electiveId != -1) storeSuccessful = true;
         } else {
-            return InternalCore.updateInfoFile(SEObjectType.ELECTIVE, Long.toString(this.electiveId), info);
-        }
-    }
-
-    // This method allows the user to edit the elective
-    public static boolean editElective(Admin who) {
-        // Check access rights
-        UserType requestorsType = who.getUserType();
-        if (requestorsType != UserType.ADMIN) {
-            InternalCore.printIssue("Invalid Access Rights",
-                    "You do not have the correct access privileges to edit an elective.");
-            return false;
+            storeSuccessful = InternalCore.updateInfoFile(SEObjectType.ELECTIVE, Long.toString(this.electiveId), info);
         }
 
-        // Get course to edit
-        String courseCode = InternalCore.getUserInput(String.class,
-                "Which elective do you want to edit? Please enter the course code");
-        String[][] electiveList = InternalCore.readInfoFile(SEObjectType.ELECTIVE, null);
-        int toEditElective = -1;
-        for (int i = 0; i < electiveList.length; i++) {
-            if (electiveList[i][1].equals(courseCode)) {
-                toEditElective = i;
+        if (!storeSuccessful) return false;
+        for (Elective elect : electives) {
+            if (elect.electiveId == this.electiveId) {
+                elect.courseCode = this.courseCode;
+                elect.electiveName = this.electiveName;
+                elect.ects = this.ects;
+                elect.program = this.program;
+                elect.keywords = this.keywords;
+                elect.classTimes = this.classTimes;
+                elect.block = this.block;
+                elect.lecturerId = this.lecturerId;
+                updateSuccessful = true;
                 break;
             }
         }
 
-        // Check if course exists
-        if (toEditElective == -1) {
-            String choice = InternalCore.getUserInput(String.class,
-                    "It seems like the course you want to edit doesn't exist. Would you like to create it? (Y/n)");
-            if (choice.toLowerCase().equals("y")) {
-                Admin adminWho = (Admin) who;
-                return adminWho.addElective(courseCode);
-            }
-            return false;
+        if (!updateSuccessful) {
+            InternalCore.printIssue("State Consistency Issue", "A fatal internal state consistency has occurred, will gracefully crash and burn...");
+            System.exit(InternalCore.BROKEN_INTERNAL_STATE_FATAL);
         }
-
-        Elective toEdit = new Elective(
-                Long.parseLong(electiveList[toEditElective][0]),
-                electiveList[toEditElective][1],
-                electiveList[toEditElective][2],
-                Integer.parseInt(electiveList[toEditElective][3]),
-                MasterProgram.valueOf(electiveList[toEditElective][4]),
-                keywordsFromKeywordString(electiveList[toEditElective][5]),
-                LectureTime.generateLectureTimeArrayFromStringRepresentation(electiveList[toEditElective][6]),
-                (new LectureBlock(electiveList[toEditElective][7]))
-        );
-        return toEdit.edit(who);
+        return true;
     }
 
     public boolean edit(Admin who) {
@@ -439,14 +468,4 @@ public class Elective {
         this.block = new LectureBlock(Long.parseLong(newBlock) - 1);
         return true;
     }
-
-    //region Register For Elective
-    public boolean registerForElective(Student stu) {
-        return false; //TODO
-    }
-
-    public boolean deregisterForElective(Student stu) {
-        return false; //TODO
-    }
-    //endregion
 }
