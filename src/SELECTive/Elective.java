@@ -60,10 +60,6 @@ public class Elective {
     public Elective() {
         hasValidElectives = loadElectives();
     }
-	
-    public Elective(String code) {
-    	this.courseCode = code;
-    }
 
     public Elective(String code, String name) {
         this();
