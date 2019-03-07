@@ -2,7 +2,6 @@ package SELECTive;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
 
 enum MasterProgram {
     AFM,
@@ -24,21 +23,18 @@ enum Day {
     TUESDAY,
     WEDNESDAY,
     THURSDAY,
-    FRIDAY
+    FRIDAY,
+    INVLD
 }
 
 public class Elective {
-    //region TO DEFINITELY REMOVE SCANNERS
-    Scanner userInputInt = new Scanner(System.in);
-    Scanner userInputString = new Scanner(System.in);
-    //endregion
 
     //region Class specific enum declarations
     public enum ElectiveFilterType {
-        COURSEID, // only equal filter
-        ECTS, //TODO: check if electives have diff ects
-        BLOCK, // equal or selection
-        KEYWORDS, // any match, (single)
+        COURSEID,
+        ECTS,
+        BLOCK,
+        KEYWORDS,
     }
     //endregion
 
@@ -64,7 +60,7 @@ public class Elective {
         this.electiveName = name;
     }
 
-    public Elective(long id, String code, String name, int e, MasterProgram prog, String[] keys, Day day, int block) {
+    public Elective(long id, String code, String name, int e, MasterProgram prog, String[] keys, Day day, int block, long lecturerId) {
         this.electiveId = id;
         this.courseCode = code;
         this.electiveName = name;
@@ -73,11 +69,11 @@ public class Elective {
         this.keywords = keys;
         this.lectureDay = day;
         this.block = block;
+        this.lecturerId = lecturerId;
     }
-
-    //TODO: write constructor to just take course code
+    
     public Elective(String courseCode) {
-
+   	    this.courseCode = courseCode;
     }
     //endregion
 
@@ -113,8 +109,9 @@ public class Elective {
                     Integer.parseInt(electiveList[i][3]),
                     (electiveList[i][4] != "")? MasterProgram.valueOf(electiveList[i][4]) : MasterProgram.INVLD,
                     keywordsFromKeywordString(electiveList[i][5]),
-                    (electiveList[i][6] != "")? Day.valueof(electiveList[i][6]) : Day.INVLD,
-                    Integer.parseInt(electiveList[i][7])
+                    (electiveList[i][6] != "")? Day.valueOf(electiveList[i][6]) : Day.INVLD,
+                    Integer.parseInt(electiveList[i][7]),
+                    Long.parseLong(electiveList[i][8])
             );
             allElectives[i] = temp;
         }
@@ -253,7 +250,8 @@ public class Elective {
                 this.program.toString(),
                 keywordString(),
                 this.lectureDay.toString(),
-                this.block.toString()
+                this.block.toString(),
+                Long.toString(this.lecturerId),
         };
 
         if (newElective) {
@@ -306,7 +304,8 @@ public class Elective {
                 MasterProgram.valueOf(electiveList[toEditElective][4]),
                 keywordsFromKeywordString(electiveList[toEditElective][5]),
                 Day.valueOf(electiveList[toEditElective][6]),
-                Integer.parseInt(electiveList[toEditElective][7])
+                Integer.parseInt(electiveList[toEditElective][7]),
+                Long.parseLong(electiveList[toEditElective][8])
         );
         return toEdit.edit(who);
     }
@@ -328,7 +327,8 @@ public class Elective {
                 "(3) ECTS \n" +
                 "(4) Keywords \n" +
                 "(5) Class day \n" +
-                "(6) Block");
+                "(6) Block \n" +
+                "(7) Lecturer Id");
         InternalCore.println(InternalCore.consoleLine('-'));
         Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, 3, 4, or 5): ");
         if (userChoice == null) return false;
@@ -346,8 +346,14 @@ public class Elective {
                 editKeywords();
                 break;
             case 5:
+            	editClassTimes();
+            	break;
+            case 6:
                 editBlock();
                 break;
+            case 7:
+            	editLecturerId();
+            	break;
         }
 
         return saveElective(who, false);
@@ -403,6 +409,17 @@ public class Elective {
         return true;
     }
 
+     //This method asks for the change of the class time and saves this in the file
+    private boolean editClassTimes() {
+    	InternalCore.println("On which day will this class be taught?");
+    	String classDay = InternalCore.getUserInput(String.class, "" +
+				"> Lesson day: \n" +
+				"   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
+		
+    	if (classDay == null) return false;
+    	this.lectureDay = Day.valueOf(classDay);
+			return true;
+	}
 
     // This method asks for the change of the elective block and saves this in the file
     private boolean editBlock() {
@@ -413,7 +430,15 @@ public class Elective {
         InternalCore.println(InternalCore.consoleLine('-'));
         String newBlock = InternalCore.getUserInput(String.class, "Your selection (1, 2, or 3:");
         if (newBlock == null) return false;
-        this.block = new Block(Long.parseLong(newBlock) - 1);
+        this.block = Integer.parseInt(newBlock);
+        return true;
+    }
+    
+    // This method asks for the change of the lecturer Id and saves this in the file
+    private boolean editLecturerId() {
+        String newLecturerId = InternalCore.getUserInput(String.class, "What is the Id of this elective's lecturer?");
+        if (newLecturerId == null) return false;
+        this.lecturerId = Long.parseLong(newLecturerId);
         return true;
     }
 
