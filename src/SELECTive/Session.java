@@ -350,8 +350,8 @@ public class Session {
                 "(2) Student\n" +
                 "(3) Admin");
         Integer utype = InternalCore.getUserInput(Integer.class,
-                "Please enter your choice (1 or 2):");
-        if (utype == null) {
+                "Please enter your choice (1, 2 or 3):");
+        if (utype == null || utype > 3) {
             InternalCore.println("You entered an invalid Username.");
             return;
         }
