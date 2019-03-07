@@ -7,6 +7,7 @@ public class Student extends User {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static Student[] students = null;
     private static boolean hasValidStudents = false;
+    private static boolean isLoading = false;
     //endregion
 
     //region Constructor
@@ -44,6 +45,8 @@ public class Student extends User {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static boolean loadStudents() {
         if (hasValidStudents && students != null) return true;
+        if (isLoading) return false;
+        isLoading = true;
         String[][] stus = InternalCore.readInfoFile(SEObjectType.STUDENT_USER, null);
         if (stus.length < 1) return false;
         students = new Student[stus.length];

@@ -556,7 +556,7 @@ public class User {
      * @return {@code bool} that indicates if the change was successful
      */
     public boolean changePassword(String uname, char[] oldPassword, char[] newPassword) {
-        if (!validPassword(newPassword)) {
+        if (invalidPassword(newPassword)) {
             InternalCore.printIssue("New Password is Invalid", "The password you selected in invalid!");
             return false;
         }
@@ -790,7 +790,7 @@ public class User {
      * @param them {@code User} representing the new User + subType to store in the subType specific location
      * @return {@code boolean} representing if the saving was entirely complete or failed at any stage
      */
-    private static User saveNewUser(char[] pword, User them) {
+    private User saveNewUser(char[] pword, User them) {
         SEObjectType type = (them.type.equals(UserType.ADMIN))? SEObjectType.ADMIN_USER : (them.type.equals(UserType.LECTURER))? SEObjectType.LECTURER_USER : SEObjectType.STUDENT_USER;
         String[] userInfo = {
                 them.firstName,
@@ -882,12 +882,12 @@ public class User {
      * @param pword {@code char[]} the password to validate
      * @return {@code bool} indicating if the password is valid or not
      */
-    public static boolean validPassword(char[] pword) {
-        if (pword.length < pwordMinLength) return false;
-        if (pword.length > pwordMaxLength) return false;
-        if (!containsAtLeast(regexNumCount, pwordMinNumCount, String.copyValueOf(pword))) return false;
-        if (!containsAtLeast(regexCapital, pwordMinCapitalCount, String.copyValueOf(pword))) return false;
-        return true;
+    public static boolean invalidPassword(char[] pword) {
+        if (pword.length < pwordMinLength) return true;
+        if (pword.length > pwordMaxLength) return true;
+        if (containsLessThan(regexNumCount, pwordMinNumCount, String.copyValueOf(pword))) return true;
+        if (containsLessThan(regexCapital, pwordMinCapitalCount, String.copyValueOf(pword))) return true;
+        return false;
     }
 
     /**
@@ -900,15 +900,15 @@ public class User {
      * @param str       {@code String} representing the string to search
      * @return {@code bool} indicating if the `minCount` of matches occured
      */
-    private static boolean containsAtLeast(String regex, int minCount, String str) {
+    private static boolean containsLessThan(String regex, int minCount, String str) {
         Pattern regexP = Pattern.compile(regex);
         Matcher regexM = regexP.matcher(str);
         int count = 0;
         while (regexM.find()) {
             count++;
-            if (count == minCount) return true;
+            if (count == minCount) return false;
         }
-        return false;
+        return true;
     }
     //endregion
 

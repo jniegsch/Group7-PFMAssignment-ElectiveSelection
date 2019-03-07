@@ -182,7 +182,7 @@ public class Session {
                     viewRegisteredStudentsPerElective();
                     break;
                 case 3:
-                    viewStudentGradesPerElectice();
+                    viewStudentGradesPerElective();
                     break;
                 case 4:
                     viewGradeStatsPerElective();
@@ -211,9 +211,8 @@ public class Session {
                     + " 2) Register to an elective\n"
                     + " 3) View a list of your enrolled electives\n"
                     + " 4) View your grade for a specific elective\n"
-                    + " 5) Create ICal export\n"
                     + "- - - Account Management:\n"
-                    + " 6) Reset/Change password\\n"
+                    + " 5) Reset/Change password\\n"
                     + "- - - \n"
                     + " 0) Logout\n");
 
@@ -245,9 +244,6 @@ public class Session {
                     sessionStudent.viewElectiveProgress(courseCodeProgress);;
                     break;
                 case 5:
-                    sessionStudent.exportCalForElectives();
-                    break;
-                case 6:
                     resetOrChangePasswordOfUser(sessionStudent);
                     break;
 
@@ -299,22 +295,25 @@ public class Session {
 
         // print the users
         if (adminUsers != null) {
+            InternalCore.println("> Admins:");
             for (User au : adminUsers) {
                 InternalCore.println(au.toString());
             }
         }
         if (studentUsers != null) {
+            InternalCore.println("> Students:");
             for (User su : studentUsers) {
                 InternalCore.println(su.toString());
             }
         }
         if (lectureUsers != null) {
+            InternalCore.println("> Lecturers:");
             for (User lu : lectureUsers) {
                 InternalCore.println(lu.toString());
             }
         }
         InternalCore.println(InternalCore.consoleLine('-') + "\n \n ");
-
+        InternalCore.getUserInput(String.class, "Close view / Back (press any key)");
     }
 
     // Method to add an elective
@@ -339,30 +338,9 @@ public class Session {
                 "Enter the course code for the elective you would like to edit: ");
         if (code == null) return;
 
-        Elective toEdit = new Elective(InternalCore.stripWhitespace(code));
+        Elective toEdit = Elective.getElectiveWithCourseCode(InternalCore.stripWhitespace(code));
         if (toEdit.getElectiveId() == -1) return;
         toEdit.edit(sessionAdmin);
-    }
-
-    // Method to view elective statistics
-    private static void viewElectiveStats() {
-        if (sessionUser.getUserType() != UserType.ADMIN && sessionUser.getUserType() != UserType.LECTURER) {
-            InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
-            return;
-        }
-
-        String codes = InternalCore.getUserInput(String.class,
-                "Please enter all the course codes for which you would like to see the statistics, separated by ';'");
-        if (codes == null) return;
-        String[] courseCodes = codes.split(";");
-        Elective[] electives = new Elective[courseCodes.length];
-        for (int i = 0; i < courseCodes.length; i++) {
-            courseCodes[i] = InternalCore.stripWhitespace(courseCodes[i]);
-            electives[i] = new Elective(courseCodes[i]);
-        }
-
-        if (sessionLecturer != null) sessionLecturer.viewStatsForElective(electives);
-        if (sessionAdmin != null) return;
     }
 
     private static void editAUser() {
@@ -402,7 +380,7 @@ public class Session {
     }
 
     // Method to view student grades for an elective
-    private static void viewStudentGradesPerElectice() {
+    private static void viewStudentGradesPerElective() {
         String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the registered students: ");
         sessionLecturer.showStudentGrades(courseCode);
     }
@@ -410,7 +388,7 @@ public class Session {
     // Method to print grade statistics for an elective AND number of students that failed the elective
     private static void viewGradeStatsPerElective() {
         String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the grade statistics: ");
-        sessionLecturer.viewStatsForElective(new Elective(courseCode));
+        sessionLecturer.viewStatsForElective(courseCode);
     }
     //endregion
 
@@ -529,7 +507,7 @@ public class Session {
             char[] pword = pass.toCharArray();
             pass = null; // try and get pass GCed
 
-            if (!User.validPassword(pword)) {
+            if (User.invalidPassword(pword)) {
                 InternalCore.println("Invalid password!");
                 numTries++;
                 continue;
