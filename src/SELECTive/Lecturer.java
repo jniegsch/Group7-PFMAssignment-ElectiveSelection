@@ -6,7 +6,9 @@ public class Lecturer extends User {
     public enum Title {
         MR,
         MRS,
+        MS,
         DR,
+        PROF,
         DEFAULT
     }
 
@@ -39,6 +41,11 @@ public class Lecturer extends User {
         super(base, UserType.LECTURER);
         hasvalidLecturers = loadLecturers();
     }
+
+    public Lecturer(User base, Title titl) {
+        this(base);
+        this.title = titl;
+    }
     //endregion
 
     //region Static Init
@@ -66,9 +73,24 @@ public class Lecturer extends User {
     }
 
     public static void addLecturer(Lecturer lecturer) {
-        int currLength = lecturers.length;
-        lecturers = Arrays.copyOf(lecturers, currLength + 1);
+        if (alreadyHasLoaded(lecturer)) return;
+        int currLength = 0;
+        if (lecturers != null) {
+            currLength = lecturers.length;
+            lecturers = Arrays.copyOf(lecturers, currLength + 1);
+        } else {
+            lecturers = new Lecturer[1];
+        }
         lecturers[currLength] = lecturer;
+    }
+
+    private static boolean alreadyHasLoaded(Lecturer lecturer) {
+        hasvalidLecturers = loadLecturers();
+        if (lecturers == null) return false;
+        for (Lecturer lec : lecturers) {
+            if (lec.equals(lecturer)) return true;
+        }
+        return false;
     }
     //endregion
 

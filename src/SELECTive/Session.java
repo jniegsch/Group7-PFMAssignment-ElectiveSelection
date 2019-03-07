@@ -57,6 +57,7 @@ public class Session {
         }
 
         InternalCore.println("Logging out...");
+        InternalCore.cleanup();
     }
     //endregion
 
@@ -270,9 +271,24 @@ public class Session {
         // Get user input
         String uname = InternalCore.getUserInput(String.class,
                 "Enter a username: ");
-        String pword = InternalCore.getUserInput(String.class,
+        User.showPasswordRules();
+        String pass = InternalCore.getUserInput(String.class,
                 "Enter a password: ");
-        if (sessionAdmin.createNewUser(uname, pword.toCharArray(), UserType.values()[typeSelect]) == null) {
+        if (pass == null) return;
+        char[] pword = pass.toCharArray();
+        if (User.invalidPassword(pword)) {
+            InternalCore.printIssue("Invalid password", "");
+            return;
+        }
+        String pass2 = InternalCore.getUserInput(String.class,
+                "Repeat the password: ");
+        if (pass2 == null) return;
+        char[] pword2 = pass2.toCharArray();
+        if (!Arrays.equals(pword, pword2)) {
+            InternalCore.printIssue("The passwords do not match.", "");
+            return;
+        }
+        if (sessionAdmin.createNewUser(uname, pword, UserType.values()[typeSelect]) == null) {
             InternalCore.printIssue("Couldn't create the user", "For some reason the user could not be created, please try again.");
         }
     }

@@ -46,9 +46,24 @@ public class Admin extends User {
     }
 
     public static void addAdmin(Admin admin) {
-        int currLength = admins.length;
-        admins = Arrays.copyOf(admins, currLength + 1);
+        if (alreadyHasLoaded(admin)) return;
+        int currLength = 0;
+        if (admins != null) {
+            currLength = admins.length;
+            admins = Arrays.copyOf(admins, currLength + 1);
+        } else {
+            admins = new Admin[1];
+        }
         admins[currLength] = admin;
+    }
+
+    private static boolean alreadyHasLoaded(Admin admin) {
+        hasValidAdmins = loadAdmins();
+        if (admins == null) return false;
+        for (Admin adm : admins) {
+            if (adm.equals(admin)) return true;
+        }
+        return false;
     }
     //endregion
   

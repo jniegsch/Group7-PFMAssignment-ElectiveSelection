@@ -9,7 +9,9 @@ import java.security.NoSuchAlgorithmException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -232,18 +234,44 @@ public class User {
         if (userExists(uname)) {
             InternalCore.printIssue("Username already taken.",
                     "The username you chose is already taken. Please choose another");
+            return null;
         }
 
-        Scanner newAdminScanner = new Scanner(System.in);
-        InternalCore.println("Please fill in the account details. You can also skip them by pressing `enter`. The user can change these at a later stage");
-        InternalCore.print("What is your first name: ");
-        String fname = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
-        InternalCore.print("What is your last name: ");
-        String lname = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
-        InternalCore.print("What is/are your middle initial(s): ");
-        String minit = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
-        InternalCore.print("What is your date of birth (please enter in the format yyyy-MM-dd: ");
-        String dobStr = (newAdminScanner.hasNextLine())? newAdminScanner.nextLine() : "";
+        InternalCore.println("Please fill in the account details. You can also skip them by pressing `enter`. The user can change these at a later stage.");
+        String fnameInp = InternalCore.getUserInput(String.class, "What is their first name: ");
+        String fname = (fnameInp != null)? fnameInp : "";
+        String lnameInp = InternalCore.getUserInput(String.class, "What is their last name: ");
+        String lname = (lnameInp != null)? lnameInp : "";
+        String minitInp = InternalCore.getUserInput(String.class, "What is/are their middle initial(s): ");
+        String minit = (minitInp != null)? minitInp : "";
+        String dobInp = InternalCore.getUserInput(String.class, "What is their date of birth (please enter in the format yyyy-MM-dd: ");
+        String dobStr = (dobInp != null)? dobInp : "";
+
+        Lecturer.Title title = null;
+        if (utype == UserType.LECTURER) {
+            InternalCore.println("Please choose one of the specified titles for the lecturer: ");
+            InternalCore.println("(0) No title");
+            int optId = 0;
+            for (Lecturer.Title t : Lecturer.Title.values()) {
+                InternalCore.println("(" + optId + ") " + InternalCore.capitalizeString(t.toString()));
+                optId++;
+            }
+            // Even though we can use this class to request an integer, seeing as we allow the user to skip
+            // using `enter` we must use `String` in order to not throw errors!
+            String titleInp = InternalCore.getUserInput(String.class, "The title choice (1, 2, etc): ");
+            String titleIntStr = (titleInp != null)? titleInp : "-1";
+            int titleChoice = -1;
+            try {
+                titleChoice = Integer.parseInt(titleIntStr) - 1;
+            } catch (NumberFormatException nfe) {
+                titleChoice = -1;
+            }
+            if (titleChoice < 0 || titleChoice >= Lecturer.Title.values().length) {
+                title = Lecturer.Title.DEFAULT;
+            } else {
+                title = Lecturer.Title.values()[titleChoice];
+            }
+        }
 
         User newUser = new User();
         newUser.firstName = fname;
@@ -252,7 +280,13 @@ public class User {
         newUser.username = uname;
         newUser.dateOfBirth = parseDOB(dobStr);
         newUser.type = utype;
-        if (saveNewUser(pword, newUser) == null) {
+
+        Lecturer newLec = null;
+        if (utype == UserType.LECTURER) {
+            newLec = new Lecturer(newUser, title);
+        }
+
+        if (saveNewUser(pword, (newLec == null)? newUser : newLec) == null) {
             InternalCore.printError("User",
                     "createNew",
                     "FatalError",
@@ -268,19 +302,10 @@ public class User {
     public String toString() {
         StringBuilder strRepresentation = new StringBuilder();
         strRepresentation.append("[id: ").append(this.userId).append("] ");
-        strRepresentation.append(capitalizeString(this.firstName)).append(" ");
-        strRepresentation.append(capitalizeString(this.middleInitial)).append(" ");
-        strRepresentation.append(capitalizeString(this.lastname)).append(" ");
+        strRepresentation.append(InternalCore.capitalizeString(this.firstName)).append(" ");
+        strRepresentation.append(InternalCore.capitalizeString((this.middleInitial.equals(" ")? "" : this.middleInitial))).append(" ");
+        strRepresentation.append(InternalCore.capitalizeString(this.lastname)).append(" ");
         return strRepresentation.toString();
-    }
-
-    private static String capitalizeString(String str) {
-        if (str == null || str.equals("") || str.equals(" ")) return "";
-        StringBuilder capitalizedString = new StringBuilder();
-        char[] strArray = str.toLowerCase().toCharArray();
-        capitalizedString.append(Character.toString(strArray[0]).toUpperCase());
-        capitalizedString.append(String.valueOf(Arrays.copyOfRange(strArray, 1, strArray.length)));
-        return capitalizedString.toString();
     }
     //endregion
 
@@ -439,24 +464,20 @@ public class User {
         String uname = "";
         char[] pword;
         while (failedAccessCount < MAX_LOGIN_ATTEMPTS) {
-            Scanner loginScanner = new Scanner(System.in);
             InternalCore.printTitle("Attempt " + (failedAccessCount + 1) + " of " + MAX_LOGIN_ATTEMPTS, '-');
             // Get username
-            InternalCore.print("Username: ");
-            if (loginScanner.hasNextLine()) {
-                uname = loginScanner.nextLine();
-            } else {
+            uname = InternalCore.getUserInput(String.class, "Username: ");
+            if (uname == null) {
                 InternalCore.printIssue("No Username inserted", "Please enter your username!");
                 continue;
             }
             // Get password
-            InternalCore.print("Password: ");
-            if (loginScanner.hasNextLine()) {
-                pword = loginScanner.nextLine().toCharArray();
-            } else {
+            String pass = InternalCore.getUserInput(String.class, "Password: ");
+            if (pass == null) {
                 InternalCore.printIssue("No Password inserted", "Please enter your password!");
                 continue;
             }
+            pword = pass.toCharArray();
             if (authenticateUser(uname, pword)) { authed = true; break; }
             failedAccessCount++;
             InternalCore.printIssue("Wrong Password or Username",
@@ -588,12 +609,8 @@ public class User {
     public static boolean hasNoUsers() {
         // check if root needs to be created
         if (!userExists(rootUserName)) createRootAdmin();
-        File userFile = new File(InternalCore.fileLocationForObjectType(SEObjectType.USER_AUTH));
-        if (userFile.exists()) {
-           String[][] auth = new User().readDictFromAuthFile();
-           if (auth.length > 1) return false;
-           return true;
-        }
+        if (!hasOpenUP) { uPs = readDictFromAuthFile(); hasOpenUP = true; }
+        if (uPs.length > 1) return false;
         return true;
     }
 
@@ -603,11 +620,10 @@ public class User {
      * @return {@code bool} indicating if the user was found
      */
     public static boolean userExists(String username) {
-        File userFile = new File(InternalCore.fileLocationForObjectType(SEObjectType.USER_AUTH));
-        if (!userFile.exists()) return false;
-        String[][] auth = new User().readDictFromAuthFile();
+        //TODO: Make it check uPs
+        if (!hasOpenUP) { uPs = readDictFromAuthFile(); hasOpenUP = true; }
         String uHash = hashUsername(username);
-        for (int i = 0; i < auth.length; i++) if (auth[i][0].equals(uHash)) return true;
+        for (int i = 0; i < uPs.length; i++) if (uPs[i][0].equals(uHash)) return true;
         return false;
     }
     //endregion
@@ -695,17 +711,6 @@ public class User {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Reads the data connected to certain user(s)
-     * @param type  {@code UserType} the UserType from which information should be read
-     * @param ids   {@code long[]} representing the user ids who's information should be returned
-     * @return {@code String[]} representing the user(s) information
-     */
-    private static String[][] getUserInfo(UserType type, String[] ids) {
-        SEObjectType ot = objectTypeForUserType(type);
-        return InternalCore.readInfoFile(ot, ids);
     }
 
     /**

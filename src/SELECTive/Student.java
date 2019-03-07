@@ -71,9 +71,24 @@ public class Student extends User {
     }
 
     public static void addStudent(Student student) {
-        int currLength = students.length;
-        students = Arrays.copyOf(students, currLength + 1);
+        if (alreadyHasLoaded(student)) return;
+        int currLength = 0;
+        if (students != null) {
+            currLength = students.length;
+            students = Arrays.copyOf(students, currLength + 1);
+        } else {
+            students = new Student[1];
+        }
         students[currLength] = student;
+    }
+
+    private static boolean alreadyHasLoaded(Student student) {
+        hasValidStudents = loadStudents();
+        if (students == null) return false;
+        for (Student stu : students) {
+            if (stu.equals(student)) return true;
+        }
+        return false;
     }
     //endregion
 

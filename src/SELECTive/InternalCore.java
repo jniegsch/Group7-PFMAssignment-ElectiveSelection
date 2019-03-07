@@ -3,6 +3,7 @@ package SELECTive;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -438,40 +439,64 @@ public final class InternalCore {
     //region Getting User Input
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // TODO: DOCS!!!
+    private static Scanner inputScanner = null;
+
+    // Important scanner is kept open until logout, since otherwise we also close the System.in stream and cannot recover
     public static <T extends java.lang.Object> T getUserInput(Class<T> type, String prompt) {
         final int maxTries = 5;
 
         int tryCount = 0;
-        Scanner inputScanner = new Scanner(System.in);
+        if (inputScanner == null) inputScanner = new Scanner(System.in);
+        inputScanner.reset();
+        inputScanner.useLocale(Locale.US);
         while (tryCount < maxTries) {
-            println(consoleLine('-'));
-            println(prompt);
+            println("[user input] " + stripWhitespace(prompt));
+
             if (type.equals(Integer.class)) {
-                if (inputScanner.hasNextInt()) return type.cast(Integer.valueOf(inputScanner.nextInt()));
+                if (inputScanner.hasNextInt()) {
+                    Integer x = inputScanner.nextInt();
+                    if (inputScanner.hasNextLine()) inputScanner.nextLine(); // Used due to possible hanging lines, which causes the next `nextLine` to return ""
+                    return type.cast(x);
+                }
                 InternalCore.printIssue("Wrong input type.", "An integer input was expected but none received");
                 tryCount++;
             }
 
             if (type.equals(String.class)) {
-                if (inputScanner.hasNextLine()) return type.cast(inputScanner.nextLine());
+                if (inputScanner.hasNextLine()) {
+                    String x = inputScanner.nextLine();
+                    return type.cast(x);
+                }
                 InternalCore.printIssue("Wrong input type.", "A string input was expected but none received");
                 tryCount++;
             }
 
             if (type.equals(Long.class)) {
-                if (inputScanner.hasNextLong()) return type.cast(Long.valueOf(inputScanner.nextLong()));
+                if (inputScanner.hasNextLong()) {
+                    Long x = inputScanner.nextLong();
+                    if (inputScanner.hasNextLine()) inputScanner.nextLine();
+                    return type.cast(x);
+                }
                 InternalCore.printIssue("Wrong input type.", "A long input was expected but none received");
                 tryCount++;
             }
 
             if (type.equals(Double.class)) {
-                if (inputScanner.hasNextDouble()) return type.cast(Double.valueOf(inputScanner.nextDouble()));
+                if (inputScanner.hasNextDouble()) {
+                    Double x = inputScanner.nextDouble();
+                    if (inputScanner.hasNextLine()) inputScanner.nextLine();
+                    return type.cast(x);
+                }
                 InternalCore.printIssue("Wrong input type.", "A double input was expected but none received");
                 tryCount++;
             }
         }
-        inputScanner.close();
         return null;
+    }
+
+    public static void cleanup() {
+        inputScanner.close();
+        inputScanner = null;
     }
     //endregion
 
@@ -545,9 +570,16 @@ public final class InternalCore {
         String[] sections = str.split("\n");
         for (int i = 0; i < sections.length; i++) {
             while (sections[i].length() > consoleCharWidth) {
-                String sub = sections[i].substring(0, consoleCharWidth - 1);
-                System.out.println(sub);
-                sections[i] = sections[i].substring(consoleCharWidth);
+                String[] sub = sections[i].split(" ");
+                int charsPrinted = 0, j = 0, nextLength = 0;
+                do {
+                    nextLength = (j + 1 < sub.length)? sub[j].length() : 0;
+                    charsPrinted += sub[j].length() + " ".length();
+                    System.out.print(sub[j] + " ");
+                    j++;
+                } while (charsPrinted + nextLength < consoleCharWidth);
+                System.out.println();
+                sections[i] = sections[i].substring(charsPrinted);
             }
             System.out.println(sections[i]);
         }
@@ -609,6 +641,15 @@ public final class InternalCore {
         for (int i = 0; i < strArr.length; i++) strArr[i] = stripWhitespace(strArr[i]);
         return strArr;
     }
+
+    public static String capitalizeString(String str) {
+        if (str == null || str.equals("") || str.equals(" ")) return "";
+        StringBuilder capitalizedString = new StringBuilder();
+        char[] strArray = str.toLowerCase().toCharArray();
+        capitalizedString.append(Character.toString(strArray[0]).toUpperCase());
+        capitalizedString.append(String.valueOf(Arrays.copyOfRange(strArray, 1, strArray.length)));
+        return capitalizedString.toString();
+    }
     //endregion
 
     //region Error and Issue handling
@@ -646,10 +687,5 @@ public final class InternalCore {
         if (!message.equals("")) System.out.println("" +
                 "    " + message + "\n\n");
     }
-    //endregion
-
-    //region iCal Handling
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
     //endregion
 }
