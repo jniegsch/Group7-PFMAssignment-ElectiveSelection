@@ -1,12 +1,9 @@
 package SELECTive;
 
 import java.io.*;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 /**
  * Enum defining the Info File Types
@@ -559,6 +556,10 @@ public final class InternalCore {
         for (i = 0; i < consoleCharWidth; i += 2) line += c + " ";
         if (i - 1 == consoleCharWidth) line += c;
         return line;
+    }
+
+    public static void println() {
+        System.out.println();
     }
 
     /**

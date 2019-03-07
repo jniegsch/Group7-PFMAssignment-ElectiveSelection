@@ -94,7 +94,12 @@ public class Elective {
         if (validElectives.size() == 0) return null;
         Elective[] electivesToReturn = new Elective[validElectives.size()];
         return validElectives.toArray(electivesToReturn);
-		}
+    }
+
+    public static Elective[] getAllElectives() {
+        hasValidElectives = loadElectives();
+        return electives;
+    }
     //endregion
 
     //region Getters
@@ -115,9 +120,6 @@ public class Elective {
     }
     public int getBlock() {
         return this.block;
-    }
-    public Elective[] getAllElectives() {
-        return electives;
     }
     //endregion
 
@@ -285,6 +287,34 @@ public class Elective {
     }
     //endregion
 
+    //region Stringify
+    public String toString() {
+        int minSize = this.courseCode.length() + this.electiveName.length() + 50; //50 for good measure of the program, ects, and extras
+        StringBuilder repBuilder = new StringBuilder();
+        repBuilder.ensureCapacity(minSize);
+        repBuilder.append(this.courseCode).append(": ").append(this.electiveName);
+        repBuilder.append("\n    ").append("Offered by: ").append(this.program.toString());
+        repBuilder.append("\n    ").append("For ").append(this.ects).append(" ECTS");
+        return repBuilder.toString();
+    }
+
+    public String view() {
+        Lecturer lecturer = Lecturer.getLecturerWithId(this.lecturerId);
+        // need to add keywords, block, and time so increase toString capa by 100
+        StringBuilder viewBuilder = new StringBuilder(this.toString());
+        viewBuilder.ensureCapacity(viewBuilder.length() + 100);
+        viewBuilder.append("\n    ").append("Taught in Block ").append(this.block);
+        viewBuilder.append("\n    ").append("Every ").append(InternalCore.capitalizeString(this.lectureDay.toString()));
+        viewBuilder.append("\n    ").append("By: ").append(lecturer.toString());
+        viewBuilder.append("\n\n    Keywords:");
+        for (String keyword : this.keywords) {
+            viewBuilder.append("\n    > ").append(keyword);
+        }
+        return viewBuilder.toString();
+    }
+    //endregion
+
+    //region Elective Editing
     public boolean saveElective(Admin who, boolean newElective) {
         if (who.getUserType() != UserType.ADMIN) {
             InternalCore.printIssue("Insufficient access rights", "");

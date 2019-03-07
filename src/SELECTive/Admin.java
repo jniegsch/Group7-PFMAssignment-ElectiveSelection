@@ -97,6 +97,7 @@ public class Admin extends User {
     public boolean addElective(String courseCode) {
         if (this.getUserType() != UserType.ADMIN) return false;
         InternalCore.printTitle("Adding an Elective", '*');
+        InternalCore.println("You MUST fill in all fields!");
 
         // There are 8 properties to set for an elective
         String electiveCourseCode = courseCode, electiveName = "";
@@ -118,10 +119,12 @@ public class Admin extends User {
                                 "Please edit the elective if you need to change anything");
                         return false;
                     }
+                    if (electiveCourseCode.equals("") || electiveCourseCode.equals(" ")) successfulSet = false;
                     break;
                 case 1:
                     electiveName = InternalCore.getUserInput(String.class, "Elective name: ");
                     if (electiveName != null) successfulSet = true;
+                    if (electiveName.equals("") || electiveName.equals(" ")) successfulSet = false;
                     break;
                 case 2:
                     InternalCore.println("> To which program does this elective belong?");
@@ -134,7 +137,8 @@ public class Admin extends User {
                     InternalCore.println(" ");
                     Integer selection = InternalCore.getUserInput(Integer.class, "The program: ");
                     if (selection != null) {
-                        electiveProgramName = MasterProgram.values()[selection.intValue() - 1];
+                        if (selection < 0 || selection > MasterProgram.values().length) break;
+                        electiveProgramName = MasterProgram.values()[selection - 1];
                         successfulSet = true;
                     }
                     break;
@@ -149,7 +153,8 @@ public class Admin extends User {
                     String keys = InternalCore.getUserInput(String.class, "Elective Keywords (separate each keyword using a ';'): ");
                     if (keys != null) {
                         electiveKeywords = keys.split(";");
-                        // loop through and strip starting or ending whitespace
+                        if (electiveKeywords.length < 1) break;
+                        if (electiveKeywords[0].equals("") || electiveKeywords[0].equals(" ")) break;
                         for (int i = 0 ; i < electiveKeywords.length; i++) {
                             electiveKeywords[i] = InternalCore.stripWhitespace(electiveKeywords[i]);
                         }
@@ -161,30 +166,34 @@ public class Admin extends User {
                     InternalCore.println("(3) Block 3");
                     InternalCore.println("(4) Block 4");
                     InternalCore.println("(5) Block 5");
-                    String newBlock = InternalCore.getUserInput(String.class, "Your selection (3, 4, or 5):");
+                    Integer newBlock = InternalCore.getUserInput(Integer.class, "Your selection (3, 4, or 5):");
                     if (newBlock != null) {
-                        block = Integer.parseInt(newBlock);
+                        if (newBlock < 3 || newBlock > 5) break;
+                        block = newBlock;
                         successfulSet = true;
                     }
                     break;
                 case 6:
-		                Integer classDay = InternalCore.getUserInput(Integer.class, "" +
-				                "> On which day is the lesson taught: \n" +
-				                "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
-		               if (classDay != null) {
-			                  lectureDay = Day.values()[classDay - 1];
-			                  successfulSet = true;
-                   }
-                   break;
-		            case 7:
-			              Long lecturerIdElective = InternalCore.getUserInput(Long.class, "> Which lecturer teaches this elective? Please enter the lecturerId:");
-			              if (lecturerIdElective != null) {
-				                lecturerId = lecturerIdElective;
-				                successfulSet = true;
-			              }
-			              break;
+                    Integer classDay = InternalCore.getUserInput(Integer.class,
+                            "> On which day is the lesson taught: \n" +
+                                    "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
+                    if (classDay != null) {
+                        if (classDay < 1 || classDay > 7) break;
+                        lectureDay = Day.values()[classDay - 1];
+                        successfulSet = true;
+                    }
+                    break;
+                case 7:
+                    String lecturerUsername = InternalCore.getUserInput(String.class, "> Which lecturer teaches this elective? Please enter the username:");
+                    if (lecturerUsername != null) {
+                        Lecturer lecturer = Lecturer.getLecturerWithUsername(lecturerUsername);
+                        if (lecturer == null) break;
+                        lecturerId = lecturer.getUserId();
+                        successfulSet = true;
+                    }
+                    break;
             }
-            if (!successfulSet) prop--;
+            if (!successfulSet) --prop;
         }
         InternalCore.println("\nCreating elective...");
 
@@ -202,7 +211,7 @@ public class Admin extends User {
         newElective.saveElective(this, true);
 
         InternalCore.println("Elective successfully created!");
-        InternalCore.println(InternalCore.consoleLine('*'));
+        InternalCore.println();
         return false;
     }
     //endregion

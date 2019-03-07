@@ -1,8 +1,5 @@
 package SELECTive;
 
-import java.io.File;
-import java.io.IOError;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -104,12 +101,13 @@ public class Session {
                     " 5) Add an elective\n" +
                     " 6) Edit an elective\n" +
                     " 7) Find an elective\n" +
+                    " 8) View all electives\n" +
                     "- - - \n" +
                     " 0) Logout\n");
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 7):");
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, etc.):");
             if (userChoice == null) break;
             int choice = userChoice.intValue();
-            if (choice < 0 || choice > 7) {
+            if (choice < 0 || choice > 8) {
                 InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
                 continue;
             }
@@ -139,7 +137,11 @@ public class Session {
                 case 7:
                     filterElectives();
                     break;
+                case 8:
+                    viewElectives();
+                    break;
             }
+            waitToReturnToDashboard();
         }
     }
 
@@ -157,17 +159,18 @@ public class Session {
                     + " 3) View list of student grades per elective\n"
                     + " 4) View grade statistics per elective\n"
                     + "- - - Elective Management:\n"
-                    + " 5) Find an elective"
+                    + " 5) Find an elective\n"
+                    + " 6) View electives you teach\n"
                     + "- - - Account Management:\n"
-                    + " 6) Reset/Change password\\n"
+                    + " 7) Reset/Change password\n"
                     + "- - - \n"
                     + " 0) Logout\n");
 
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 6):");
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, etc.):");
             if (userChoice == null)
                 break;
             int choice = userChoice.intValue();
-            if (choice < 0 || choice > 6) {
+            if (choice < 0 || choice > 7) {
                 InternalCore.printIssue("Invalid input", "Please specify one of the available options.");
                 continue;
             }
@@ -192,10 +195,14 @@ public class Session {
                     filterElectives();
                     break;
                 case 6:
+                    viewOwnElectives();
+                    break;
+                case 7:
                     resetOrChangePasswordOfUser(sessionLecturer);
                     break;
 
             }
+            waitToReturnToDashboard();
         }
     }
 
@@ -209,19 +216,20 @@ public class Session {
             InternalCore.println(""
                     + "- - - Elective Management:\n"
                     + " 1) Find an elective\n"
-                    + " 2) Register to an elective\n"
-                    + " 3) View a list of your enrolled electives\n"
-                    + " 4) View your grade for a specific elective\n"
+                    + " 2) View all electives\n"
+                    + " 3) Register to an elective\n"
+                    + " 4) View a list of your enrolled electives\n"
+                    + " 5) View your grade for a specific elective\n"
                     + "- - - Account Management:\n"
-                    + " 5) Reset/Change password\n"
+                    + " 6) Reset/Change password\n"
                     + "- - - \n"
                     + " 0) Logout\n");
 
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 6):");
+            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, etc.):");
             if (userChoice == null)
                 break;
             int choice = userChoice.intValue();
-            if (choice < 0 || choice > 5) {
+            if (choice < 0 || choice > 6) {
                 InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
                 continue;
             }
@@ -234,22 +242,34 @@ public class Session {
                     filterElectives();
                     break;
                 case 2:
+                    viewElectives();
+                case 3:
                     String courseCode = InternalCore.getUserInput(String.class, "For which elective do you want to register? Please give the course code:");
                     sessionStudent.registerToElective(courseCode);
                     break;
-                case 3:
+                case 4:
                     sessionStudent.viewEnrolledElectives();
                     break;
-                case 4:
+                case 5:
                     String courseCodeProgress = InternalCore.getUserInput(String.class, "For which elective do you want to register? Please give the course code:");
                     sessionStudent.viewElectiveProgress(courseCodeProgress);;
                     break;
-                case 5:
+                case 6:
                     resetOrChangePasswordOfUser(sessionStudent);
                     break;
 
             }
+            waitToReturnToDashboard();
         }
+    }
+    //endregion
+
+    //region Dashboard Return Buffer
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static void waitToReturnToDashboard() {
+        InternalCore.getUserInput(String.class, "Close view / Back (press any key)");
+        InternalCore.println();
+        InternalCore.println();
     }
     //endregion
 
@@ -327,8 +347,7 @@ public class Session {
                 InternalCore.println(lu.toString());
             }
         }
-        InternalCore.println(InternalCore.consoleLine('-') + "\n \n ");
-        InternalCore.getUserInput(String.class, "Close view / Back (press any key)");
+        InternalCore.println(InternalCore.consoleLine('-') + "\n ");
     }
 
     // Method to add an elective
@@ -405,6 +424,18 @@ public class Session {
         String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the grade statistics: ");
         sessionLecturer.viewStatsForElective(courseCode);
     }
+
+    private static void viewOwnElectives() {
+        Elective[] electives = Elective.getAllElectivesForLecturer(sessionLecturer);
+        if (electives == null) {
+            InternalCore.println("You do not seem to be teaching any electives. If you are, please contact a system admin.");
+            return;
+        }
+        InternalCore.println("These are the course you teach: (If any are missing, or there that shouldn't be, contact an admin)");
+        for (Elective elective : electives) {
+            InternalCore.println(elective.toString());
+        }
+    }
     //endregion
 
     //region All User Actions
@@ -443,7 +474,7 @@ public class Session {
         }
     }
 
-    private static boolean filterElectives() {
+    private static void filterElectives() {
         // Print filter options
         int optId = 1;
         InternalCore.printTitle("Available Filter Options: ", '-');
@@ -453,7 +484,7 @@ public class Session {
         }
         Integer userFilterTypeChoice = InternalCore.getUserInput(Integer.class,
                 "Please enter your choice of the available filters: ");
-        if (userFilterTypeChoice == null) return false;
+        if (userFilterTypeChoice == null) return;
         Elective.ElectiveFilterType userFilterType = Elective.ElectiveFilterType.values()[userFilterTypeChoice - 1];
 
         Elective[] electives = null;
@@ -461,32 +492,90 @@ public class Session {
             case COURSEID:
                 String courseCodes = InternalCore.getUserInput(String.class,
                         "Please enter the course codes you would like to filter on separated by a ';': ");
-                if (courseCodes == null) return false;
+                if (courseCodes == null) return;
                 String[] codes = courseCodes.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.COURSEID, InternalCore.stripWhitespaceOfArray(codes));
                 break;
             case ECTS:
                 String ectsString = InternalCore.getUserInput(String.class,
                         "Please enter the ects you would like to filter on separated by a ';': ");
-                if (ectsString == null) return false;
+                if (ectsString == null) return;
                 String[] ectsArr = ectsString.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.ECTS, InternalCore.stripWhitespaceOfArray(ectsArr));
                 break;
             case BLOCK:
                 String keywordStr = InternalCore.getUserInput(String.class,
                         "Please enter the keywords you would like to filter on separated by a ';': ");
-                if (keywordStr == null) return false;
+                if (keywordStr == null) return;
                 String[] keywords = keywordStr.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.ECTS, InternalCore.stripWhitespaceOfArray(keywords));
                 break;
         }
 
         InternalCore.println("\nThe electives that match your search are: ");
+        int optEl = 0;
         for (Elective elect : electives) {
-            InternalCore.println(elect.toString());
+            InternalCore.println(" " + optId + ") " + elect.toString());
+            optEl++;
         }
 
-        return true;
+        String viewChoice = InternalCore.getUserInput(String.class, "Would you like to view one of the electives details? (y/n)");
+        if (viewChoice == null) return;
+        if (viewChoice.toLowerCase().equals("y")) {
+            while (true) {
+                Integer electiveChoice = InternalCore.getUserInput(Integer.class, "The elective you would like to view (1, 2, etc.): ");
+                if (electiveChoice == null) break;
+                if (electiveChoice < 1 || electiveChoice > electives.length) break;
+                InternalCore.println(" \n" + InternalCore.consoleLine('-'));
+                InternalCore.println(electives[electiveChoice - 1].view());
+                InternalCore.println();
+                String contChoice = InternalCore.getUserInput(String.class, "Would you like to view another from your search? (y/n)");
+                if (contChoice == null) break;
+                if (contChoice.toLowerCase().equals("y")) {
+                    optEl = 0;
+                    for (Elective elect : electives) {
+                        InternalCore.println(" " + optEl + ") " + elect.toString());
+                        optEl++;
+                    }
+                    continue;
+                }
+                break;
+            }
+        }
+    }
+
+    private static void viewElectives() {
+        Elective[] electives = Elective.getAllElectives();
+        if (electives == null) {
+            InternalCore.println("Looks like there are no electives...");
+            return;
+        }
+
+        InternalCore.println("These are the available electives:");
+        int printCount = 0;
+        InternalCore.println("[Block 3]");
+        for (Elective elective : electives) {
+            if (elective.getBlock() != 3) continue;
+            InternalCore.println(elective.toString());
+            printCount++;
+        }
+        if (printCount == 0) InternalCore.println("No electives in this block");
+        printCount = 0;
+        InternalCore.println("\n[Block 4]");
+        for (Elective elective : electives) {
+            if (elective.getBlock() != 4) continue;
+            InternalCore.println(elective.toString());
+            printCount++;
+        }
+        if (printCount == 0) InternalCore.println("No electives in this block");
+        printCount = 0;
+        InternalCore.println("\n[Block 5]");
+        for (Elective elective : electives) {
+            if (elective.getBlock() != 5) continue;
+            InternalCore.println(elective.toString());
+            printCount++;
+        }
+        if (printCount == 0) InternalCore.println("No electives in this block");
     }
     //endregion
 
