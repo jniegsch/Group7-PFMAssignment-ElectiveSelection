@@ -108,7 +108,7 @@ public class Session {
             Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, ..., or 7):");
             if (userChoice == null) break;
             int choice = userChoice.intValue();
-            if (choice < 0 || choice > 8) {
+            if (choice < 0 || choice > 7) {
                 InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
                 continue;
             }
@@ -133,7 +133,7 @@ public class Session {
                     addElective();
                     break;
                 case 6:
-                    Elective.editElective(sessionAdmin);
+                    editElective();
                     break;
                 case 7:
                     filterElectives();
@@ -329,7 +329,42 @@ public class Session {
         sessionAdmin.addElective(courseCode);
     }
 
-    // Method to edit a user
+    private static void editElective() {
+        if (sessionUser.getUserType() != UserType.ADMIN) {
+            InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
+            return;
+        }
+
+        String code = InternalCore.getUserInput(String.class,
+                "Enter the course code for the elective you would like to edit: ");
+        if (code == null) return;
+
+        Elective toEdit = new Elective(InternalCore.stripWhitespace(code));
+        if (toEdit.getElectiveId() == -1) return;
+        toEdit.edit(sessionAdmin);
+    }
+
+    // Method to view elective statistics
+    private static void viewElectiveStats() {
+        if (sessionUser.getUserType() != UserType.ADMIN && sessionUser.getUserType() != UserType.LECTURER) {
+            InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
+            return;
+        }
+
+        String codes = InternalCore.getUserInput(String.class,
+                "Please enter all the course codes for which you would like to see the statistics, separated by ';'");
+        if (codes == null) return;
+        String[] courseCodes = codes.split(";");
+        Elective[] electives = new Elective[courseCodes.length];
+        for (int i = 0; i < courseCodes.length; i++) {
+            courseCodes[i] = InternalCore.stripWhitespace(courseCodes[i]);
+            electives[i] = new Elective(courseCodes[i]);
+        }
+
+        if (sessionLecturer != null) sessionLecturer.viewStatsForElective(electives);
+        if (sessionAdmin != null) return;
+    }
+
     private static void editAUser() {
         String uname = InternalCore.getUserInput(String.class,
                 "Enter a username: ");

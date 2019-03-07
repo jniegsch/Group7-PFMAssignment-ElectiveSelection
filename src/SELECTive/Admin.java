@@ -1,17 +1,77 @@
 package SELECTive;
 
+import java.util.Arrays;
+
 public class Admin extends User {
+    //region Static Properties
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static Admin[] admins = null;
+    private static boolean hasValidAdmins = false;
+    //endregion
 
     //region Constructor
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public Admin() {
+        hasValidAdmins = loadAdmins();
+    }
+
     public Admin(User base) {
         super(base, UserType.ADMIN);
+        hasValidAdmins = loadAdmins();
     }
     //endregion
 
+    //region Static Init
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static boolean loadAdmins() {
+        if (hasValidAdmins && admins != null) return true;
+        String[][] ads = InternalCore.readInfoFile(SEObjectType.ADMIN_USER, null);
+        if (ads.length < 1) return false;
+        admins = new Admin[ads.length];
+        for (int i = 0; i < ads.length; i++) {
+            User tmp = new User(
+                    ads[i][0],
+                    ads[i][1],
+                    ads[i][2],
+                    ads[i][3],
+                    ads[i][4],
+                    ads[i][5],
+                    UserType.ADMIN);
+            admins[i] = new Admin(tmp);
+        }
+        return true;
+    }
 
+    public static void addAdmin(Admin admin) {
+        int currLength = admins.length;
+        admins = Arrays.copyOf(admins, currLength + 1);
+        admins[currLength] = admin;
+    }
+    //endregion
+  
+    //region Student Getter
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public static Admin getAdminWithId(long id) {
+        hasValidAdmins = loadAdmins();
+        for (Admin adm : admins) {
+            if (adm.getUserId() == id) return adm;
+        }
+        return null;
+    }
+
+    public static Admin getAdminWithUsername(String uname) {
+        hasValidAdmins = loadAdmins();
+        for (Admin adm : admins) {
+            if (adm.getUsername().equals(uname)) return adm;
+        }
+        return null;
+    }
+    //endregion
+
+    //region Adding Electives
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public boolean addElective(String courseCode) {
         if (this.getUserType() != UserType.ADMIN) return false;
-
         InternalCore.printTitle("Adding an Elective", '*');
 
         // There are 7 properties to set for an elective
@@ -28,18 +88,12 @@ public class Admin extends User {
             boolean successfulSet = false;
             switch (prop) {
                 case 0:
-                    String courseCodeValue = InternalCore.getUserInput(String.class, "> Elective course code: ");
-		    if (courseCodeValue != null) {
-			electiveCourseCode = courseCodeValue;
-			successfulSet = true;
-                    }
+                    electiveCourseCode = InternalCore.getUserInput(String.class, "Elective course code: ");
+                    if (electiveCourseCode != null) successfulSet = true;
                     break;
                 case 1:
-                    String courseNameValue = InternalCore.getUserInput(String.class, "> Elective name: ");
-		    if (courseNameValue != null) {
-			electiveName = courseNameValue;
-			successfulSet = true;
-                    }
+                    electiveName = InternalCore.getUserInput(String.class, "Elective name: ");
+                    if (electiveName != null) successfulSet = true;
                     break;
                 case 2:
                     InternalCore.println("> To which program does this elective belong?");
@@ -57,14 +111,14 @@ public class Admin extends User {
                     }
                     break;
                 case 3:
-                    String ectsValue = InternalCore.getUserInput(String.class, "> How many ECTS does this elective have: ");
-		    if (ectsValue != null) {
-			electiveECTS = Integer.parseInt(ectsValue);
-			successfulSet = true;
+                    Integer number = InternalCore.getUserInput(Integer.class, "Elective ECTS: ");
+                    if (number != null) {
+                        electiveECTS = number;
+                        successfulSet = true;
                     }
                     break;
                 case 4:
-                    String keys = InternalCore.getUserInput(String.class, "> Elective Keywords (separate each keyword using a ';'): ");
+                    String keys = InternalCore.getUserInput(String.class, "Elective Keywords (separate each keyword using a ';'): ");
                     if (keys != null) {
                         electiveKeywords = keys.split(";");
                         // loop through and strip starting or ending whitespace
@@ -86,23 +140,22 @@ public class Admin extends User {
                     }
                     break;
                 case 6:
-		   String classDay = InternalCore.getUserInput(String.class, "" +
-				"> On which day is the lesson taught: \n" +
-				"   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
-		   if (classDay != null) {
-			lectureDay = Day.valueOf(classDay);
-			successfulSet = true;
+		                Integer classDay = InternalCore.getUserInput(Integer.class, "" +
+				                "> On which day is the lesson taught: \n" +
+				                "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
+		               if (classDay != null) {
+			                  lectureDay = Day.values()[classDay - 1];
+			                  successfulSet = true;
                    }
                    break;
-		case 7:
-			String lecturerIdElective = InternalCore.getUserInput(String.class, "> Which lecturer teaches this elective? Please enter the lecturerId:");
-			if (lecturerIdElective != null) {
-				lecturerId = Integer.parseInt(lecturerIdElective);
-				successfulSet = true;
-			}
-			break;
+		            case 7:
+			              Long lecturerIdElective = InternalCore.getUserInput(Long.class, "> Which lecturer teaches this elective? Please enter the lecturerId:");
+			              if (lecturerIdElective != null) {
+				                lecturerId = lecturerIdElective;
+				                successfulSet = true;
+			              }
+			              break;
             }
-
             if (!successfulSet) prop--;
         }
         InternalCore.println("\nCreating elective...");
@@ -116,7 +169,7 @@ public class Admin extends User {
                 electiveKeywords,
                 classTimes,
                 block,
-		lecturerId
+		            lecturerId
         );
         newElective.saveElective(this, true);
 
@@ -131,15 +184,21 @@ public class Admin extends User {
     public boolean editSpecificUser(String uname, UserType ut) {
 
         if (ut.equals(UserType.LECTURER)) {
-            Lecturer tempLecturer = new Lecturer(new User(uname, UserType.LECTURER, this));
+            Lecturer tempLecturer = Lecturer.getLecturerWithUsername(uname);
             if (!tempLecturer.editUser(true)) {
                 InternalCore.printIssue("Could not edit the lecturer", "");
                 return false;
             }
         } else if (ut.equals(UserType.STUDENT)) {
-            Student tempStudent = new Student(new User(uname, UserType.STUDENT, this));
+            Student tempStudent = Student.getStudentWithUsername(uname);
+            if (tempStudent == null) {
+                InternalCore.printIssue("Could not edit the student",
+                        "Student doesn't seem to exist");
+                return false;
+            }
             if (!tempStudent.editUser(false)) {
-                InternalCore.printIssue("Could not edit the student", "");
+                InternalCore.printIssue("Could not edit the student",
+                        "There was an issue editing the requested user.");
                 return false;
             }
         } else if (ut.equals(UserType.ADMIN)) {
@@ -153,7 +212,7 @@ public class Admin extends User {
                     InternalCore.printIssue("You may not edit the root user!", "");
                     return false;
                 }
-                Admin tempAdmin = new Admin(new User(uname, UserType.ADMIN, this));
+                Admin tempAdmin = getAdminWithUsername(uname);
                 if (!tempAdmin.editUser(false)) {
                     InternalCore.printIssue("Could not edit the admin", "");
                     return false;

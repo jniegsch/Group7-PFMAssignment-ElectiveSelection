@@ -29,6 +29,11 @@ enum UserType {
  * functions are prepared for extra functionality of specific uber classes, but the class does ensure rights are checked.
  */
 public class User {
+    //region Static Private Properties
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static User[] allStudents = null;
+    private static boolean hasValidStudentUsers = false;
+    //endregion
     //region Private Property Definitions
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
@@ -62,7 +67,6 @@ public class User {
     //endregion
 
     //region Property getters
-
     /**
      * Gets the current users {@code USerType}
      * @return {@code UserType} of the current user
@@ -80,7 +84,7 @@ public class User {
      * An empty constructor.
      */
     public User() {
-        // Do nothing
+        // nothing special
     }
 
     /**
@@ -89,7 +93,7 @@ public class User {
      * @param ut    the {@code UserType} defining what type of user it is
      * @param admin the {@code User} who wants to edit the other user
      */
-    public User(String uname, UserType ut, User admin) {
+    private User(String uname, UserType ut, User admin) {
         if (admin.getUserType() != UserType.ADMIN) {
             InternalCore.printIssue("Cannot create user", "You do not have the rights to create a user");
             return;
@@ -137,7 +141,7 @@ public class User {
      * @param id    a {@code String} representing the id of the user to create
      * @param ut    a {@code UserType} defining the type of the user to create
      */
-    public User(String id, UserType ut) {
+    private User(String id, UserType ut) {
         SEObjectType ot = objectTypeForUserType(ut);
         String[] ids = {id};
         String[][] userInfo = InternalCore.readInfoFile(ot, ids);
@@ -262,8 +266,7 @@ public class User {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public String toString() {
         StringBuilder strRepresentation = new StringBuilder();
-        strRepresentation.append(capitalizeString(this.type.toString()));
-        strRepresentation.append(" ").append(this.userId).append(": ");
+        strRepresentation.append("[id: ").append(this.userId).append("] ");
         strRepresentation.append(capitalizeString(this.firstName)).append(" ");
         strRepresentation.append(capitalizeString(this.middleInitial)).append(" ");
         strRepresentation.append(capitalizeString(this.lastname)).append(" ");
@@ -750,7 +753,7 @@ public class User {
      * @param ids   {@code long[]} representing the user ids who's information should be returned
      * @return {@code String[]} representing the user(s) information
      */
-    public static String[][] getUserInfo(UserType type, String[] ids) {
+    private static String[][] getUserInfo(UserType type, String[] ids) {
         SEObjectType ot = objectTypeForUserType(type);
         return InternalCore.readInfoFile(ot, ids);
     }
@@ -774,9 +777,9 @@ public class User {
                 this.middleInitial,
                 this.username,
                 (this.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(this.dateOfBirth) : "",
-                (lecturerInstance)? ((Lecturer)this).getTitle().toString() : ""
+                (this.type == UserType.LECTURER)? ((Lecturer)this).getTitle().toString() : ""
         };
-        return InternalCore.updateInfoFile(ot, Long.toString(this.userId), (lecturerInstance)? info : Arrays.copyOfRange(info, 0, info.length - 1));
+        return InternalCore.updateInfoFile(ot, Long.toString(this.userId), (lecturerInstance)? info : Arrays.copyOfRange(info, 0, 5));
     }
 
     /**
@@ -794,9 +797,10 @@ public class User {
                 them.lastname,
                 them.middleInitial,
                 them.username,
-                (them.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(them.dateOfBirth) : ""
+                (them.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(them.dateOfBirth) : "",
+                (them.type == UserType.LECTURER)? ((Lecturer)them).getTitle().toString() : ""
         };
-        them.userId = InternalCore.addEntryToInfoFile(type, userInfo);
+        them.userId = InternalCore.addEntryToInfoFile(type, (them.type == UserType.LECTURER)? userInfo : Arrays.copyOfRange(userInfo, 0, 5));
         if (them.userId == -1) {
             InternalCore.printIssue("Could not create user", "The new user could not be saved");
             return null;
@@ -806,6 +810,10 @@ public class User {
             InternalCore.printIssue("Could not create user", "The new user credentials could not be saved");
             return null;
         }
+
+        if (them.type == UserType.ADMIN) Admin.addAdmin((Admin)them);
+        if (them.type == UserType.STUDENT) Student.addStudent((Student)them);
+        if (them.type == UserType.LECTURER) Lecturer.addLecturer((Lecturer)them);
         return them;
     }
 

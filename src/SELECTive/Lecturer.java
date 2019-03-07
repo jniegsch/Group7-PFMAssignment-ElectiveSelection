@@ -1,26 +1,95 @@
 package SELECTive;
 
-public class Lecturer extends User {
-    //region Constructor
-    public Lecturer(User base) {
-        super(base, UserType.LECTURER);
-    }
+import java.util.Arrays;
 
+public class Lecturer extends User {
     public enum Title {
         MR,
         MRS,
         DR,
         DEFAULT
     }
+
+    //region Static Properties
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static Lecturer[] lecturers = null;
+    private static boolean hasvalidLecturers = false;
+    //endregion
+
+    //region Private Properties
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private Title title = Title.DEFAULT;
+    //endregion
 
     //region Getters
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public Title getTitle() {
         return this.title;
     }
     //endregion
 
+    //region Constructor
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public Lecturer() {
+        hasvalidLecturers = loadLecturers();
+    }
+
+    public Lecturer(User base) {
+        super(base, UserType.LECTURER);
+        hasvalidLecturers = loadLecturers();
+    }
+    //endregion
+
+    //region Static Init
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static boolean loadLecturers() {
+        if (hasvalidLecturers && lecturers != null) return true;
+        String[][] lects = InternalCore.readInfoFile(SEObjectType.LECTURER_USER, null);
+        if (lects.length < 1) return false;
+        lecturers = new Lecturer[lects.length];
+        for (int i = 0; i < lects.length; i++) {
+            User tmp = new User(
+                    lects[i][0],
+                    lects[i][1],
+                    lects[i][2],
+                    lects[i][3],
+                    lects[i][4],
+                    lects[i][5],
+                    UserType.LECTURER);
+            lecturers[i] = new Lecturer(tmp);
+            lecturers[i].title = Title.valueOf(lects[i][6]);
+        }
+        return true;
+    }
+
+    public static void addLecturer(Lecturer lecturer) {
+        int currLength = lecturers.length;
+        lecturers = Arrays.copyOf(lecturers, currLength + 1);
+        lecturers[currLength] = lecturer;
+    }
+    //endregion
+
+    //region Student Getter
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public static Lecturer getLecturerWithId(long id) {
+        hasvalidLecturers = loadLecturers();
+        for (Lecturer lec : lecturers) {
+            if (lec.getUserId() == id) return lec;
+        }
+        return null;
+    }
+
+    public static Lecturer getLecturerWithUsername(String uname) {
+        hasvalidLecturers = loadLecturers();
+        for (Lecturer lec : lecturers) {
+            if (lec.getUsername().equals(uname)) return lec;
+        }
+        return null;
+    }
+    //endregion
+
     //region Instance Editing
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public boolean editTitle() {
         Title newTitle = InternalCore.getUserInput(Title.class, "What is the new title of this lecturer?");
         if (newTitle == null) return false;
@@ -29,63 +98,83 @@ public class Lecturer extends User {
     }
     //endregion
 
+    //region Grade Management
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public void newGradeEntry(){
         // Loop to enter student grades until break
+        Elective elective = null;
         while (true) {
-            String studentIdInput = InternalCore.getUserInput(String.class,
-                    "Please enter the student ID for which you would like to add a grade:");
-            String [] studentToChangeGradeFor = {studentIdInput};
-            String [][] localCopy = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, studentToChangeGradeFor);
-
-            String courseCode = InternalCore.getUserInput(String.class,
-                    "Please enter the elective for which you would like to add a grade:");
-
-            InternalCore.println("Please enter the student's grade for the elective:");
-            String studentGradeToChange = InternalCore.getUserInput(String.class,
-                    "Please enter the student's grade for the elective:");
-
-
-            if (localCopy [0][0] == null) {
-                InternalCore.println("The student you looked up has not registered to the course.");
-            } else if (localCopy [0][1].equals(courseCode)) {
-                localCopy [0][2] = studentGradeToChange;
-            } else if (localCopy [0][3].equals(courseCode)) {
-                localCopy [0][4] = studentGradeToChange;
-            } else if (localCopy [0][5].equals(courseCode)) {
-                localCopy [0][6] = studentGradeToChange;
-            } else {
-                InternalCore.println("The course code you entered does not exist.");
+            if (elective == null) {
+                String courseCode = InternalCore.getUserInput(String.class,
+                        "Please enter the elective course code for which you would like to add a grade:");
+                elective = Elective.getElectiveWithCourseCode(courseCode);
             }
 
-            InternalCore.updateInfoFile(SEObjectType.STU_ELECT_RELATION, studentToChangeGradeFor[0], localCopy[0]);
+
+
+            String studentUsername = InternalCore.getUserInput(String.class,
+                    "Please enter the student username for which you would like to add a grade:");
+
+            Student student = Student.getStudentWithUsername(studentUsername);
+            Registration registration = Registration.registrationForStudent(student);
+
+            if (registration.isNotRegistrationForElective(elective)) {
+                InternalCore.printIssue("Student is not registered",
+                        "Looks like the student is not registered for this elective. " +
+                                "If they should be, contact an admin.");
+                continue;
+            }
+
+            Double newGrade = InternalCore.getUserInput(Double.class,
+                    "Please enter the student's grade for the elective: ");
+            if (newGrade == null) {
+                InternalCore.printIssue("Too many invalid inputs",
+                        "Please try registering a new grade again");
+                continue;
+            }
+
+            if (!registration.updateGradeForElective(elective, this, newGrade)) {
+                String retry = InternalCore.getUserInput(String.class,
+                        "Seeing as there was an issue, would you like to retry? (y/n)");
+                if (retry.toLowerCase().equals("y")) continue;
+            }
 
             String addMoreGrades = InternalCore.getUserInput(String.class,
-                    "Would you like to add another student grade? (Y/N)");
+                    "Would you like to add another grade? (y/n)");
 
-            if (addMoreGrades.toLowerCase().equals("y")) continue;
+            if (addMoreGrades.toLowerCase().equals("y")) {
+                String sameCourse = InternalCore.getUserInput(String.class,
+                        "Is this for the same elective? (y/n))");
+                if (sameCourse.toLowerCase().equals("y")) continue;
+                elective = null;
+                continue;
+            }
             break;
         }
     }
 
     // This method prints out a list of registered students for a particular elective
     public void showStudents(String courseCode){
-        InternalCore.println("The file contains the following registered students: ");
-
-        String[][] electiveStudent = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, null);
-        StringBuilder buffer = new StringBuilder();
-        for (int i = 0; i < electiveStudent.length; i++) {
-            if (!electiveStudent[i][1].equals(courseCode) && !electiveStudent[i][3].equals(courseCode) && !electiveStudent[i][5].equals(courseCode)) continue;
-            buffer.append(electiveStudent[i][0]).append(" ");
+        Elective elective = Elective.getElectiveWithCourseCode(courseCode);
+        Registration[] registrations = Registration.registrationsForCourse(elective);
+        InternalCore.println("The following students are enrolled in the course " + courseCode + ": ");
+        for (Registration registration : registrations) {
+            InternalCore.println("> " + registration.getStudent().toString());
         }
+    }
 
-        showStudentsEnrolled(buffer.toString());
+    public void showAllStudents() {
+        Elective[] electives = Elective.getAllElectivesForLecturer(this);
+        for (Elective elective : electives) {
+            showStudents(elective.getCourseCode());
+        }
     }
 
     // This method prints out a list of student grades for a particular elective
     public void showStudentGrades(String courseCode){
-        InternalCore.println("The file contains the following grades : ");
 
-        double[] grades = getGradesForElective(courseCode);
+        InternalCore.println("The grades for the following course are: ");
+
     }
 
     private double[] getGradesForElective(String courseCode) {
@@ -113,15 +202,6 @@ public class Lecturer extends User {
         }
 
         return numElectiveGrade;
-    }
-
-    private String[] showStudentsEnrolled(String buffer) {
-        String[] dump = buffer.split(" ");
-        for (int i = 0; i < dump.length; i++) {
-            Student temp = new Student(new User(dump[i], UserType.STUDENT));
-            InternalCore.println(temp.toString());
-        }
-        return dump;
     }
 
     public boolean viewStatsForElective(Elective elective) {
