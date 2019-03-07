@@ -250,7 +250,7 @@ public class Elective {
                 this.program.toString(),
                 keywordString(),
                 this.lectureDay.toString(),
-                this.block.toString(),
+		Integer.toString(this.block),
                 Long.toString(this.lecturerId),
         };
 
