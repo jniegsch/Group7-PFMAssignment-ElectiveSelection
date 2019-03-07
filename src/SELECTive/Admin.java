@@ -1,7 +1,5 @@
 package SELECTive;
 
-import java.util.Scanner;
-
 public class Admin extends User {
 
     //region Constructor
@@ -14,16 +12,14 @@ public class Admin extends User {
     public boolean addElective(String courseCode) {
         if (this.getUserType() != UserType.ADMIN) return false;
 
-        Scanner inpScanner = new Scanner(System.in);
-
         InternalCore.printTitle("Adding an Elective", '*');
 
-        // There are 6 properties to set for an elective
+        // There are 7 properties to set for an elective
         String electiveCourseCode = courseCode, electiveName = "";
         int electiveECTS = 0;
         String[] electiveKeywords = null;
         MasterProgram electiveProgramName = null;
-        Day[] lectureDay = null;
+        Day lectureDay = null;
 	int block = 0;
 	long lecturerId = -1;
 
@@ -32,17 +28,17 @@ public class Admin extends User {
             boolean successfulSet = false;
             switch (prop) {
                 case 0:
-                    InternalCore.print("> Elective course code: ");
-                    if (inpScanner.hasNextLine()) {
-                        electiveCourseCode = inpScanner.nextLine();
-                        successfulSet = true;
+                    String courseCodeValue = InternalCore.getUserInput(String.class, "> Elective course code: ");
+		    if (courseCodeValue != null) {
+			electiveCourseCode = courseCodeValue;
+			successfulSet = true;
                     }
                     break;
                 case 1:
-                    InternalCore.print("> Elective name: ");
-                    if (inpScanner.hasNextLine()) {
-                        electiveName = inpScanner.nextLine();
-                        successfulSet = true;
+                    String courseNameValue = InternalCore.getUserInput(String.class, "> Elective name: ");
+		    if (courseNameValue != null) {
+			electiveName = courseNameValue;
+			successfulSet = true;
                     }
                     break;
                 case 2:
@@ -61,10 +57,10 @@ public class Admin extends User {
                     }
                     break;
                 case 3:
-                    InternalCore.print("> Elective ECTS: ");
-                    if (inpScanner.hasNextInt()) {
-                        electiveECTS = inpScanner.nextInt();
-                        successfulSet = true;
+                    String ectsValue = InternalCore.getUserInput(String.class, "> How many ECTS does this elective have: ");
+		    if (ectsValue != null) {
+			electiveECTS = Integer.parseInt(ectsValue);
+			successfulSet = true;
                     }
                     break;
                 case 4:
@@ -79,7 +75,7 @@ public class Admin extends User {
                     }
                     break;
                 case 5:
-                    InternalCore.println("Which block is this elective taught?");
+                    InternalCore.println("> Which block is this elective taught?");
                     InternalCore.println("(1) Block 3");
                     InternalCore.println("(2) Block 4");
                     InternalCore.println("(3) Block 5");
@@ -90,20 +86,16 @@ public class Admin extends User {
                     }
                     break;
                 case 6:
-                    String lectureDay = InternalCore.getUserInput(String.class, "" +
-                            "> Lesson days and times (separate the list with ';'): \n" +
-                            "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
-                    if (lectureDay != null) {
-                        String[] dateTimes = lectureDay.split(";");
-                        classTimes = new Day[dateTimes.length];
-                        for (int i = 0 ; i < classTimes.length; i++) {
-				InternalCore.stripWhitespace(Day.toString(classTimes[i]));
-			}
-                        successfulSet = true;
-                    }
-                    break;
+		   String classDay = InternalCore.getUserInput(String.class, "" +
+				"> On which day is the lesson taught: \n" +
+				"   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
+		   if (classDay != null) {
+			lectureDay = Day.valueOf(classDay);
+			successfulSet = true;
+                   }
+                   break;
 		case 7:
-			String lecturerIdElective = InternalCore.getUserInput(String.class, "Which lecturer teaches this elective? Please enter the lecturerId:");
+			String lecturerIdElective = InternalCore.getUserInput(String.class, "> Which lecturer teaches this elective? Please enter the lecturerId:");
 			if (lecturerIdElective != null) {
 				lecturerId = Integer.parseInt(lecturerIdElective);
 				successfulSet = true;
