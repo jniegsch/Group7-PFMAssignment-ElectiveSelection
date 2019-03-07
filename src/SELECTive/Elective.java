@@ -61,12 +61,6 @@ public class Elective {
         hasValidElectives = loadElectives();
     }
 
-    public Elective(String code, String name) {
-        this();
-        this.courseCode = code;
-        this.electiveName = name;
-    }
-
     public Elective(long id, String code, String name, int e, MasterProgram prog, String[] keys, Day day, int block, long lecturerId) {
         this();
         this.electiveId = id;
@@ -337,26 +331,26 @@ public class Elective {
         if (userChoice == null) return false;
         switch (userChoice) {
             case 1:
-                editElectiveName();
-                break;
+                if (editElectiveName()) break;
+                return false;
             case 2:
-                editProgram();
-                break;
+                if (editProgram()) break;
+                return false;
             case 3:
-                editECTS();
-                break;
+                if (editECTS()) break;
+                return false;
             case 4:
-                editKeywords();
-                break;
+                if (editKeywords()) break;
+                return false;
             case 5:
-            	editClassTimes();
-            	break;
+            	if (editClassDay()) break;
+            	return false;
             case 6:
-                editBlock();
-                break;
+                if (editBlock()) break;
+                return false;
             case 7:
-            	editLecturerId();
-            	break;
+            	if (editLecturerId()) break;
+            	return false;
         }
 
         return saveElective(who, false);
@@ -413,7 +407,7 @@ public class Elective {
     }
 
      //This method asks for the change of the class time and saves this in the file
-    private boolean editClassTimes() {
+    private boolean editClassDay() {
     	InternalCore.println("On which day will this class be taught?");
     	String classDay = InternalCore.getUserInput(String.class, "" +
 				"> Lesson day: \n" +
@@ -421,7 +415,7 @@ public class Elective {
 		
     	if (classDay == null) return false;
     	this.lectureDay = Day.valueOf(classDay);
-			return true;
+    	return true;
 	}
 
     // This method asks for the change of the elective block and saves this in the file
