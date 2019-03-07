@@ -211,9 +211,8 @@ public class Session {
                     + " 2) Register to an elective\n"
                     + " 3) View a list of your enrolled electives\n"
                     + " 4) View your grade for a specific elective\n"
-                    + " 5) Create ICal export\n"
                     + "- - - Account Management:\n"
-                    + " 6) Reset/Change password\\n"
+                    + " 5) Reset/Change password\\n"
                     + "- - - \n"
                     + " 0) Logout\n");
 
@@ -221,7 +220,7 @@ public class Session {
             if (userChoice == null)
                 break;
             int choice = userChoice.intValue();
-            if (choice < 0 || choice > 6) {
+            if (choice < 0 || choice > 5) {
                 InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
                 continue;
             }
@@ -245,9 +244,6 @@ public class Session {
                     sessionStudent.viewElectiveProgress(courseCodeProgress);;
                     break;
                 case 5:
-                    sessionStudent.exportCalForElectives();
-                    break;
-                case 6:
                     resetOrChangePasswordOfUser(sessionStudent);
                     break;
 
@@ -486,7 +482,6 @@ public class Session {
                 String[] keywords = keywordStr.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.ECTS, InternalCore.stripWhitespaceOfArray(keywords));
                 break;
-                //TODO Availability
         }
 
         InternalCore.println("\nThe electives that match your search are: ");
