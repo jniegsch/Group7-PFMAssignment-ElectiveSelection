@@ -179,13 +179,19 @@ public final class InternalCore {
             return null;
         }
 
+        if (userDump.toString().equals("")) return null;
         String[] fileRows = userDump.toString().split("\n");
         String[][] info = new String[fileRows.length][];
+        int j = 0;
         for (int i = 0; i < fileRows.length; i++) {
-            info[i] = fileRows[i].split(infoSeparator);
+            String[] row = fileRows[i].split(infoSeparator);
+            if (row.length <= 1) continue;
+            info[j] = row;
+            j++;
         }
 
-        return info;
+        if (info.length < 1) return null;
+        return (info.length - 1 > j)? Arrays.copyOfRange(info, 0, j) : info;
     }
 
     /**

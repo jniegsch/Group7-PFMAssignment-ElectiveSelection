@@ -44,11 +44,11 @@ public class Lecturer extends User {
     //region Static Init
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static boolean loadLecturers() {
-        if (hasvalidLecturers && lecturers != null) return true;
+        if (hasvalidLecturers) return true;
         if (isLoading) return false;
         isLoading = true;
         String[][] lects = InternalCore.readInfoFile(SEObjectType.LECTURER_USER, null);
-        if (lects.length < 1) return false;
+        if (lects == null) return true;
         lecturers = new Lecturer[lects.length];
         for (int i = 0; i < lects.length; i++) {
             User tmp = new User(
@@ -89,6 +89,12 @@ public class Lecturer extends User {
         }
         return null;
     }
+
+    public static Lecturer[] getAllLecturers(Admin admin) {
+        if (!admin.isValidAdmin()) return null;
+        hasvalidLecturers = loadLecturers();
+        return lecturers;
+    }
     //endregion
 
     //region Instance Editing
@@ -98,6 +104,15 @@ public class Lecturer extends User {
         if (newTitle == null) return false;
         this.title = newTitle;
         return true;
+    }
+    //endregion
+
+    //region Stringify Override
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public String toString() {
+        String userRep = super.toString();
+        userRep.replaceAll("] ", "] " + title.toString() + ". ");
+        return userRep;
     }
     //endregion
 

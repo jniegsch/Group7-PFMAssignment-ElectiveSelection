@@ -222,6 +222,7 @@ public class User {
      * @return {@code boolean} indicating if the creation of the user account was successful
      */
     public User createNewUser(String uname, char[] pword, UserType utype) {
+        //TODO: add to internal storage not just file update
         if (this.type != UserType.ADMIN) {
             InternalCore.printIssue("Cannot create user", "You do not have the rights to create a user");
             return null;
@@ -309,7 +310,7 @@ public class User {
     /**
      * A loaded memory copy of the authentication DB
      */
-    private String[][] uPs;
+    private static String[][] uPs;
     //endregion
 
     //region User Management Definitions
@@ -320,7 +321,7 @@ public class User {
     /**
      * Represents if the authentication file has been loaded into memory and is accessible
      */
-    private boolean hasOpenUP = false;
+    private static boolean hasOpenUP = false;
     //endregion
 
     //region User Instance Editing
@@ -420,25 +421,6 @@ public class User {
             return null;
         }
     }
-    //endregion
-
-    //region Public Session Management
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    /**
-     * A constant defining what all invalid User Ids should be se to.
-     * <pre>
-     *     VALUE = "ohno_notvalid"
-     * </pre>
-     */
-    private static final String invalidID = "ohno_notvalid";
-
-    /**
-     * Gets the current `invalidID`. This is usually not required outside of the context of the User class, however,
-     * it is an important factor for validation, so if pre-validation ever needs to be done a comparison of this value
-     * to another UserId could give important insights.
-     * @return {@code String} representing the invalid id
-     */
-    public String getInvalidID() { return invalidID; }
     //endregion
 
     //region Session Management
@@ -556,6 +538,7 @@ public class User {
      * @return {@code bool} that indicates if the change was successful
      */
     public boolean changePassword(String uname, char[] oldPassword, char[] newPassword) {
+        //TODO: add to internal storage not just file update
         if (invalidPassword(newPassword)) {
             InternalCore.printIssue("New Password is Invalid", "The password you selected in invalid!");
             return false;
@@ -626,39 +609,6 @@ public class User {
         String uHash = hashUsername(username);
         for (int i = 0; i < auth.length; i++) if (auth[i][0].equals(uHash)) return true;
         return false;
-    }
-
-    /**
-     * Gets all the the users of a specific type defined by the ids. If null is specified, all are returned
-     * @param userIDs       {@code long[]} the user ids for which to get the users (null for all)
-     * @param typeOfUser    {@code UserType} the type of users to get
-     * @return {@code User[]} the created user objects
-     */
-    public static User[] getUsers(long[] userIDs, UserType typeOfUser) {
-        String[] ids = null;
-        if (userIDs != null) {
-            ids = new String[userIDs.length];
-            for (int i = 0; i < userIDs.length; i++) ids[i] = Long.toString(userIDs[i]);
-        }
-
-        String[][] userInfo = getUserInfo(typeOfUser, ids);
-        User[] users = new User[userInfo.length];
-        int i = 0;
-        for (; i < users.length; i++) {
-            if (userInfo[i].length < 6) break;
-            User n = new User(
-                    (userInfo[i][0] != null)? userInfo[i][0] : "",
-                    (userInfo[i][1] != null)? userInfo[i][1] : "",
-                    (userInfo[i][2] != null)? userInfo[i][2] : "",
-                    (userInfo[i][3] != null)? userInfo[i][3] : "",
-                    (userInfo[i][4] != null)? userInfo[i][4] : "",
-                    (userInfo[i][5] != null)? userInfo[i][5] : "",
-                    typeOfUser
-            );
-            users[i] = n;
-        }
-        if (users.length > 0 && i > 0) return users;
-        return null;
     }
     //endregion
 

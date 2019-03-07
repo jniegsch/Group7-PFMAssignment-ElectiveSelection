@@ -25,11 +25,11 @@ public class Admin extends User {
     //region Static Init
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static boolean loadAdmins() {
-        if (hasValidAdmins && admins != null) return true;
+        if (hasValidAdmins) return true;
         if (isLoading) return false;
         isLoading = true;
         String[][] ads = InternalCore.readInfoFile(SEObjectType.ADMIN_USER, null);
-        if (ads.length < 1) return false;
+        if (ads == null) return true;
         admins = new Admin[ads.length];
         for (int i = 0; i < ads.length; i++) {
             User tmp = new User(
@@ -68,6 +68,12 @@ public class Admin extends User {
             if (adm.getUsername().equals(uname)) return adm;
         }
         return null;
+    }
+
+    public static Admin[] getAllAdmins(Admin admin) {
+        if (!admin.isValidAdmin()) return null;
+        hasValidAdmins = loadAdmins();
+        return admins;
     }
     //endregion
 

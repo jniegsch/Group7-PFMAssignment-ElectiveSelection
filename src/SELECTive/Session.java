@@ -288,27 +288,26 @@ public class Session {
         InternalCore.println(" \n ");
         InternalCore.printTitle("Here is a list of all users", '-');
 
-        long[] userIDs = null;
-        User[] adminUsers = User.getUsers(userIDs, UserType.ADMIN);
-        User[] studentUsers = User.getUsers(userIDs, UserType.STUDENT);
-        User[] lectureUsers = User.getUsers(userIDs, UserType.LECTURER);
+        Admin[] adminUsers = Admin.getAllAdmins(sessionAdmin);
+        Student[] studentUsers = Student.getAllStudents(sessionAdmin);
+        Lecturer[] lectureUsers = Lecturer.getAllLecturers(sessionAdmin);
 
         // print the users
         if (adminUsers != null) {
             InternalCore.println("> Admins:");
-            for (User au : adminUsers) {
+            for (Admin au : adminUsers) {
                 InternalCore.println(au.toString());
             }
         }
         if (studentUsers != null) {
             InternalCore.println("> Students:");
-            for (User su : studentUsers) {
+            for (Student su : studentUsers) {
                 InternalCore.println(su.toString());
             }
         }
         if (lectureUsers != null) {
             InternalCore.println("> Lecturers:");
-            for (User lu : lectureUsers) {
+            for (Lecturer lu : lectureUsers) {
                 InternalCore.println(lu.toString());
             }
         }
