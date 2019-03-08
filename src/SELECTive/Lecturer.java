@@ -98,6 +98,7 @@ public class Lecturer extends User {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public static Lecturer getLecturerWithId(long id) {
         hasvalidLecturers = loadLecturers();
+        if (lecturers == null) return null;
         for (Lecturer lec : lecturers) {
             if (lec.getUserId() == id) return lec;
         }
@@ -106,6 +107,7 @@ public class Lecturer extends User {
 
     public static Lecturer getLecturerWithUsername(String uname) {
         hasvalidLecturers = loadLecturers();
+        if (lecturers == null) return null;
         for (Lecturer lec : lecturers) {
             if (lec.getUsername().equals(uname)) return lec;
         }

@@ -1,12 +1,9 @@
 package SELECTive;
 
 import java.io.*;
-
 import java.nio.charset.StandardCharsets;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -69,6 +66,9 @@ public class User {
     //endregion
 
     //region Property getters
+    public long getUserId() {
+        return this.userId;
+    }
     /**
      * Gets the current users {@code USerType}
      * @return {@code UserType} of the current user
@@ -76,8 +76,23 @@ public class User {
     public UserType getUserType() {
         return this.type;
     }
-    public long getUserId() { return this.userId; }
+
+    public String getFirstName() {
+        return this.firstName;
+    }
+
+    public String getLastname() {
+        return this.lastname;
+    }
+
+    public String getMiddleInitial() {
+        return this.middleInitial;
+    }
     public String getUsername() { return  this.username; }
+
+    public Date getDateOfBirth() {
+        return this.dateOfBirth;
+    }
     //endregion
 
     //region Constructors
@@ -86,7 +101,11 @@ public class User {
      * An empty constructor.
      */
     public User() {
-        // nothing special
+        if (!hasOpenUP) {
+            uPs = readDictFromAuthFile();
+            hasOpenUP = true;
+        }
+        if (uPs == null) hasOpenUP = false;
     }
 
     /**
@@ -224,7 +243,6 @@ public class User {
      * @return {@code boolean} indicating if the creation of the user account was successful
      */
     public User createNewUser(String uname, char[] pword, UserType utype) {
-        //TODO: add to internal storage not just file update
         if (this.type != UserType.ADMIN) {
             InternalCore.printIssue("Cannot create user", "You do not have the rights to create a user");
             return null;
@@ -293,18 +311,6 @@ public class User {
             System.exit(InternalCore.USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE);
         }
         return newUser;
-    }
-    //endregion
-
-    //region User Stringify
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    public String toString() {
-        StringBuilder strRepresentation = new StringBuilder();
-        strRepresentation.append("[id: ").append(this.userId).append("] ");
-        strRepresentation.append(InternalCore.capitalizeString(this.firstName)).append(" ");
-        strRepresentation.append(InternalCore.capitalizeString((this.middleInitial.equals(" ")? "" : this.middleInitial))).append(" ");
-        strRepresentation.append(InternalCore.capitalizeString(this.lastname)).append(" ");
-        return strRepresentation.toString();
     }
     //endregion
 
@@ -457,11 +463,12 @@ public class User {
      * If successful, an active session is defined.
      * @return {@code boolean} representing if the login was successful
      */
-    public boolean login() {
+    public static User login() {
         int failedAccessCount = 0;
         boolean authed = false;
         String uname = "";
         char[] pword;
+        UserType type = UserType.DEFAULT;
         while (failedAccessCount < MAX_LOGIN_ATTEMPTS) {
             InternalCore.printTitle("Attempt " + (failedAccessCount + 1) + " of " + MAX_LOGIN_ATTEMPTS, '-');
             // Get username
@@ -477,25 +484,34 @@ public class User {
                 continue;
             }
             pword = pass.toCharArray();
-            if (authenticateUser(uname, pword)) { authed = true; break; }
+            if ((type = authenticateUser(uname, pword)) != UserType.DEFAULT) {
+                authed = true;
+                break;
+            }
             failedAccessCount++;
             InternalCore.printIssue("Wrong Password or Username",
                     "The password or the username you specified was wrong. Or even both...");
         }
         if (authed) {
-            pword = null;
-            loggedIn = true;
             InternalCore.println("> Logged in successfully\n \n ");
-            return true;
+            switch (type) {
+                case ADMIN:
+                    return Admin.getAdminWithUsername(uname);
+                case STUDENT:
+                    return Student.getStudentWithUsername(uname);
+                case LECTURER:
+                    return Lecturer.getLecturerWithUsername(uname);
+            }
+            return null;
         }
         InternalCore.printIssue("Reached maximum login tries.",
                 "You have reached the maximum amount of login attempts. Ask an admin to reset your password.");
-        loggedIn = false;
-        return false;
+        return null;
     }
 
-    public boolean rootLogin(String uname, char[] pword) {
-        return authenticateUser(uname, pword);
+    public static Admin rootLogin(String uname, char[] pword) {
+        if (authenticateUser(uname, pword) != UserType.ADMIN) return null;
+        return Admin.getAdminWithUsername(rootUserName);
     }
 
     /**
@@ -507,7 +523,7 @@ public class User {
      * @param pword {@code char[]}: the password, passed as a char array for security reasons (see above)
      * @return {@code boolean}: indicating if authentication was successful
      */
-    private boolean authenticateUser(String uname, char[] pword) {
+    private static UserType authenticateUser(String uname, char[] pword) {
         if (!hasOpenUP) { uPs = readDictFromAuthFile(); hasOpenUP = true; }
         String uhash = hashUsername(uname), phash = hashPassword(pword);
         if (uPs.length == 0) {
@@ -521,18 +537,14 @@ public class User {
             uPs = readDictFromAuthFile();
         }
         for (int i = 0; i < uPs.length; i++) {
-
             if (uhash.equals(uPs[i][0])) {
                 if (phash.equals(uPs[i][1])) {
-                    username = uname;
-                    type = UserType.valueOf(uPs[i][2]);
-                    pword = null;
-                    return true;
+                    return UserType.valueOf(uPs[i][2]);
                 }
-                return false;
+                return UserType.DEFAULT;
             }
         }
-        return false;
+        return UserType.DEFAULT;
     }
     //endregion
 
@@ -558,7 +570,6 @@ public class User {
      * @return {@code bool} that indicates if the change was successful
      */
     public boolean changePassword(String uname, char[] oldPassword, char[] newPassword) {
-        //TODO: add to internal storage not just file update
         if (invalidPassword(newPassword)) {
             InternalCore.printIssue("New Password is Invalid", "The password you selected in invalid!");
             return false;
@@ -585,10 +596,7 @@ public class User {
             }
         }
         if (changed) {
-            if (writeDictToAuthFile(uPs, true)) {
-                hasOpenUP = false; // has been changed current is invalid
-                return true;
-            }
+            if (writeDictToAuthFile(uPs, true)) return true;
             // error saving, try to revert...
             if ((uPs = readDictFromAuthFile()) != null) {
                 InternalCore.printIssue("An issue occured saving the new password.", "There was a severe issue trying to save your new password. For this reason the change was not saved, and your password was reverted to the old one.");
@@ -619,15 +627,15 @@ public class User {
      * @return {@code bool} indicating if the user was found
      */
     public static boolean userExists(String username) {
-        //TODO: Make it check uPs
         if (!hasOpenUP) { uPs = readDictFromAuthFile(); hasOpenUP = true; }
+        if (uPs == null) return false;
         String uHash = hashUsername(username);
         for (int i = 0; i < uPs.length; i++) if (uPs[i][0].equals(uHash)) return true;
         return false;
     }
     //endregion
 
-    //region File Access
+    //region File Access & I/O Management
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     /**
@@ -662,6 +670,8 @@ public class User {
                     "Could not read the file " + fname);
         }
         String [] dictPairs = dump.split(" \n");
+        if (dictPairs.length == 0) return null;
+        if (dictPairs[0].length() < 3) return null;
         String [][] dictToReturn = new String[dictPairs.length][3];
         for (int i = 0; i < dictPairs.length; i++) {
             String[] sp = dictPairs[i].split(" : ");
@@ -709,6 +719,13 @@ public class User {
                     "Could not write to the file " + fname);
             return false;
         }
+
+        // add to internal memory
+        for (String[] newAuth : dict) {
+            if (newAuth.length < 3) continue;
+            addAuth(newAuth[0], newAuth[1].toCharArray(), UserType.valueOf(newAuth[2]));
+        }
+
         return true;
     }
 
@@ -765,6 +782,10 @@ public class User {
             return null;
         }
 
+        if (!hasOpenUP) {
+            uPs = readDictFromAuthFile();
+            hasOpenUP = true;
+        }
         if (them.type == UserType.ADMIN) Admin.addAdmin(new Admin(them));
         if (them.type == UserType.STUDENT) Student.addStudent(new Student(them));
         if (them.type == UserType.LECTURER) Lecturer.addLecturer(new Lecturer(them));
@@ -783,6 +804,27 @@ public class User {
                 return null;
         }
         return null;
+    }
+
+    public static void addAuth(String unmae, char[] pword, UserType typ) {
+        if (hasAlreadyLoaded(unmae)) return;
+        int currLength = 0;
+        if (uPs != null) {
+            currLength = uPs.length;
+            uPs = Arrays.copyOf(uPs, currLength + 1);
+        } else {
+            uPs = new String[1][];
+        }
+        uPs[currLength] = new String[]{hashUsername(unmae), hashPassword(pword), typ.toString()};
+    }
+
+    private static boolean hasAlreadyLoaded(String username) {
+        if (!hasOpenUP) return false;
+        if (uPs == null) return false;
+        for (String[] auth : uPs) {
+            if (auth[0].equals(username)) return true;
+        }
+        return false;
     }
     //endregion
 
@@ -910,6 +952,24 @@ public class User {
             System.exit(InternalCore.REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE);
         }
         return hash;
+    }
+    //endregion
+
+    //region Misc Overrides
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public String toString() {
+        StringBuilder strRepresentation = new StringBuilder();
+        strRepresentation.append("[id: ").append(this.userId).append("] ");
+        strRepresentation.append(InternalCore.capitalizeString(this.firstName)).append(" ");
+        strRepresentation.append(InternalCore.capitalizeString((this.middleInitial.equals(" ") ? "" : this.middleInitial))).append(" ");
+        strRepresentation.append(InternalCore.capitalizeString(this.lastname)).append(" ");
+        return strRepresentation.toString();
+    }
+
+    public boolean equals(Object obj) {
+        if (!(obj instanceof User)) return super.equals(obj);
+        User object = (User) obj;
+        return this.username.equals(object.username) && this.userId == object.userId && this.type == object.type;
     }
     //endregion
 

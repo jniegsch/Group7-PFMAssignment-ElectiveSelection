@@ -66,11 +66,12 @@ public class Admin extends User {
         return false;
     }
     //endregion
-  
-    //region Student Getter
+
+    //region Retrievers
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public static Admin getAdminWithId(long id) {
         hasValidAdmins = loadAdmins();
+        if (admins == null) return null;
         for (Admin adm : admins) {
             if (adm.getUserId() == id) return adm;
         }
@@ -79,6 +80,7 @@ public class Admin extends User {
 
     public static Admin getAdminWithUsername(String uname) {
         hasValidAdmins = loadAdmins();
+        if (admins == null) return null;
         for (Admin adm : admins) {
             if (adm.getUsername().equals(uname)) return adm;
         }
@@ -96,8 +98,9 @@ public class Admin extends User {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public boolean addElective(String courseCode) {
         if (this.getUserType() != UserType.ADMIN) return false;
+        InternalCore.println();
         InternalCore.printTitle("Adding an Elective", '*');
-        InternalCore.println("You MUST fill in all fields!");
+        InternalCore.println("You MUST fill in all fields!\n ");
 
         // There are 8 properties to set for an elective
         String electiveCourseCode = courseCode, electiveName = "";
@@ -117,7 +120,7 @@ public class Admin extends User {
                     if (Elective.getElectiveWithCourseCode(electiveCourseCode) != null) {
                         InternalCore.printIssue("Elective already exists",
                                 "Please edit the elective if you need to change anything");
-                        return false;
+                        return false; // If we don't let them leave here, then they'll be forced to make a `fake` elective just so that they can leave the dialog
                     }
                     if (electiveCourseCode.equals("") || electiveCourseCode.equals(" ")) successfulSet = false;
                     break;
@@ -153,7 +156,10 @@ public class Admin extends User {
                     String keys = InternalCore.getUserInput(String.class, "Elective Keywords (separate each keyword using a ';'): ");
                     if (keys != null) {
                         electiveKeywords = keys.split(";");
-                        if (electiveKeywords.length < 1) break;
+                        if (electiveKeywords.length < 1) {
+                            InternalCore.printIssue("You must define keywords for the elective!", "Please try again...");
+                            break;
+                        }
                         if (electiveKeywords[0].equals("") || electiveKeywords[0].equals(" ")) break;
                         for (int i = 0 ; i < electiveKeywords.length; i++) {
                             electiveKeywords[i] = InternalCore.stripWhitespace(electiveKeywords[i]);
@@ -187,7 +193,15 @@ public class Admin extends User {
                     String lecturerUsername = InternalCore.getUserInput(String.class, "> Which lecturer teaches this elective? Please enter the username:");
                     if (lecturerUsername != null) {
                         Lecturer lecturer = Lecturer.getLecturerWithUsername(lecturerUsername);
-                        if (lecturer == null) break;
+                        if (lecturer == null) {
+                            String retry = InternalCore.getUserInput(String.class, "Lecturer not found. Would you like to try again? Or add one later? Try again (y/n): ");
+                            if (retry != null) {
+                                if (retry.toLowerCase().equals("y")) break;
+                            }
+                            lecturerId = -1;
+                            successfulSet = true;
+                            break;
+                        }
                         lecturerId = lecturer.getUserId();
                         successfulSet = true;
                     }

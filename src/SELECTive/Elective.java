@@ -38,7 +38,7 @@ public class Elective {
     //endregion
 
     // region Private Constants
-    private static final String invalidCourseID = "invC0iceNegativeWithdrawl";
+    public static final String invalidCourseID = "invC0iceNegativeWithdrawl";
 
     private static Elective[] electives = null;
     private static boolean hasValidElectives = false;
@@ -79,6 +79,7 @@ public class Elective {
     //region Accessors
     public static Elective getElectiveWithCourseCode(String courseCode) {
         hasValidElectives = loadElectives();
+        if (electives == null) return null;
         for (Elective elective : electives) {
             if (elective.courseCode.equals(courseCode)) return elective;
         }
@@ -88,6 +89,7 @@ public class Elective {
     public static Elective[] getAllElectivesForLecturer(Lecturer lecturer) {
         hasValidElectives = loadElectives();
         ArrayList<Elective> validElectives = new ArrayList<>();
+        if (electives == null) return null;
         for (Elective elective : electives) {
             if (elective.lecturerId == lecturer.getUserId()) validElectives.add(elective);
         }
@@ -131,7 +133,7 @@ public class Elective {
         String[][] electiveList = InternalCore.readInfoFile(SEObjectType.ELECTIVE, null);
         if (electiveList == null) return true;
         int electiveCount = electiveList.length;
-        Elective[] allElectives = new Elective[electiveCount];
+        electives = new Elective[electiveCount];
         for (int i = 0; i < electiveCount; i++) {
             Elective temp = new Elective(
                     Long.parseLong(electiveList[i][0]),
@@ -144,7 +146,7 @@ public class Elective {
                     Integer.parseInt(electiveList[i][7]),
                     Long.parseLong(electiveList[i][8])
             );
-            allElectives[i] = temp;
+            electives[i] = temp;
         }
         return true;
     }
@@ -212,6 +214,7 @@ public class Elective {
      */
     private static Elective[] electivesFilteredOnCourseCode(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
+	if (electives == null) return null;
         for (Elective elect : electives) {
             for (String arg : argument) {
                 if (elect.courseCode.equals(arg)) {
@@ -226,6 +229,7 @@ public class Elective {
 
     private static Elective[] electivesFilteredOnEcts(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
+	if (electives == null) return null;
         for (Elective elect : electives) {
             for (String arg : argument) {
                 if (elect.ects == Integer.parseInt(arg)) {
@@ -240,6 +244,7 @@ public class Elective {
 
     private static Elective[] electivesFilteredOnBlock(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
+	if (electives == null) return null;
         for (Elective elect : electives) {
             for (String arg : argument) {
                 if (elect.block == Integer.parseInt(arg)) {
@@ -254,6 +259,7 @@ public class Elective {
 
     private  static Elective[] electivesFilteredOnKeywords(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
+	if (electives == null) return null;
         for (Elective elect : electives) {
             boolean earlyExit = false;
             for (String arg : argument) {
@@ -483,11 +489,11 @@ public class Elective {
     // This method asks for the change of the elective block and saves this in the file
     private boolean editBlock() {
         InternalCore.println("Which block is this elective taught?");
-        InternalCore.println("(1) Block 4");
-        InternalCore.println("(2) Block 5");
-        InternalCore.println("(3) Block 6");
+        InternalCore.println("(3) Block 3");
+        InternalCore.println("(4) Block 4");
+        InternalCore.println("(5) Block 5");
         InternalCore.println(InternalCore.consoleLine('-'));
-        String newBlock = InternalCore.getUserInput(String.class, "Your selection (1, 2, or 3:");
+        String newBlock = InternalCore.getUserInput(String.class, "Your selection (3, 4 or 5:");
         if (newBlock == null) return false;
         this.block = Integer.parseInt(newBlock);
         return true;

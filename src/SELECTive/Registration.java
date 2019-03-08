@@ -1,10 +1,12 @@
 package SELECTive;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Registration {
     //region Private Properties
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private long relationId = -1;
     private Student student = null;
     private Elective[] electives = null;
     private double[] grades = null;
@@ -72,6 +74,7 @@ public class Registration {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static Registration[] registrations = null;
     private static boolean hasValidRegistrations = false;
+    private static boolean isLoading = false;
     //endregion
 
     //region Constructors
@@ -86,12 +89,21 @@ public class Registration {
         this.electives = elects;
         this.grades = grds;
     }
+
+    public Registration(long relId, Student std, Elective[] elects, double[] grds) {
+        this();
+        this.relationId = relId;
+        this.student = std;
+        this.electives = elects;
+        this.grades = grds;
+    }
     //endregion
 
     //region Public Retrieval
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public static Registration registrationForStudent(Student stu) {
         hasValidRegistrations = loadRegistrations();
+        if (registrations == null) return null;
         for (Registration registration : registrations) {
             if (registration.student.getUserId() == stu.getUserId()) return registration;
         }
@@ -100,6 +112,7 @@ public class Registration {
 
     public static Registration[] registrationsForCourse(Elective elect) {
         hasValidRegistrations = loadRegistrations();
+        if (registrations == null) return null;
         ArrayList<Registration> validRegs = new ArrayList<>();
         for (Registration registration : registrations) {
             if (registration.electives[elect.getBlock() - 3].getCourseCode().equals(elect.getCourseCode())) validRegs.add(registration);
@@ -119,9 +132,19 @@ public class Registration {
             return false;
         }
         if (this.electives[elect.getBlock() - 3] != null) {
-
+            InternalCore.println("You're already enrolled in a course in this block. The course is: \n "
+                    + this.electives[elect.getBlock() - 3].toString());
+            String changeElective = InternalCore.getUserInput(String.class, "Change elective? (y/n)");
+            if (changeElective == null) {
+                return false;
+            }
+            if (changeElective.toLowerCase().equals("y")) {
+                this.electives[elect.getBlock() - 3] = elect;
+            }
+        } else {
+            this.electives[elect.getBlock() - 3] = elect;
         }
-        return false;
+        return saveRegistration(false);
     }
     //endregion
 
@@ -141,19 +164,34 @@ public class Registration {
 
         grades[elect.getBlock() - 3] = grade;
 
-        String[] newInfo = {
-                electives[0].getCourseCode(),
-                Double.toString(grades[0]),
-                electives[1].getCourseCode(),
-                Double.toString(grades[1]),
-                electives[2].getCourseCode(),
-                Double.toString(grades[2])
+        return saveRegistration(false);
+    }
+
+    public boolean saveRegistration(boolean isnew) {
+        String[] info = {
+                Long.toString(this.student.getUserId()),
+                (this.electives[0] != null) ? this.electives[0].getCourseCode() : Elective.invalidCourseID,
+                Double.toString(this.grades[0]),
+                (this.electives[1] != null) ? this.electives[1].getCourseCode() : Elective.invalidCourseID,
+                Double.toString(this.grades[1]),
+                (this.electives[2] != null) ? this.electives[2].getCourseCode() : Elective.invalidCourseID,
+                Double.toString(this.grades[2])
         };
-        if (!InternalCore.updateInfoFile(SEObjectType.STU_ELECT_RELATION, Long.toString(this.student.getUserId()), newInfo)) {
-            InternalCore.printIssue("Failed to save the file",
-                    "If the problem persists, please restart the system. Changes were not saved.");
-            hasValidRegistrations = false;
+        if (isnew) {
+            if ((relationId = InternalCore.addEntryToInfoFile(SEObjectType.STU_ELECT_RELATION, info)) == -1) {
+                InternalCore.printIssue("Failed to save the file",
+                        "If the problem persists, please restart the system. Changes were not saved.");
+                hasValidRegistrations = false;
+            }
+        } else {
+            if (!InternalCore.updateInfoFile(SEObjectType.STU_ELECT_RELATION, Long.toString(this.student.getUserId()), Arrays.copyOfRange(info, 1, info.length))) {
+                InternalCore.printIssue("Failed to save the file",
+                        "If the problem persists, please restart the system. Changes were not saved.");
+                hasValidRegistrations = false;
+            }
         }
+
+        addRegistration(this);
         return hasValidRegistrations;
     }
     //endregion
@@ -161,31 +199,68 @@ public class Registration {
     //region Backend Loading
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static boolean loadRegistrations() {
-        if (hasValidRegistrations && registrations != null) return true;
+        if (hasValidRegistrations) return true;
+        if (isLoading) return false;
+        isLoading = true;
         String[][] regs = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, null);
+        if (regs == null) return true;
         registrations = new Registration[regs.length];
         int i = 0;
         for (String[] reg : regs) {
-            if (reg.length != 7) continue;
-            long studentId = Long.parseLong(reg[0]);
+            if (reg.length != 8) continue;
+            long relId = Long.parseLong(reg[0]);
+            if (relId == -1) continue;
+            long studentId = Long.parseLong(reg[1]);
             if (studentId == -1) continue;
             Student tmpStudent = Student.getStudentWithId(studentId);
 
             Elective[] els = new Elective[3];
             double[] grs = new double[3];
 
-            els[0] = Elective.getElectiveWithCourseCode(reg[1]);
-            grs[0] = Double.parseDouble(reg[2]);
-            els[0] = Elective.getElectiveWithCourseCode(reg[3]);
-            grs[0] = Double.parseDouble(reg[4]);
-            els[0] = Elective.getElectiveWithCourseCode(reg[5]);
-            grs[0] = Double.parseDouble(reg[6]);
+            els[0] = Elective.getElectiveWithCourseCode(reg[2]);
+            grs[0] = Double.parseDouble(reg[3]);
+            els[1] = Elective.getElectiveWithCourseCode(reg[4]);
+            grs[1] = Double.parseDouble(reg[5]);
+            els[2] = Elective.getElectiveWithCourseCode(reg[6]);
+            grs[2] = Double.parseDouble(reg[7]);
 
-            registrations[i]= new Registration(tmpStudent, els, grs);
+            registrations[i] = new Registration(relId, tmpStudent, els, grs);
             i++;
         }
         if (i == 0) return false;
         return true;
+    }
+
+    public static void addRegistration(Registration registration) {
+        if (alreadyHasLoaded(registration)) return;
+        int currLength = 0;
+        if (registrations != null) {
+            currLength = registrations.length;
+            registrations = Arrays.copyOf(registrations, currLength + 1);
+        } else {
+            registrations = new Registration[1];
+        }
+        registrations[currLength] = registration;
+    }
+
+    private static boolean alreadyHasLoaded(Registration registration) {
+        hasValidRegistrations = loadRegistrations();
+        if (registrations == null) return false;
+        for (Registration reg : registrations) {
+            if (reg.equals(registration)) return true;
+        }
+        return false;
+    }
+    //endregion
+
+    //region Overrides
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    public boolean equals(Object obj) {
+        if (obj instanceof Registration) {
+            Registration object = (Registration) obj;
+            return this.student.getUserId() == object.student.getUserId();
+        }
+        return super.equals(obj);
     }
     //endregion
 }

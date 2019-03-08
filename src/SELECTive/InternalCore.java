@@ -40,30 +40,37 @@ public final class InternalCore {
 
     //region File Access Constants
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+    private final static String DBLoc = "database/";
     /**
      * The location in the DB folder where the authentication file is stored
      */
-    private final static String UPLoc = ".db/UPdb.txt";
+    private final static String UPLoc = DBLoc + "UPdb.txt";
     /**
      * The location in the DB folder where the Admin User Information file is stored
+     * Admin ID; First Name; Last Name; Initial Middle Name; Username; Date of Birth
      */
-    private final static String AdminInfoLoc = ".db/adminuinfo.txt";
+    private final static String AdminInfoLoc = DBLoc + "adminuinfo.txt";
     /**
      * The location in the DB folder where the Lecturer User Information file is stored
+     * Lecturer ID; First Name; Last Name; Initial Middle Name; Username; Date of Birth; Title
      */
-    private final static String LecturerInfoLoc = ".db/lectureruinfo.txt";
+    private final static String LecturerInfoLoc = DBLoc + "lectureruinfo.txt";
     /**
      * The location in the DB folder where the Student User Information file is stored
+     * Student ID; First Name; Last Name; Initial Middle Name; Username; Date of Birth
      */
-    private final static String StudentInfoLoc = ".db/studentuinfo.txt";
+    private final static String StudentInfoLoc = DBLoc + "studentuinfo.txt";
     /**
      * The location in the DB Folder where the Elective Information file is stored
+     * Elective ID; Course Code; Course Name; ECTS; Program; Keywords; Class Time; Block; Lecturer ID
      */
-    private final static String ElectiveInfoLoc = ".db/electiveinfo.txt";
+    private final static String ElectiveInfoLoc = DBLoc + "electiveinfo.txt";
     /**
      * The location in the DB Folder where the Student and Elective relation is stored
+       * Student ID | Block 3 | Grade 3 | Block 4 | Grade 4 | Block 5 | Grade 5
      */
-    private final static String StudentElectiveRelationLoc = ".db/stuelectrel.txt";
+    private final static String StudentElectiveRelationLoc = DBLoc + "stuelectrel.txt";
     /**
      * The separator that MUST be used to store the different properties of an instance. This value must always be used
      * to separate the individual object properties. For example, any row must be something like this:
@@ -72,7 +79,7 @@ public final class InternalCore {
      * </pre>
      * Seeing as this class should solely read, update, or write this value is kept privately
      */
-    private static final String infoSeparator = " ; ";
+    private static final String infoSeparator = ";;";
     //endregion
 
     //region File Access Methods
@@ -286,7 +293,7 @@ public final class InternalCore {
             BufferedWriter writer = new BufferedWriter(new FileWriter(locString, true));
 
             long id = nextIdForType(ot);
-            if (ot != SEObjectType.USER_AUTH) str.append(Long.toString(id)).append(infoSeparator);
+            if (ot != SEObjectType.USER_AUTH) str.append(id).append(infoSeparator);
 
             for (int i = 0; i < infoToAdd.length; i++) {
                 if (infoToAdd[i].equals("")) infoToAdd[i] = " ";
@@ -319,9 +326,9 @@ public final class InternalCore {
     /**
      * The location of the internal state tracker where the last given id is stored for each type
      */
-    private final static String InternalStateLoc = ".db/internalstate.txt";
+    private final static String InternalStateLoc = DBLoc + ".internalstate.txt";
     /**
-     * Returns the key to use based on admin = 0; student = 1; lecturer = 2;
+     * Returns the key to use based on admin = 0; student = 1; lecturer = 2; elective = 3; relation = 4;
      */
     private final static char[] TypeKeys = {'A', 'S', 'L', 'E', 'R'};
 
@@ -346,7 +353,8 @@ public final class InternalCore {
             int i = 0, j = 0;
             for ( ; i < fileChars.length; i++) {
                 if (fileChars[i] == TypeKeys[selector]) j = i + 1;
-                if (fileChars[i] == TypeKeys[(selector + 1) % TypeKeys.length] || fileChars[i] == '\u0000') break; // '\u0000' denotes the null char
+                if (selector + 1 < TypeKeys.length) if (fileChars[i] == TypeKeys[(selector + 1)]) break;
+                if (fileChars[i] == '\u0000') break; // '\u0000' denotes the null char
             }
             fReader.close();
             long lastId = Long.parseLong(new String(Arrays.copyOfRange(fileChars, j, i)));
