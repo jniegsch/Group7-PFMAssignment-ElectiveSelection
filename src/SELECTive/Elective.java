@@ -212,6 +212,7 @@ public class Elective {
      */
     private static Elective[] electivesFilteredOnCourseCode(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
+	if (electives == null) return null;
         for (Elective elect : electives) {
             for (String arg : argument) {
                 if (elect.courseCode.equals(arg)) {
@@ -226,6 +227,7 @@ public class Elective {
 
     private static Elective[] electivesFilteredOnEcts(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
+	if (electives == null) return null;
         for (Elective elect : electives) {
             for (String arg : argument) {
                 if (elect.ects == Integer.parseInt(arg)) {
@@ -240,6 +242,7 @@ public class Elective {
 
     private static Elective[] electivesFilteredOnBlock(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
+	if (electives == null) return null;
         for (Elective elect : electives) {
             for (String arg : argument) {
                 if (elect.block == Integer.parseInt(arg)) {
@@ -254,6 +257,7 @@ public class Elective {
 
     private  static Elective[] electivesFilteredOnKeywords(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
+	if (electives == null) return null;
         for (Elective elect : electives) {
             boolean earlyExit = false;
             for (String arg : argument) {
