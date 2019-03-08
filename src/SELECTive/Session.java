@@ -504,11 +504,18 @@ public class Session {
                 electives = Elective.filterOn(Elective.ElectiveFilterType.ECTS, InternalCore.stripWhitespaceOfArray(ectsArr));
                 break;
             case BLOCK:
+                String blockStr = InternalCore.getUserInput(String.class,
+                        "Please enter the block you would like to filter on separated by a ';': ");
+                if (blockStr == null) return;
+                String[] block = blockStr.split(";");
+                electives = Elective.filterOn(Elective.ElectiveFilterType.BLOCK, InternalCore.stripWhitespaceOfArray(block));
+                break;
+            case KEYWORDS:
                 String keywordStr = InternalCore.getUserInput(String.class,
                         "Please enter the keywords you would like to filter on separated by a ';': ");
                 if (keywordStr == null) return;
                 String[] keywords = keywordStr.split(";");
-                electives = Elective.filterOn(Elective.ElectiveFilterType.ECTS, InternalCore.stripWhitespaceOfArray(keywords));
+                electives = Elective.filterOn(Elective.ElectiveFilterType.KEYWORDS, InternalCore.stripWhitespaceOfArray(keywords));
                 break;
         }
 
