@@ -467,7 +467,14 @@ public class Session {
             InternalCore.printIssue("Invalid password entered.", "");
             return;
         }
-        if (sessionUser.changePassword(username, (u == null)? null : oldPassword.toCharArray(), newPassword.toCharArray())) {
+        boolean success = false;
+        if (sessionAdmin == null) {
+            if (sessionUser.changePassword(oldPassword.toCharArray(), newPassword.toCharArray())) success = true;
+        } else {
+            if (sessionAdmin.changePassword(username, (u == null)? null : oldPassword.toCharArray(), newPassword.toCharArray())) success = true;
+        }
+
+        if (success) {
             InternalCore.println("> Password successfully changed.\n \n ");
         } else {
             InternalCore.println("> Password NOT successfully changed.\n \n ");
