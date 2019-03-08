@@ -250,7 +250,6 @@ public class User {
         Lecturer.Title title = null;
         if (utype == UserType.LECTURER) {
             InternalCore.println("Please choose one of the specified titles for the lecturer: ");
-            InternalCore.println("(0) No title");
             int optId = 1;
             for (Lecturer.Title t : Lecturer.Title.values()) {
                 InternalCore.println("(" + optId + ") " + InternalCore.capitalizeString(t.toString()));
