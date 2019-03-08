@@ -22,7 +22,7 @@ public class Student extends User {
     }
     //endregion
 
-    //region Student Getter
+    //region Student Retrievers
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public static Student getStudentWithId(long id) {
         hasValidStudents = loadStudents();

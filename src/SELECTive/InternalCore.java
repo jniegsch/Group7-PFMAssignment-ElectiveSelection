@@ -77,7 +77,7 @@ public final class InternalCore {
      * </pre>
      * Seeing as this class should solely read, update, or write this value is kept privately
      */
-    private static final String infoSeparator = " ; ";
+    private static final String infoSeparator = ";;";
     //endregion
 
     //region File Access Methods

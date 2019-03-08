@@ -76,8 +76,8 @@ public class Session {
             System.exit(InternalCore.INITIAL_STATE_SETUP_FAILED_FATALITY);
         }
 
-        sessionUser = new User();
-        if (sessionUser.login()) return true;
+        sessionUser = User.login();
+        if (sessionUser != null) return true;
         return false;
     }
     //endregion
@@ -141,7 +141,7 @@ public class Session {
                     viewElectives();
                     break;
             }
-            waitToReturnToDashboard();
+            if (running) waitToReturnToDashboard();
         }
     }
 
@@ -202,7 +202,7 @@ public class Session {
                     break;
 
             }
-            waitToReturnToDashboard();
+            if (running) waitToReturnToDashboard();
         }
     }
 
@@ -243,6 +243,7 @@ public class Session {
                     break;
                 case 2:
                     viewElectives();
+                    break;
                 case 3:
                     String courseCode = InternalCore.getUserInput(String.class, "For which elective do you want to register? Please give the course code:");
                     sessionStudent.registerToElective(courseCode);
@@ -259,7 +260,7 @@ public class Session {
                     break;
 
             }
-            waitToReturnToDashboard();
+            if (running) waitToReturnToDashboard();
         }
     }
     //endregion
@@ -267,8 +268,8 @@ public class Session {
     //region Dashboard Return Buffer
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static void waitToReturnToDashboard() {
-        InternalCore.getUserInput(String.class, "Close view / Back (press any key)");
         InternalCore.println();
+        InternalCore.getUserInput(String.class, "Close view / Back (press any key)");
         InternalCore.println();
     }
     //endregion
@@ -648,9 +649,7 @@ public class Session {
      * @return a {@code bool} indicating if the load was successful
      */
     private static boolean loadRootUser() {
-        User u = new User();
-        if (!u.rootLogin(User.rootUserName, User.rootUserPass)) return false;
-        rootUser = new Admin(u);
+        if ((rootUser = User.rootLogin(User.rootUserName, User.rootUserPass)) == null) return false;
         return true;
     }
     //endregion

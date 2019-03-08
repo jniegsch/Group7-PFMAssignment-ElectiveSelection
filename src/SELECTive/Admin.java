@@ -66,8 +66,8 @@ public class Admin extends User {
         return false;
     }
     //endregion
-  
-    //region Student Getter
+
+    //region Retrievers
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public static Admin getAdminWithId(long id) {
         hasValidAdmins = loadAdmins();
@@ -96,8 +96,9 @@ public class Admin extends User {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public boolean addElective(String courseCode) {
         if (this.getUserType() != UserType.ADMIN) return false;
+        InternalCore.println();
         InternalCore.printTitle("Adding an Elective", '*');
-        InternalCore.println("You MUST fill in all fields!");
+        InternalCore.println("You MUST fill in all fields!\n ");
 
         // There are 8 properties to set for an elective
         String electiveCourseCode = courseCode, electiveName = "";
@@ -117,7 +118,7 @@ public class Admin extends User {
                     if (Elective.getElectiveWithCourseCode(electiveCourseCode) != null) {
                         InternalCore.printIssue("Elective already exists",
                                 "Please edit the elective if you need to change anything");
-                        return false;
+                        return false; // If we don't let them leave here, then they'll be forced to make a `fake` elective just so that they can leave the dialog
                     }
                     if (electiveCourseCode.equals("") || electiveCourseCode.equals(" ")) successfulSet = false;
                     break;
