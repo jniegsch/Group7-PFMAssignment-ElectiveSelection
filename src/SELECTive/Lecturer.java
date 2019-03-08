@@ -4,12 +4,12 @@ import java.util.Arrays;
 
 public class Lecturer extends User {
     public enum Title {
-        MR,
+        DEFAULT,
+    	MR,
         MRS,
         MS,
         DR,
-        PROF,
-        DEFAULT
+        PROF
     }
 
     //region Static Properties
