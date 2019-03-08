@@ -46,22 +46,27 @@ public final class InternalCore {
     private final static String UPLoc = ".db/UPdb.txt";
     /**
      * The location in the DB folder where the Admin User Information file is stored
+     * Admin ID; First Name; Last Name; Initial Middle Name; Username; Date of Birth
      */
     private final static String AdminInfoLoc = ".db/adminuinfo.txt";
     /**
      * The location in the DB folder where the Lecturer User Information file is stored
+     * Lecturer ID; First Name; Last Name; Initial Middle Name; Username; Date of Birth; Title
      */
     private final static String LecturerInfoLoc = ".db/lectureruinfo.txt";
     /**
      * The location in the DB folder where the Student User Information file is stored
+     * Student ID; First Name; Last Name; Initial Middle Name; Username; Date of Birth
      */
     private final static String StudentInfoLoc = ".db/studentuinfo.txt";
     /**
      * The location in the DB Folder where the Elective Information file is stored
+     * Elective ID; Course Code; Course Name; ECTS; Program; Keywords; Class Time; Block; Lecturer ID
      */
     private final static String ElectiveInfoLoc = ".db/electiveinfo.txt";
     /**
      * The location in the DB Folder where the Student and Elective relation is stored
+       * Student ID | Block 3 | Grade 3 | Block 4 | Grade 4 | Block 5 | Grade 5
      */
     private final static String StudentElectiveRelationLoc = ".db/stuelectrel.txt";
     /**
