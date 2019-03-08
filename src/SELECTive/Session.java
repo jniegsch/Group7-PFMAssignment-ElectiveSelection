@@ -467,7 +467,7 @@ public class Session {
             InternalCore.printIssue("Invalid password entered.", "");
             return;
         }
-        if (sessionAdmin.changePassword(username, (u == null)? null : oldPassword.toCharArray(), newPassword.toCharArray())) {
+        if (sessionUser.changePassword(username, (u == null)? null : oldPassword.toCharArray(), newPassword.toCharArray())) {
             InternalCore.println("> Password successfully changed.\n \n ");
         } else {
             InternalCore.println("> Password NOT successfully changed.\n \n ");
