@@ -480,7 +480,8 @@ public class Elective {
 				"   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
 		
     	if (classDay == null) return false;
-    	this.lectureDay = Day.valueOf(classDay);
+    	if (Integer.parseInt(classDay) < 1 || Integer.parseInt(classDay) > 7) return false;
+        this.lectureDay = Day.values()[Integer.parseInt(classDay) - 1];
     	return true;
 	}
 
