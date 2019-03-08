@@ -259,11 +259,11 @@ public class User {
             // using `enter` we must use `String` in order to not throw errors!
             String titleInp = InternalCore.getUserInput(String.class, "The title choice (1, 2, etc): ");
             String titleIntStr = (titleInp != null)? titleInp : "-1";
-            int titleChoice = -1;
+            int titleChoice;
             try {
-                titleChoice = Integer.parseInt(titleIntStr) - 1;
+                titleChoice = Integer.parseInt(titleIntStr);
             } catch (NumberFormatException nfe) {
-                titleChoice = -1;
+                titleChoice = 0;
             }
             if (titleChoice < 0 || titleChoice >= Lecturer.Title.values().length) {
                 title = Lecturer.Title.DEFAULT;
