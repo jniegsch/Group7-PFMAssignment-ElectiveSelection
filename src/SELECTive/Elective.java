@@ -487,11 +487,11 @@ public class Elective {
     // This method asks for the change of the elective block and saves this in the file
     private boolean editBlock() {
         InternalCore.println("Which block is this elective taught?");
-        InternalCore.println("(1) Block 4");
-        InternalCore.println("(2) Block 5");
-        InternalCore.println("(3) Block 6");
+        InternalCore.println("(3) Block 3");
+        InternalCore.println("(4) Block 4");
+        InternalCore.println("(5) Block 5");
         InternalCore.println(InternalCore.consoleLine('-'));
-        String newBlock = InternalCore.getUserInput(String.class, "Your selection (1, 2, or 3:");
+        String newBlock = InternalCore.getUserInput(String.class, "Your selection (3, 4 or 5:");
         if (newBlock == null) return false;
         this.block = Integer.parseInt(newBlock);
         return true;
