@@ -522,14 +522,12 @@ public class Session {
             InternalCore.printIssue("Invalid password entered.", "");
             return;
         }
-
-
+      
         boolean success = false;
         if (sessionAdmin == null) {
             if (sessionUser.changePassword(oldPassword.toCharArray(), newPassword.toCharArray())) success = true;
         } else {
-            if (sessionAdmin.changePassword(username, (u == null) ? null : oldPassword.toCharArray(), newPassword.toCharArray()))
-                success = true;
+            if (sessionAdmin.changePassword(username, (u == null)? null : oldPassword.toCharArray(), newPassword.toCharArray())) success = true;
         }
 
         if (success) {
