@@ -293,7 +293,7 @@ public final class InternalCore {
             BufferedWriter writer = new BufferedWriter(new FileWriter(locString, true));
 
             long id = nextIdForType(ot);
-            if (ot != SEObjectType.USER_AUTH) str.append(Long.toString(id)).append(infoSeparator);
+            if (ot != SEObjectType.USER_AUTH) str.append(id).append(infoSeparator);
 
             for (int i = 0; i < infoToAdd.length; i++) {
                 if (infoToAdd[i].equals("")) infoToAdd[i] = " ";
@@ -328,7 +328,7 @@ public final class InternalCore {
      */
     private final static String InternalStateLoc = DBLoc + ".internalstate.txt";
     /**
-     * Returns the key to use based on admin = 0; student = 1; lecturer = 2;
+     * Returns the key to use based on admin = 0; student = 1; lecturer = 2; elective = 3; relation = 4;
      */
     private final static char[] TypeKeys = {'A', 'S', 'L', 'E', 'R'};
 
@@ -353,7 +353,8 @@ public final class InternalCore {
             int i = 0, j = 0;
             for ( ; i < fileChars.length; i++) {
                 if (fileChars[i] == TypeKeys[selector]) j = i + 1;
-                if (fileChars[i] == TypeKeys[(selector + 1) % TypeKeys.length] || fileChars[i] == '\u0000') break; // '\u0000' denotes the null char
+                if (selector + 1 < TypeKeys.length) if (fileChars[i] == TypeKeys[(selector + 1)]) break;
+                if (fileChars[i] == '\u0000') break; // '\u0000' denotes the null char
             }
             fReader.close();
             long lastId = Long.parseLong(new String(Arrays.copyOfRange(fileChars, j, i)));

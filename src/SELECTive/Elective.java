@@ -38,7 +38,7 @@ public class Elective {
     //endregion
 
     // region Private Constants
-    private static final String invalidCourseID = "invC0iceNegativeWithdrawl";
+    public static final String invalidCourseID = "invC0iceNegativeWithdrawl";
 
     private static Elective[] electives = null;
     private static boolean hasValidElectives = false;
@@ -79,6 +79,7 @@ public class Elective {
     //region Accessors
     public static Elective getElectiveWithCourseCode(String courseCode) {
         hasValidElectives = loadElectives();
+        if (electives == null) return null;
         for (Elective elective : electives) {
             if (elective.courseCode.equals(courseCode)) return elective;
         }
@@ -88,6 +89,7 @@ public class Elective {
     public static Elective[] getAllElectivesForLecturer(Lecturer lecturer) {
         hasValidElectives = loadElectives();
         ArrayList<Elective> validElectives = new ArrayList<>();
+        if (electives == null) return null;
         for (Elective elective : electives) {
             if (elective.lecturerId == lecturer.getUserId()) validElectives.add(elective);
         }
@@ -131,7 +133,7 @@ public class Elective {
         String[][] electiveList = InternalCore.readInfoFile(SEObjectType.ELECTIVE, null);
         if (electiveList == null) return true;
         int electiveCount = electiveList.length;
-        Elective[] allElectives = new Elective[electiveCount];
+        electives = new Elective[electiveCount];
         for (int i = 0; i < electiveCount; i++) {
             Elective temp = new Elective(
                     Long.parseLong(electiveList[i][0]),
@@ -144,7 +146,7 @@ public class Elective {
                     Integer.parseInt(electiveList[i][7]),
                     Long.parseLong(electiveList[i][8])
             );
-            allElectives[i] = temp;
+            electives[i] = temp;
         }
         return true;
     }

@@ -112,6 +112,8 @@ public class Session {
                 continue;
             }
 
+            InternalCore.println();
+            InternalCore.println(InternalCore.consoleLine('-'));
             switch (choice) {
                 case 0:
                     running = false;
@@ -141,6 +143,7 @@ public class Session {
                     viewElectives();
                     break;
             }
+            InternalCore.println(InternalCore.consoleLine('-'));
             if (running) waitToReturnToDashboard();
         }
     }
@@ -175,6 +178,8 @@ public class Session {
                 continue;
             }
 
+            InternalCore.println();
+            InternalCore.println(InternalCore.consoleLine('-'));
             switch (choice) {
                 case 0:
                     running = false;
@@ -202,6 +207,7 @@ public class Session {
                     break;
 
             }
+            InternalCore.println(InternalCore.consoleLine('-'));
             if (running) waitToReturnToDashboard();
         }
     }
@@ -219,7 +225,7 @@ public class Session {
                     + " 2) View all electives\n"
                     + " 3) Register to an elective\n"
                     + " 4) View a list of your enrolled electives\n"
-                    + " 5) View your grade for a specific elective\n"
+                    + " 5) View your grade(s)\n"
                     + "- - - Account Management:\n"
                     + " 6) Reset/Change password\n"
                     + "- - - \n"
@@ -234,6 +240,8 @@ public class Session {
                 continue;
             }
 
+            InternalCore.println();
+            InternalCore.println(InternalCore.consoleLine('-'));
             switch (choice) {
                 case 0:
                     running = false;
@@ -245,21 +253,20 @@ public class Session {
                     viewElectives();
                     break;
                 case 3:
-                    String courseCode = InternalCore.getUserInput(String.class, "For which elective do you want to register? Please give the course code:");
-                    sessionStudent.registerToElective(courseCode);
+                    registerForElective();
                     break;
                 case 4:
                     sessionStudent.viewEnrolledElectives();
                     break;
                 case 5:
-                    String courseCodeProgress = InternalCore.getUserInput(String.class, "For which elective do you want to register? Please give the course code:");
-                    sessionStudent.viewElectiveProgress(courseCodeProgress);;
+                    viewGrades();
                     break;
                 case 6:
                     resetOrChangePasswordOfUser(sessionStudent);
                     break;
 
             }
+            InternalCore.println(InternalCore.consoleLine('-'));
             if (running) waitToReturnToDashboard();
         }
     }
@@ -312,6 +319,7 @@ public class Session {
         if (sessionAdmin.createNewUser(uname, pword, UserType.values()[typeSelect]) == null) {
             InternalCore.printIssue("Couldn't create the user", "For some reason the user could not be created, please try again.");
         }
+        InternalCore.println("User created successfully!");
     }
 
     // Method to view users
@@ -436,6 +444,52 @@ public class Session {
         for (Elective elective : electives) {
             InternalCore.println(elective.toString());
         }
+    }
+    //endregion
+
+    //region Student Actions
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private static void registerForElective() {
+        String courseCode = InternalCore.getUserInput(String.class, "For which elective do you want to register? Please give the course code:");
+        if (courseCode == null) return;
+        Elective elect = Elective.getElectiveWithCourseCode(courseCode);
+        if (elect == null) {
+            InternalCore.printIssue("No such course exists", "No elective exists with that course code.");
+            return;
+        }
+        Registration studentsRegistrations = Registration.registrationForStudent(sessionStudent);
+        if (studentsRegistrations == null) {
+            Elective[] elects = new Elective[3];
+            double[] grds = {-1, -1, -1};
+            elects[elect.getBlock() - 3] = elect;
+            studentsRegistrations = new Registration(
+                    sessionStudent,
+                    elects,
+                    grds
+            );
+            if (studentsRegistrations.saveRegistration(true)) {
+                InternalCore.println("> Registration successful");
+            } else {
+                InternalCore.println("> Registration unsuccessful");
+            }
+            return;
+        }
+        studentsRegistrations.registerForElective(sessionStudent, elect);
+    }
+
+    private static void viewGrades() {
+        String viewAll = InternalCore.getUserInput(String.class, "Would you like to see your progress for all electives? (y/n)");
+        if (viewAll != null) {
+            if (viewAll.toLowerCase().equals("y")) {
+                InternalCore.println();
+                sessionStudent.viewProgress();
+                return;
+            }
+        }
+        String courseCode = InternalCore.getUserInput(String.class, "Please enter the course code of the elective for which you would like to see your grades");
+        if (courseCode == null) return;
+        InternalCore.println();
+        sessionStudent.viewElectiveProgress(courseCode);
     }
     //endregion
 
