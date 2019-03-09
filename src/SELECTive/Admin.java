@@ -241,7 +241,7 @@ public class Admin extends User {
                         "lecturer doesn't seem to exist");
                 return false;
             }
-	    if (!tempLecturer.editUser(false)) {
+	    if (!tempLecturer.editUser(true)) {
             	InternalCore.printIssue("Could not edit the lecturer", "");
             	return false;
             }
