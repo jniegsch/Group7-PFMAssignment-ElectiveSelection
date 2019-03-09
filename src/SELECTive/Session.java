@@ -585,32 +585,35 @@ public class Session {
 
         InternalCore.println("\nThe electives that match your search are: ");
         int optEl = 0;
-        for (Elective elect : electives) {
-            InternalCore.println(" " + optId + ") " + elect.toString());
-            optEl++;
-        }
-
-        String viewChoice = InternalCore.getUserInput(String.class, "Would you like to view one of the electives details? (y/n)");
-        if (viewChoice == null) return;
-        if (viewChoice.toLowerCase().equals("y")) {
-            while (true) {
-                Integer electiveChoice = InternalCore.getUserInput(Integer.class, "The elective you would like to view (1, 2, etc.): ");
-                if (electiveChoice == null) break;
-                if (electiveChoice < 1 || electiveChoice > electives.length) break;
-                InternalCore.println(" \n" + InternalCore.consoleLine('-'));
-                InternalCore.println(electives[electiveChoice - 1].view());
-                InternalCore.println();
-                String contChoice = InternalCore.getUserInput(String.class, "Would you like to view another from your search? (y/n)");
-                if (contChoice == null) break;
-                if (contChoice.toLowerCase().equals("y")) {
-                    optEl = 0;
-                    for (Elective elect : electives) {
-                        InternalCore.println(" " + optEl + ") " + elect.toString());
-                        optEl++;
+        if (electives == null) {
+			InternalCore.println("No matches.");
+		} else {
+            for (Elective elect : electives) {
+                InternalCore.println(" " + optId + ") " + elect.toString());
+                optEl++;
+            }
+            String viewChoice = InternalCore.getUserInput(String.class, "Would you like to view one of the electives details? (y/n)");
+            if (viewChoice == null) return;
+            if (viewChoice.toLowerCase().equals("y")) {
+                while (true) {
+                    Integer electiveChoice = InternalCore.getUserInput(Integer.class, "The elective you would like to view (1, 2, etc.): ");
+                    if (electiveChoice == null) break;
+                    if (electiveChoice < 1 || electiveChoice > electives.length) break;
+                    InternalCore.println(" \n" + InternalCore.consoleLine('-'));
+                    InternalCore.println(electives[electiveChoice - 1].view());
+                    InternalCore.println();
+                    String contChoice = InternalCore.getUserInput(String.class, "Would you like to view another from your search? (y/n)");
+                    if (contChoice == null) break;
+                    if (contChoice.toLowerCase().equals("y")) {
+                        optEl = 0;
+                        for (Elective elect : electives) {
+                            InternalCore.println(" " + optEl + ") " + elect.toString());
+                            optEl++;
+                        }
+                        continue;
                     }
-                    continue;
+                    break;
                 }
-                break;
             }
         }
     }
