@@ -236,9 +236,14 @@ public class Admin extends User {
 
         if (ut.equals(UserType.LECTURER)) {
             Lecturer tempLecturer = Lecturer.getLecturerWithUsername(uname);
-            if (!tempLecturer.editUser(true)) {
-                InternalCore.printIssue("Could not edit the lecturer", "");
+            if (tempLecturer == null) {
+                InternalCore.printIssue("Could not edit the lecturer",
+                        "lecturer doesn't seem to exist");
                 return false;
+            }
+	    if (!tempLecturer.editUser(false)) {
+            	InternalCore.printIssue("Could not edit the lecturer", "");
+            	return false;
             }
         } else if (ut.equals(UserType.STUDENT)) {
             Student tempStudent = Student.getStudentWithUsername(uname);
@@ -264,6 +269,11 @@ public class Admin extends User {
                     return false;
                 }
                 Admin tempAdmin = getAdminWithUsername(uname);
+		if (tempAdmin == null) {
+                    InternalCore.printIssue("Could not edit the admin",
+                            "admin doesn't seem to exist");
+                    return false;
+                }
                 if (!tempAdmin.editUser(false)) {
                     InternalCore.printIssue("Could not edit the admin", "");
                     return false;
