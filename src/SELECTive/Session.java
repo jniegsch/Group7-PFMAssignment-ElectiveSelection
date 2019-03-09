@@ -555,21 +555,21 @@ public class Session {
         switch (userFilterType) {
             case COURSEID:
                 String courseCodes = InternalCore.getUserInput(String.class,
-                        "Please enter the course codes you would like to filter on separated by a ';': ");
+                        "Please enter the course codes you would like to filter on (separated by a ';' if you want to filter on multiple course codes: ");
                 if (courseCodes == null) return;
                 String[] codes = courseCodes.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.COURSEID, InternalCore.stripWhitespaceOfArray(codes));
                 break;
             case ECTS:
                 String ectsString = InternalCore.getUserInput(String.class,
-                        "Please enter the ects you would like to filter on separated by a ';': ");
+                        "Please enter the ects number you would like to filter on (separated by a ';' if you want to filter on multiple ects: ");
                 if (ectsString == null) return;
                 String[] ectsArr = ectsString.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.ECTS, InternalCore.stripWhitespaceOfArray(ectsArr));
                 break;
             case BLOCK:
                 String blockStr = InternalCore.getUserInput(String.class,
-                        "Please enter the block you would like to filter on separated by a ';': ");
+                        "Please enter the block number you would like to filter on (separated by a ';' if you want to filter on multiple blocks): ");
                 if (blockStr == null) return;
                 String[] block = blockStr.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.BLOCK, InternalCore.stripWhitespaceOfArray(block));
