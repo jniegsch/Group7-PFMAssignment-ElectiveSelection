@@ -555,14 +555,14 @@ public class Session {
         switch (userFilterType) {
             case COURSEID:
                 String courseCodes = InternalCore.getUserInput(String.class,
-                        "Please enter the course codes you would like to filter on (separated by a ';' if you want to filter on multiple course codes: ");
+                        "Please enter the course code you would like to filter on (separated by a ';' if you want to filter on multiple course codes: ");
                 if (courseCodes == null) return;
                 String[] codes = courseCodes.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.COURSEID, InternalCore.stripWhitespaceOfArray(codes));
                 break;
             case ECTS:
                 String ectsString = InternalCore.getUserInput(String.class,
-                        "Please enter the ects number you would like to filter on (separated by a ';' if you want to filter on multiple ects: ");
+                        "Please enter the ects number you would like to filter on (separated by a ';' if you want to filter on multiple ects): ");
                 if (ectsString == null) return;
                 String[] ectsArr = ectsString.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.ECTS, InternalCore.stripWhitespaceOfArray(ectsArr));
@@ -576,7 +576,7 @@ public class Session {
                 break;
             case KEYWORDS:
                 String keywordStr = InternalCore.getUserInput(String.class,
-                        "Please enter the keywords you would like to filter on separated by a ';': ");
+                        "Please enter the keyword you would like to filter on (separated by a ';' if you want to filter on multiple keywords): ");
                 if (keywordStr == null) return;
                 String[] keywords = keywordStr.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.KEYWORDS, InternalCore.stripWhitespaceOfArray(keywords));
