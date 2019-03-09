@@ -427,7 +427,7 @@ public class User {
     }
 
     public boolean editUserMiddleInitial() {
-        String newMiddleInitial = InternalCore.getUserInput(String.class, "What is the new middle Initial of this user's name?");
+        String newMiddleInitial = InternalCore.getUserInput(String.class, "What is the new middle initial of this user's name?");
         if (newMiddleInitial == null) return false;
         this.middleInitial = newMiddleInitial;
         return true;
