@@ -373,9 +373,8 @@ public class Session {
                 "Enter the course code for the elective you would like to edit: ");
         if (code == null) return;
 
-        if (Elective.getElectiveWithCourseCode(InternalCore.stripWhitespace(code)) == null) {
-        	return; 
-        } else { Elective toEdit = Elective.getElectiveWithCourseCode(InternalCore.stripWhitespace(code));
+        if (Elective.getElectiveWithCourseCode(InternalCore.stripWhitespace(code)) == null) return; 
+        Elective toEdit = Elective.getElectiveWithCourseCode(InternalCore.stripWhitespace(code));
         if (toEdit.getElectiveId() == -1) return;
         toEdit.edit(sessionAdmin);
     }
