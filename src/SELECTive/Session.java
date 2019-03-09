@@ -583,7 +583,7 @@ public class Session {
                 break;
         }
 
-        InternalCore.println("\nThe electives that match your search are: ");
+        InternalCore.println("\nThe electives that match your search are presented in the following match list: ");
         int optEl = 0;
         if (electives == null) {
 			InternalCore.println("No matches.");
@@ -592,17 +592,17 @@ public class Session {
                 InternalCore.println(" " + optId + ") " + elect.toString());
                 optEl++;
             }
-            String viewChoice = InternalCore.getUserInput(String.class, "Would you like to view one of the electives details? (y/n)");
+            String viewChoice = InternalCore.getUserInput(String.class, "Would you like to view the details of one of the electives in the match list? (y/n)");
             if (viewChoice == null) return;
             if (viewChoice.toLowerCase().equals("y")) {
                 while (true) {
-                    Integer electiveChoice = InternalCore.getUserInput(Integer.class, "The elective you would like to view (1, 2, etc.): ");
+                    Integer electiveChoice = InternalCore.getUserInput(Integer.class, "Which elective of the match list would you like to view (1, 2, etc.): ");
                     if (electiveChoice == null) break;
                     if (electiveChoice < 1 || electiveChoice > electives.length) break;
                     InternalCore.println(" \n" + InternalCore.consoleLine('-'));
                     InternalCore.println(electives[electiveChoice - 1].view());
                     InternalCore.println();
-                    String contChoice = InternalCore.getUserInput(String.class, "Would you like to view another from your search? (y/n)");
+                    String contChoice = InternalCore.getUserInput(String.class, "Would you like to view another elective from the match list? (y/n)");
                     if (contChoice == null) break;
                     if (contChoice.toLowerCase().equals("y")) {
                         optEl = 0;
