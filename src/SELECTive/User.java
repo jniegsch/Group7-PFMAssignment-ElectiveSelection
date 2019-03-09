@@ -360,7 +360,7 @@ public class User {
                 "What do you want to edit? \n" +
                 "(1) First name \n" +
                 "(2) Last name \n" +
-                "(3) Middle Initial name\n" +
+                "(3) Middle initial name\n" +
                 "(4) Date of Birth" +
                 ((lecturerInstance)? "\n(5) Title" : ""));
 
