@@ -425,7 +425,7 @@ public class Session {
 
     // Method to view student grades for an elective
     private static void viewStudentGradesPerElective() {
-        String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the registered students: ");
+        String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the student grades: ");
         sessionLecturer.showStudentGrades(courseCode);
     }
 
