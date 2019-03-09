@@ -361,7 +361,7 @@ public class User {
                 "(1) First name \n" +
                 "(2) Last name \n" +
                 "(3) Middle initial name\n" +
-                "(4) Date of Birth" +
+                "(4) Date of birth" +
                 ((lecturerInstance)? "\n(5) Title" : ""));
 
         InternalCore.println(InternalCore.consoleLine('-'));
