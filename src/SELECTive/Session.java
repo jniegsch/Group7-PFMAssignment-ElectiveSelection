@@ -419,19 +419,19 @@ public class Session {
 
     // Method to view registered students for an elective
     private static void viewRegisteredStudentsPerElective() {
-        String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the registered students: ");
+        String courseCode = InternalCore.getUserInput(String.class, "Please enter the course code for which you would like to view the registered students: ");
         sessionLecturer.showStudents(courseCode); // REMOVE ", LectureBlock block" as input for the showStudents method from line 56 in class Lecturer since it is not used there
     }
 
     // Method to view student grades for an elective
     private static void viewStudentGradesPerElective() {
-        String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the student grades: ");
+        String courseCode = InternalCore.getUserInput(String.class, "Please enter the course code for which you would like to view the student grades: ");
         sessionLecturer.showStudentGrades(courseCode);
     }
 
     // Method to print grade statistics for an elective AND number of students that failed the elective
     private static void viewGradeStatsPerElective() {
-        String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the grade statistics: ");
+        String courseCode = InternalCore.getUserInput(String.class, "Please enter the course code for which you would like to view the grade statistics: ");
         sessionLecturer.viewStatsForElective(courseCode);
     }
 
