@@ -391,9 +391,9 @@ public class Session {
         String uname = InternalCore.getUserInput(String.class,
                 "Enter a username: ");
         InternalCore.println("What usertype is " + uname + ":\n" +
-                "(1) Lecturer\n" +
-                "(2) Student\n" +
-                "(3) Admin");
+                "(1) Admin\n" +
+                "(2) Lecturer\n" +
+                "(3) Student");
         Integer utype = InternalCore.getUserInput(Integer.class,
                 "Please enter your choice (1, 2 or 3):");
         if (utype == null || utype > 3) {
@@ -401,11 +401,11 @@ public class Session {
             return;
         }
         if (utype == 1) {
-            sessionAdmin.editSpecificUser(uname, UserType.LECTURER);
-        } else if (utype == 2) {
-            sessionAdmin.editSpecificUser(uname, UserType.STUDENT);
-        } else if (utype == 3) {
             sessionAdmin.editSpecificUser(uname, UserType.ADMIN);
+        } else if (utype == 2) {
+            sessionAdmin.editSpecificUser(uname, UserType.LECTURER);
+        } else if (utype == 3) {
+            sessionAdmin.editSpecificUser(uname, UserType.STUDENT);
         }
     }
     //endregion
