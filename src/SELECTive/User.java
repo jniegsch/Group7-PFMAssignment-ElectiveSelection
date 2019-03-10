@@ -662,7 +662,7 @@ public class User {
         String fname = InternalCore.fileLocationForObjectType(SEObjectType.USER_AUTH);
         String dump = "";
         try {
-            if (!InternalCore.fileExists(SEObjectType.USER_AUTH)) {
+            if (InternalCore.fileDoesNotExist(SEObjectType.USER_AUTH)) {
                 InternalCore.printError("User",
                         "readDictFromFile",
                         "File IO Error",
@@ -707,7 +707,7 @@ public class User {
     private static boolean writeDictToAuthFile(String[][] dict, boolean overwrite) {
         String fname = InternalCore.fileLocationForObjectType(SEObjectType.USER_AUTH);
         try {
-            if (!InternalCore.fileExists(SEObjectType.USER_AUTH)) {
+            if (InternalCore.fileDoesNotExist(SEObjectType.USER_AUTH)) {
                 InternalCore.printError("User",
                         "writeDictToFile",
                         "File IO Error",
@@ -762,7 +762,7 @@ public class User {
                 (this.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(this.dateOfBirth) : "",
                 (isLecturer) ? ((Lecturer) this).getTitle().toString() : ""
         };
-        return InternalCore.updateInfoFile(ot, Long.toString(this.userId), (isLecturer) ? info : Arrays.copyOfRange(info, 0, 5));
+        return InternalCore.updateInfoFile(ot, this.userId, (isLecturer) ? info : Arrays.copyOfRange(info, 0, 5));
     }
 
     /**

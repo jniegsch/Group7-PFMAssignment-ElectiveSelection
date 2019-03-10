@@ -172,10 +172,16 @@ public class Lecturer extends User {
             }
 
             Registration registration = Registration.registrationForStudent(student);
+            if (registration == null) {
+                InternalCore.printIssue("Student is not registered",
+                        "Looks like the student is not registered for this elective. " +
+                                "If they should be, contact the student.");
+                continue;
+            }
             if (registration.isNotRegistrationForElective(elective)) {
                 InternalCore.printIssue("Student is not registered",
                         "Looks like the student is not registered for this elective. " +
-                                "If they should be, contact an admin.");
+                                "If they should be, contact the user.");
                 continue;
             }
 

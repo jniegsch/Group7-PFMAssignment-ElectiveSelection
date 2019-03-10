@@ -108,17 +108,11 @@ public class Elective {
     public long getElectiveId() {
         return this.electiveId;
     }
-    public String getElectiveName() {
-        return this.electiveName;
-    }
     public String getCourseCode() {
         return this.courseCode;
     }
     public long getLecturerId() {
         return this.lecturerId;
-    }
-    public Day getLectureDay() {
-        return this.lectureDay;
     }
     public int getBlock() {
         return this.block;
@@ -140,9 +134,9 @@ public class Elective {
                     electiveList[i][1],
                     electiveList[i][2],
                     Integer.parseInt(electiveList[i][3]),
-                    (electiveList[i][4] != "")? MasterProgram.valueOf(electiveList[i][4]) : MasterProgram.INVLD,
+                    (electiveList[i][4].equals("")) ? MasterProgram.valueOf(electiveList[i][4]) : MasterProgram.INVLD,
                     keywordsFromKeywordString(electiveList[i][5]),
-                    (electiveList[i][6] != "")? Day.valueOf(electiveList[i][6]) : Day.INVLD,
+                    (electiveList[i][6].equals("")) ? Day.valueOf(electiveList[i][6]) : Day.INVLD,
                     Integer.parseInt(electiveList[i][7]),
                     Long.parseLong(electiveList[i][8])
             );
@@ -151,7 +145,7 @@ public class Elective {
         return true;
     }
 
-    public static void addElective(Elective elective) {
+    private static void addElective(Elective elective) {
         if (alreadyHasLoaded(elective)) return;
         int currLength = 0;
         if (electives != null) {
@@ -186,9 +180,9 @@ public class Elective {
      *     > KEYWORDS
      *     args: a {@code String[]} of keyword strings
      * </pre>
-     * @param filter
-     * @param argument
-     * @return
+     * @param filter    the {@code ElectiveFilterType} to apply
+     * @param argument  a {@code String[]} of the arguments
+     * @return {@code Elective[]} of all the electives that fit the filter
      */
     public static Elective[] filterOn(ElectiveFilterType filter, String[] argument) {
         switch (filter) {
@@ -284,11 +278,11 @@ public class Elective {
     private static final String keywordStorageSeparator = "&";
     private String keywordString() {
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < this.keywords.length; i++) builder.append(this.keywords[i]).append(keywordStorageSeparator);
+        for (String keyword : keywords) builder.append(keyword).append(keywordStorageSeparator);
         return builder.toString();
     }
 
-    public static String[] keywordsFromKeywordString(String keywordStr) {
+    private static String[] keywordsFromKeywordString(String keywordStr) {
         return keywordStr.split(keywordStorageSeparator);
     }
     //endregion
@@ -311,7 +305,7 @@ public class Elective {
         viewBuilder.ensureCapacity(viewBuilder.length() + 100);
         viewBuilder.append("\n    ").append("Taught in Block ").append(this.block);
         viewBuilder.append("\n    ").append("Every ").append(InternalCore.capitalizeString(this.lectureDay.toString()));
-        viewBuilder.append("\n    ").append("By: ").append(lecturer.toString());
+        viewBuilder.append("\n    ").append("By: ").append((lecturer == null) ? "none defined" : lecturer.toString());
         viewBuilder.append("\n\n    Keywords:");
         for (String keyword : this.keywords) {
             viewBuilder.append("\n    > ").append(keyword);
@@ -343,7 +337,7 @@ public class Elective {
             this.electiveId = InternalCore.addEntryToInfoFile(SEObjectType.ELECTIVE, Arrays.copyOfRange(info, 1, info.length));
             if (this.electiveId != -1) storeSuccessful = true;
         } else {
-            storeSuccessful = InternalCore.updateInfoFile(SEObjectType.ELECTIVE, Long.toString(this.electiveId), info);
+            storeSuccessful = InternalCore.updateInfoFile(SEObjectType.ELECTIVE, this.electiveId, info);
         }
 
         if (!storeSuccessful) return false;
@@ -446,7 +440,7 @@ public class Elective {
         }
         Integer selection = InternalCore.getUserInput(Integer.class, "The program: ");
         if (selection == null) return false;
-        this.program = MasterProgram.values()[selection.intValue() - 1];
+        this.program = MasterProgram.values()[selection - 1];
         return true;
 
     }
@@ -455,7 +449,7 @@ public class Elective {
     private boolean editECTS() {
         Integer newECTS = InternalCore.getUserInput(Integer.class, "What is the new ECTS number of this elective?");
         if (newECTS == null) return false;
-        this.ects = newECTS.intValue();
+        this.ects = newECTS;
         return true;
     }
 

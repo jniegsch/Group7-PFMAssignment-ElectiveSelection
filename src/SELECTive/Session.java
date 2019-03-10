@@ -470,7 +470,10 @@ public class Session {
             }
             return;
         }
-        studentsRegistrations.registerForElective(sessionStudent, elect);
+        if (!studentsRegistrations.registerForElective(sessionStudent, elect)) {
+            InternalCore.printIssue("Could not register",
+                    "For some reason you couldn't register for the elective. Please try again.");
+        }
     }
 
     private static void viewGrades() {

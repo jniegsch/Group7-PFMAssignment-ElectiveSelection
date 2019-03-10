@@ -22,18 +22,6 @@ public class Registration {
         return electives;
     }
 
-    public Elective getElective(int block) {
-        return electives[block - 3];
-    }
-
-    public double[] getAllGrades() {
-        return grades;
-    }
-
-    public double getGrade(int block) {
-        return grades[block - 3];
-    }
-
     public double getGrade(Elective elect) {
         if (isNotRegistrationForElective(elect.getCourseCode())) return -1.0;
         return grades[elect.getBlock() - 3];
@@ -43,11 +31,10 @@ public class Registration {
         return isNotRegistrationForElective(elective.getCourseCode());
     }
 
-    public boolean isNotRegistrationForElective(String courseCode) {
+    private boolean isNotRegistrationForElective(String courseCode) {
         if (electives[0].getCourseCode().equals(courseCode)) return false;
         if (electives[1].getCourseCode().equals(courseCode)) return false;
-        if (electives[2].getCourseCode().equals(courseCode)) return false;
-        return true;
+        return electives[2].getCourseCode().equals(courseCode);
     }
 
     public boolean mayNotViewGrades(User them) {
@@ -56,17 +43,16 @@ public class Registration {
         return mayNotEditGrades(them);
     }
 
-    public boolean mayNotEditGrades(User them) {
+    private boolean mayNotEditGrades(User them) {
         for (Elective elective : electives) {
             if (elective.getLecturerId() == them.getUserId() && them.getUserType() == UserType.LECTURER) return false;
         }
         return true;
     }
 
-    public boolean mayNotAdaptRegistration(User them) {
+    private boolean mayNotAdaptRegistration(User them) {
         if (them.getUserType() == UserType.ADMIN) return false;
-        if (them.getUserType() == UserType.STUDENT && them.getUserId() == student.getUserId()) return false;
-        return true;
+        return them.getUserType() == UserType.STUDENT && them.getUserId() == student.getUserId();
     }
     //endregion
 
@@ -79,7 +65,7 @@ public class Registration {
 
     //region Constructors
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    public Registration() {
+    private Registration() {
         hasValidRegistrations = loadRegistrations();
     }
 
@@ -90,7 +76,7 @@ public class Registration {
         this.grades = grds;
     }
 
-    public Registration(long relId, Student std, Elective[] elects, double[] grds) {
+    private Registration(long relId, Student std, Elective[] elects, double[] grds) {
         this();
         this.relationId = relId;
         this.student = std;
@@ -184,7 +170,7 @@ public class Registration {
                 hasValidRegistrations = false;
             }
         } else {
-            if (!InternalCore.updateInfoFile(SEObjectType.STU_ELECT_RELATION, Long.toString(this.student.getUserId()), Arrays.copyOfRange(info, 1, info.length))) {
+            if (!InternalCore.updateInfoFile(SEObjectType.STU_ELECT_RELATION, this.relationId, Arrays.copyOfRange(info, 1, info.length))) {
                 InternalCore.printIssue("Failed to save the file",
                         "If the problem persists, please restart the system. Changes were not saved.");
                 hasValidRegistrations = false;
@@ -227,8 +213,7 @@ public class Registration {
             registrations[i] = new Registration(relId, tmpStudent, els, grs);
             i++;
         }
-        if (i == 0) return false;
-        return true;
+        return i == 0;
     }
 
     public static void addRegistration(Registration registration) {

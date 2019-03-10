@@ -28,14 +28,12 @@ public final class InternalCore {
 
     //region Exit Codes
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    public static final int ALL_GOOD_IN_THE_HOOD = 0;
     public static final int INITIAL_STATE_SETUP_FAILED_FATALITY = 1;
     public static final int BROKEN_INTERNAL_STATE_FATAL = 2;
     public static final int FATAL_ERROR_RESET_REQUIRED = 3;
-    public static final int INTERNALLY_REQUIRED_FILE_CANNOT_EXIST = 4;
-    public static final int USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE = 5;
-    public static final int REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE = 6;
-    public static final int NO_AUTHENTICATION = 7;
+    public static final int USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE = 4;
+    public static final int REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE = 5;
+    public static final int NO_AUTHENTICATION = 6;
     //endregion
 
     //region File Access Constants
@@ -87,11 +85,7 @@ public final class InternalCore {
     // Important: All file accessors that search will not use binarySearch since the arrays read are not guaranteed to
     // be sorted. Thus, applying binarySearch would require a sort first resulting in worst case of O(n log(n)), compared
     // to which a linear search in O(n) is better.
-    
-    //TODO: Change BufferWriter to FileWriter
-    //TODO: Possibly change BufferedReader to FileReader
-    //TODO: Adapt file accessors to merely handle SEObjectTypes not locations
-    private static boolean settingUpInitial = false;
+
     /**
      * Checks if a file exists at the specified path. If it doesn't the function automatically creates the file.
      * <b>
@@ -103,32 +97,49 @@ public final class InternalCore {
      * @param ot the {@code SEObjectType} defining the type of the object to which to add an entry
      * @return {@code boolean} indicating if the file exists after completion of this function
      */
-    public static boolean fileExists(SEObjectType ot) {
+    public static boolean fileDoesNotExist(SEObjectType ot) {
         String location = fileLocationForObjectType(ot);
+        if (location == null) {
+            printError("InternalCore",
+                    "fileDoesNotExist",
+                    "Could Not Find Myself",
+                    "Something has really gone wrong and we can't find ourselves");
+            System.exit(INITIAL_STATE_SETUP_FAILED_FATALITY);
+        }
         String[] locSections = location.split("/");
-        String file = locSections[locSections.length - 1];
         String[] folders = Arrays.copyOf(locSections, locSections.length - 1);
 
         //folders
-        for (int i = 0; i < folders.length; i++) {
-            File dir = new File(folders[i]);
+        for (String folder : folders) {
+            File dir = new File(folder);
             if (dir.exists()) continue;
             try{
-                dir.mkdir();
+                if (dir.mkdir()) continue;
+                printError("InternalCore",
+                        "fileDoesNotExist",
+                        "Could Not Create File",
+                        "Couldn't create the folder needed!");
+                System.exit(INITIAL_STATE_SETUP_FAILED_FATALITY);
             }
             catch(SecurityException se){
-                printError("Session",
-                        "fileExists",
+                printError("InternalCore",
+                        "fileDoesNotExist",
                         "SecurityException",
                         "Could not create the folders");
-                return false;
+                return true;
             }
         }
 
         File tmp = new File(location);
-        if (tmp.exists()) return true;
+        if (tmp.exists()) return false;
         try {
-            tmp.createNewFile();
+            if (!tmp.createNewFile()) {
+                printError("InternalCore",
+                        "fileDoesNotExist",
+                        "Could Not Create File",
+                        "Could not create the necessary new file!");
+                System.exit(INITIAL_STATE_SETUP_FAILED_FATALITY);
+            }
             if (location.equals(InternalStateLoc)) {
                 // Create the internal state for all to be 1
                 for (SEObjectType t : SEObjectType.values()) {
@@ -137,13 +148,13 @@ public final class InternalCore {
                 }
             }
         } catch (IOException ioe) {
-            printError("Session",
-                    "fileExists",
+            printError("InternalCore",
+                    "fileDoesNotExist",
                     "IOException",
                     "Could not create the file...");
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     /**
@@ -159,7 +170,7 @@ public final class InternalCore {
         // not thread safe, but faster than StringBuffer -> in a single thread environment so all good
         StringBuilder userDump = new StringBuilder();
         try {
-            if (!fileExists(ot)) {
+            if (fileDoesNotExist(ot)) {
                 InternalCore.printError("InternalCore",
                         "readInfoFile",
                         "File IO Error",
@@ -170,10 +181,17 @@ public final class InternalCore {
             String currentLine;
             while((currentLine = reader.readLine()) != null) {
                 String[] userInfo  = currentLine.split(infoSeparator);
-                if (ids != null)
-                    for (int i = 0; i < ids.length; i++) if (!ids[i].equals(userInfo[0])) continue;
-
-                userDump.append(currentLine + "\n");
+                if (ids != null) {
+                    boolean found = false;
+                    for (String id : ids) {
+                        if (id.equals(userInfo[0])) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) continue;
+                }
+                userDump.append(currentLine).append("\n");
             }
             reader.close();
         } catch (IOException ioe) {
@@ -216,14 +234,14 @@ public final class InternalCore {
      * @param info      a {@code String[]} defining the info of the object to write to the file
      * @return a {@code boolean} indicating if the update occurred successful
      */
-    public static boolean updateInfoFile(SEObjectType ot, String id, String[] info) {
+    public static boolean updateInfoFile(SEObjectType ot, long id, String[] info) {
         String locString = fileLocationForObjectType(ot);
 
         BufferedReader reader = null;
         BufferedWriter writer = null;
 
         try {
-            if (!fileExists(ot)) {
+            if (fileDoesNotExist(ot)) {
                 printError("InternalCore",
                         "updateInfoFile",
                         "File IO Error",
@@ -238,7 +256,7 @@ public final class InternalCore {
                     for (int i = 0; i < info.length; i++) {
                         if (info[i].equals(""))
                             info[i] = " "; // make space instead of empty otherwise reading issues will occur
-                        if (i == 0) if (!info[i].equals(id)) newBuffer.append(id).append(infoSeparator);
+                        if (i == 0) if (!info[i].equals(Long.toString(id))) newBuffer.append(id).append(infoSeparator);
                         newBuffer.append(info[i]).append(infoSeparator);
                     }
                     newBuffer.append("\n");
@@ -273,7 +291,7 @@ public final class InternalCore {
     public static long addEntryToInfoFile(SEObjectType ot, String[] infoToAdd) {
         String locString = fileLocationForObjectType(ot);
         try {
-            if (!fileExists(ot)) {
+            if (fileDoesNotExist(ot)) {
                 printError("InternalCore",
                         "addEntryToInfoFile",
                         "File IO Error",
@@ -333,7 +351,7 @@ public final class InternalCore {
      */
     private static long nextIdForType(SEObjectType ot) {
         if (ot == SEObjectType.USER_AUTH) return 0;
-        if (!fileExists(SEObjectType.INTERNAL)) {
+        if (fileDoesNotExist(SEObjectType.INTERNAL)) {
             printIssue("Accessing invalid UserType", "Tried get next id for DEFAULT");
             System.exit(BROKEN_INTERNAL_STATE_FATAL);
         }
@@ -367,7 +385,7 @@ public final class InternalCore {
      * @return {@code bool} indicating if the save was successful
      */
     private static boolean saveLastIdForType(SEObjectType ot, long id) {
-        if (!fileExists(SEObjectType.INTERNAL)) {
+        if (fileDoesNotExist(SEObjectType.INTERNAL)) {
             printIssue("Accessing invalid UserType", "Tried to get next id for DEFAULT");
             System.exit(BROKEN_INTERNAL_STATE_FATAL);
         }
