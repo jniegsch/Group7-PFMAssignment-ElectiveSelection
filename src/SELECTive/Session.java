@@ -381,6 +381,7 @@ public class Session {
                 "Enter the course code for the elective you would like to edit: ");
         if (code == null) return;
 
+        if (Elective.getElectiveWithCourseCode(InternalCore.stripWhitespace(code)) == null) return; 
         Elective toEdit = Elective.getElectiveWithCourseCode(InternalCore.stripWhitespace(code));
         if (toEdit.getElectiveId() == -1) return;
         toEdit.edit(sessionAdmin);
@@ -390,9 +391,9 @@ public class Session {
         String uname = InternalCore.getUserInput(String.class,
                 "Enter a username: ");
         InternalCore.println("What usertype is " + uname + ":\n" +
-                "(1) Lecturer\n" +
-                "(2) Student\n" +
-                "(3) Admin");
+                "(1) Admin\n" +
+                "(2) Lecturer\n" +
+                "(3) Student");
         Integer utype = InternalCore.getUserInput(Integer.class,
                 "Please enter your choice (1, 2 or 3):");
         if (utype == null || utype > 3) {
@@ -400,11 +401,11 @@ public class Session {
             return;
         }
         if (utype == 1) {
-            sessionAdmin.editSpecificUser(uname, UserType.LECTURER);
-        } else if (utype == 2) {
-            sessionAdmin.editSpecificUser(uname, UserType.STUDENT);
-        } else if (utype == 3) {
             sessionAdmin.editSpecificUser(uname, UserType.ADMIN);
+        } else if (utype == 2) {
+            sessionAdmin.editSpecificUser(uname, UserType.LECTURER);
+        } else if (utype == 3) {
+            sessionAdmin.editSpecificUser(uname, UserType.STUDENT);
         }
     }
     //endregion
@@ -418,19 +419,19 @@ public class Session {
 
     // Method to view registered students for an elective
     private static void viewRegisteredStudentsPerElective() {
-        String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the registered students: ");
+        String courseCode = InternalCore.getUserInput(String.class, "Please enter the course code for which you would like to view the registered students: ");
         sessionLecturer.showStudents(courseCode); // REMOVE ", LectureBlock block" as input for the showStudents method from line 56 in class Lecturer since it is not used there
     }
 
     // Method to view student grades for an elective
     private static void viewStudentGradesPerElective() {
-        String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the registered students: ");
+        String courseCode = InternalCore.getUserInput(String.class, "Please enter the course code for which you would like to view the student grades: ");
         sessionLecturer.showStudentGrades(courseCode);
     }
 
     // Method to print grade statistics for an elective AND number of students that failed the elective
     private static void viewGradeStatsPerElective() {
-        String courseCode = InternalCore.getUserInput(String.class, "Please enter the coursecode for which you would like to view the grade statistics: ");
+        String courseCode = InternalCore.getUserInput(String.class, "Please enter the course code for which you would like to view the grade statistics: ");
         sessionLecturer.viewStatsForElective(courseCode);
     }
 
@@ -522,14 +523,12 @@ public class Session {
             InternalCore.printIssue("Invalid password entered.", "");
             return;
         }
-
-
+      
         boolean success = false;
         if (sessionAdmin == null) {
             if (sessionUser.changePassword(oldPassword.toCharArray(), newPassword.toCharArray())) success = true;
         } else {
-            if (sessionAdmin.changePassword(username, (u == null) ? null : oldPassword.toCharArray(), newPassword.toCharArray()))
-                success = true;
+            if (sessionAdmin.changePassword(username, (u == null)? null : oldPassword.toCharArray(), newPassword.toCharArray())) success = true;
         }
 
         if (success) {
@@ -556,62 +555,65 @@ public class Session {
         switch (userFilterType) {
             case COURSEID:
                 String courseCodes = InternalCore.getUserInput(String.class,
-                        "Please enter the course codes you would like to filter on separated by a ';': ");
+                        "Please enter the course code you would like to filter on (separated by a ';' if you want to filter on multiple course codes: ");
                 if (courseCodes == null) return;
                 String[] codes = courseCodes.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.COURSEID, InternalCore.stripWhitespaceOfArray(codes));
                 break;
             case ECTS:
                 String ectsString = InternalCore.getUserInput(String.class,
-                        "Please enter the ects you would like to filter on separated by a ';': ");
+                        "Please enter the ects number you would like to filter on (separated by a ';' if you want to filter on multiple ects): ");
                 if (ectsString == null) return;
                 String[] ectsArr = ectsString.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.ECTS, InternalCore.stripWhitespaceOfArray(ectsArr));
                 break;
             case BLOCK:
                 String blockStr = InternalCore.getUserInput(String.class,
-                        "Please enter the block you would like to filter on separated by a ';': ");
+                        "Please enter the block number you would like to filter on (separated by a ';' if you want to filter on multiple blocks): ");
                 if (blockStr == null) return;
                 String[] block = blockStr.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.BLOCK, InternalCore.stripWhitespaceOfArray(block));
                 break;
             case KEYWORDS:
                 String keywordStr = InternalCore.getUserInput(String.class,
-                        "Please enter the keywords you would like to filter on separated by a ';': ");
+                        "Please enter the keyword you would like to filter on (separated by a ';' if you want to filter on multiple keywords): ");
                 if (keywordStr == null) return;
                 String[] keywords = keywordStr.split(";");
                 electives = Elective.filterOn(Elective.ElectiveFilterType.KEYWORDS, InternalCore.stripWhitespaceOfArray(keywords));
                 break;
         }
 
-        InternalCore.println("\nThe electives that match your search are: ");
+        InternalCore.println("\nThe electives that match your search are presented in the following match list: ");
         int optEl = 0;
-        for (Elective elect : electives) {
-            InternalCore.println(" " + optId + ") " + elect.toString());
-            optEl++;
-        }
-
-        String viewChoice = InternalCore.getUserInput(String.class, "Would you like to view one of the electives details? (y/n)");
-        if (viewChoice == null) return;
-        if (viewChoice.toLowerCase().equals("y")) {
-            while (true) {
-                Integer electiveChoice = InternalCore.getUserInput(Integer.class, "The elective you would like to view (1, 2, etc.): ");
-                if (electiveChoice == null) break;
-                if (electiveChoice < 1 || electiveChoice > electives.length) break;
-                InternalCore.println(" \n" + InternalCore.consoleLine('-'));
-                InternalCore.println(electives[electiveChoice - 1].view());
-                InternalCore.println();
-                String contChoice = InternalCore.getUserInput(String.class, "Would you like to view another from your search? (y/n)");
-                if (contChoice == null) break;
-                if (contChoice.toLowerCase().equals("y")) {
-                    optEl = 0;
-                    for (Elective elect : electives) {
-                        InternalCore.println(" " + optEl + ") " + elect.toString());
-                        optEl++;
+        if (electives == null) {
+			InternalCore.println("No matches.");
+		} else {
+            for (Elective elect : electives) {
+                InternalCore.println(" " + optId + ") " + elect.toString());
+                optEl++;
+            }
+            String viewChoice = InternalCore.getUserInput(String.class, "Would you like to view the details of one of the electives in the match list? (y/n)");
+            if (viewChoice == null) return;
+            if (viewChoice.toLowerCase().equals("y")) {
+                while (true) {
+                    Integer electiveChoice = InternalCore.getUserInput(Integer.class, "Which elective of the match list would you like to view (1, 2, etc.): ");
+                    if (electiveChoice == null) break;
+                    if (electiveChoice < 1 || electiveChoice > electives.length) break;
+                    InternalCore.println(" \n" + InternalCore.consoleLine('-'));
+                    InternalCore.println(electives[electiveChoice - 1].view());
+                    InternalCore.println();
+                    String contChoice = InternalCore.getUserInput(String.class, "Would you like to view another elective from the match list? (y/n)");
+                    if (contChoice == null) break;
+                    if (contChoice.toLowerCase().equals("y")) {
+                        optEl = 0;
+                        for (Elective elect : electives) {
+                            InternalCore.println(" " + optEl + ") " + elect.toString());
+                            optEl++;
+                        }
+                        continue;
                     }
-                    continue;
+                    break;
                 }
-                break;
             }
         }
     }

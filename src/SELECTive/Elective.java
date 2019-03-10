@@ -482,7 +482,8 @@ public class Elective {
 				"   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
 		
     	if (classDay == null) return false;
-    	this.lectureDay = Day.valueOf(classDay);
+    	if (Integer.parseInt(classDay) < 1 || Integer.parseInt(classDay) > 7) return false;
+        this.lectureDay = Day.values()[Integer.parseInt(classDay) - 1];
     	return true;
 	}
 
@@ -499,9 +500,9 @@ public class Elective {
         return true;
     }
     
-    // This method asks for the change of the lecturer Id and saves this in the file
+    // This method asks for the change of the lecturer id and saves this in the file
     private boolean editLecturerId() {
-        String newLecturerId = InternalCore.getUserInput(String.class, "What is the Id of this elective's lecturer?");
+        String newLecturerId = InternalCore.getUserInput(String.class, "What is the id of this elective's lecturer?");
         if (newLecturerId == null) return false;
         this.lecturerId = Long.parseLong(newLecturerId);
         return true;

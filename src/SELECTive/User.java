@@ -360,8 +360,8 @@ public class User {
                 "What do you want to edit? \n" +
                 "(1) First name \n" +
                 "(2) Last name \n" +
-                "(3) Middle Initial name\n" +
-                "(4) Date of Birth" +
+                "(3) Middle initial name\n" +
+                "(4) Date of birth" +
                 ((lecturerInstance)? "\n(5) Title" : ""));
 
         InternalCore.println(InternalCore.consoleLine('-'));
@@ -427,7 +427,7 @@ public class User {
     }
 
     public boolean editUserMiddleInitial() {
-        String newMiddleInitial = InternalCore.getUserInput(String.class, "What is the new middle Initial of this user's name?");
+        String newMiddleInitial = InternalCore.getUserInput(String.class, "What is the new middle initial of this user's name?");
         if (newMiddleInitial == null) return false;
         this.middleInitial = newMiddleInitial;
         return true;
