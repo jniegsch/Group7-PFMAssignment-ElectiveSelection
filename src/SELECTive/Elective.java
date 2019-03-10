@@ -496,7 +496,7 @@ public class Elective {
     
     // This method asks for the change of the lecturer id and saves this in the file
     private boolean editLecturer() {
-        String newLecturer = InternalCore.getUserInput(String.class, "What is the username of this elective's lecturer?");
+        String newLecturer = InternalCore.getUserInput(String.class, "What is the new username of this elective's lecturer?");
         if (newLecturer == null) return false;
         Lecturer lecturer = Lecturer.getLecturerWithUsername(newLecturer);
         if (lecturer == null) return false;
