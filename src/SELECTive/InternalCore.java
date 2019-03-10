@@ -382,7 +382,6 @@ public final class InternalCore {
         // Data in the internal state file is stored in 40 char blocks (1 for the type and 39 for the last id)
         try {
             int offSetMod = selectorForObjectType(ot);
-            FileWriter fWriter = new FileWriter(InternalStateLoc);
             BufferedReader fReader = new BufferedReader(new FileReader(InternalStateLoc));
             char[] toWrite = Long.toString(id).toCharArray();
             String nLine = fReader.readLine();
@@ -401,10 +400,11 @@ public final class InternalCore {
             for (int i = 0; i < toWrite.length; i++) {
                 state[offSetMod * 40 + (40 - toWrite.length) + i] = toWrite[i];
             }
+            fReader.close();
+            FileWriter fWriter = new FileWriter(InternalStateLoc);
             fWriter.write(state);
             fWriter.flush();
             fWriter.close();
-            fReader.close();
             return true;
         } catch (FileNotFoundException e) {
             printError("User", "nextIdForType", "FileNotFoundException", e.getMessage());
