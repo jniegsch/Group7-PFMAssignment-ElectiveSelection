@@ -66,7 +66,7 @@ public final class InternalCore {
     private final static String ElectiveInfoLoc = DBLoc + "electiveinfo.txt";
     /**
      * The location in the DB Folder where the Student and Elective relation is stored
-       * Student ID | Block 3 | Grade 3 | Block 4 | Grade 4 | Block 5 | Grade 5
+       * ID; Student ID; Block 3; Grade 3; Block 4; Grade 4; Block 5; Grade 5
      */
     private final static String StudentElectiveRelationLoc = DBLoc + "stuelectrel.txt";
     /**
