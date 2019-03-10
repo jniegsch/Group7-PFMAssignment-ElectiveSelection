@@ -283,10 +283,10 @@ public class User {
             } catch (NumberFormatException nfe) {
                 titleChoice = 0;
             }
-            if (titleChoice < 0 || titleChoice >= Lecturer.Title.values().length) {
-                title = Lecturer.Title.DEFAULT;
+            if (titleChoice < 0 || titleChoice > Lecturer.Title.values().length) {
+                title = Lecturer.Title.NO_TITLE;
             } else {
-                title = Lecturer.Title.values()[titleChoice];
+                title = Lecturer.Title.values()[titleChoice - 1];
             }
         }
 
@@ -355,7 +355,8 @@ public class User {
     //endregion
 
     //region User Instance Editing
-    public boolean editUser(boolean lecturerInstance) {
+    public boolean editUser() {
+        boolean lecturerInstance = this.type == UserType.LECTURER;
         InternalCore.println("" +
                 "What do you want to edit? \n" +
                 "(1) First name \n" +
@@ -397,11 +398,9 @@ public class User {
                     InternalCore.printIssue("Invalid option.", "");
                     return false;
                 }
-                if (this.getUserType() == UserType.LECTURER) {
-                    if (!((Lecturer)this).editTitle()) {
-                        InternalCore.printIssue("Could not change the title", "");
-                        return false;
-                    }
+                if (!((Lecturer) this).editTitle()) {
+                    InternalCore.printIssue("Could not change the title", "");
+                    return false;
                 }
                 break;
             default:
@@ -445,7 +444,7 @@ public class User {
             return new SimpleDateFormat("yyyy-MM-dd").parse(date);
         } catch (ParseException pe) {
             InternalCore.printError("User",
-                    "createNewUser",
+                    "parseDOB",
                     "ParseException",
                     "Could not parse the passed date (" + date +")");
             return null;
@@ -543,6 +542,19 @@ public class User {
                 }
                 return UserType.DEFAULT;
             }
+        }
+        return UserType.DEFAULT;
+    }
+
+    public static UserType getUserTypeOfUser(String username) {
+        if (!hasOpenUP) {
+            uPs = readDictFromAuthFile();
+            hasOpenUP = true;
+        }
+        if (uPs == null) return UserType.DEFAULT;
+        String userHash = hashUsername(username);
+        for (String[] user : uPs) {
+            if (user[0].equals(userHash)) return UserType.valueOf(user[2]);
         }
         return UserType.DEFAULT;
     }
@@ -733,7 +745,7 @@ public class User {
      * Updates the users record after anything has changed
      * @return {@code bool} indicating if the update was successful
      */
-    public boolean updateUserInfo(boolean lecturerInstance) {
+    public boolean updateUserInfo(boolean isLecturer) {
         SEObjectType ot = objectTypeForUserType(this.type);
         if (ot == null) {
             InternalCore.printError("User",
@@ -748,9 +760,9 @@ public class User {
                 this.middleInitial,
                 this.username,
                 (this.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(this.dateOfBirth) : "",
-                (this.type == UserType.LECTURER)? ((Lecturer)this).getTitle().toString() : ""
+                (isLecturer) ? ((Lecturer) this).getTitle().toString() : ""
         };
-        return InternalCore.updateInfoFile(ot, Long.toString(this.userId), (lecturerInstance)? info : Arrays.copyOfRange(info, 0, 5));
+        return InternalCore.updateInfoFile(ot, Long.toString(this.userId), (isLecturer) ? info : Arrays.copyOfRange(info, 0, 5));
     }
 
     /**
@@ -785,6 +797,8 @@ public class User {
         if (!hasOpenUP) {
             uPs = readDictFromAuthFile();
             hasOpenUP = true;
+        } else {
+            addAuth(them.username, pword, them.type);
         }
         if (them.type == UserType.ADMIN) Admin.addAdmin(new Admin(them));
         if (them.type == UserType.STUDENT) Student.addStudent(new Student(them));

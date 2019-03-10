@@ -390,22 +390,20 @@ public class Session {
     private static void editAUser() {
         String uname = InternalCore.getUserInput(String.class,
                 "Enter a username: ");
-        InternalCore.println("What usertype is " + uname + ":\n" +
-                "(1) Admin\n" +
-                "(2) Lecturer\n" +
-                "(3) Student");
-        Integer utype = InternalCore.getUserInput(Integer.class,
-                "Please enter your choice (1, 2 or 3):");
-        if (utype == null || utype > 3) {
-            InternalCore.println("You entered an invalid Username.");
-            return;
-        }
-        if (utype == 1) {
-            sessionAdmin.editSpecificUser(uname, UserType.ADMIN);
-        } else if (utype == 2) {
-            sessionAdmin.editSpecificUser(uname, UserType.LECTURER);
-        } else if (utype == 3) {
-            sessionAdmin.editSpecificUser(uname, UserType.STUDENT);
+        UserType utype = User.getUserTypeOfUser(uname);
+        switch (utype) {
+            case STUDENT:
+                sessionAdmin.editSpecificUser(uname, UserType.STUDENT);
+                break;
+            case ADMIN:
+                sessionAdmin.editSpecificUser(uname, UserType.ADMIN);
+                break;
+            case LECTURER:
+                sessionAdmin.editSpecificUser(uname, UserType.LECTURER);
+                break;
+            case DEFAULT:
+                InternalCore.printIssue("User does not seem to exist!", "");
+                break;
         }
     }
     //endregion

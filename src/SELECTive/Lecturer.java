@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public class Lecturer extends User {
     public enum Title {
-        DEFAULT,
+        NO_TITLE,
     	MR,
         MRS,
         MS,
@@ -21,7 +21,7 @@ public class Lecturer extends User {
 
     //region Private Properties
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    private Title title = Title.DEFAULT;
+    private Title title = Title.NO_TITLE;
     //endregion
 
     //region Getters
@@ -124,9 +124,16 @@ public class Lecturer extends User {
     //region Instance Editing
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public boolean editTitle() {
-        Title newTitle = InternalCore.getUserInput(Title.class, "What is the new title of this lecturer?");
-        if (newTitle == null) return false;
-        this.title = newTitle;
+        int optId = 0;
+        Title[] titles = Title.values();
+        InternalCore.println("Possible title choices are:");
+        for (Title title : titles) {
+            InternalCore.println("(" + (++optId) + ") " + InternalCore.capitalizeString(title.toString()));
+        }
+        Integer newTitleChoice = InternalCore.getUserInput(Integer.class, "What is the new title of this lecturer?");
+        if (newTitleChoice == null) return false;
+        if (newTitleChoice < 1 || newTitleChoice > optId) return false;
+        this.title = titles[newTitleChoice - 1];
         return true;
     }
     //endregion
@@ -135,7 +142,7 @@ public class Lecturer extends User {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public String toString() {
         String userRep = super.toString();
-        userRep.replaceAll("] ", "] " + title.toString() + ". ");
+        userRep.replaceAll("]", "] " + title.toString() + ".");
         return userRep;
     }
     //endregion

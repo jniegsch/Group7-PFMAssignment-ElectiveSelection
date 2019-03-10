@@ -241,7 +241,7 @@ public class Admin extends User {
                         "lecturer doesn't seem to exist");
                 return false;
             }
-	    if (!tempLecturer.editUser(true)) {
+            if (!tempLecturer.editUser()) {
             	InternalCore.printIssue("Could not edit the lecturer", "");
             	return false;
             }
@@ -252,14 +252,14 @@ public class Admin extends User {
                         "Student doesn't seem to exist");
                 return false;
             }
-            if (!tempStudent.editUser(false)) {
+            if (!tempStudent.editUser()) {
                 InternalCore.printIssue("Could not edit the student",
                         "There was an issue editing the requested user.");
                 return false;
             }
         } else if (ut.equals(UserType.ADMIN)) {
             if (uname == this.getUsername()) {
-                if (!this.editUser(false)) {
+                if (!this.editUser()) {
                     InternalCore.printIssue("Could not edit yourself", "");
                     return false;
                 }
@@ -274,7 +274,7 @@ public class Admin extends User {
                             "admin doesn't seem to exist");
                     return false;
                 }
-                if (!tempAdmin.editUser(false)) {
+                if (!tempAdmin.editUser()) {
                     InternalCore.printIssue("Could not edit the admin", "");
                     return false;
                 }

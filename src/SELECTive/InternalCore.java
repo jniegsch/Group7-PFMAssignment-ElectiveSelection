@@ -209,8 +209,8 @@ public final class InternalCore {
      *     this to a temporary file  using the writer
      * </pre>
      *
-     * <b>IMPORTANT:</b> the info does not have to contain the id, the function checks if the first passed info element is the
-     * same as the defined id. If not then it will write this first followed by the info.
+     * <b>IMPORTANT:</b> the info does not have to contain the id, the function checks if the first passed info element
+     * is the same as the defined id. If not then it will write this first followed by the info.
      * @param ot        the {@code SEObjectType} defining the type of the object to which to add an entry
      * @param id        a {@code String} representing the id of the object to update
      * @param info      a {@code String[]} defining the info of the object to write to the file
@@ -218,8 +218,6 @@ public final class InternalCore {
      */
     public static boolean updateInfoFile(SEObjectType ot, String id, String[] info) {
         String locString = fileLocationForObjectType(ot);
-        // take a guess at the capacity required based on the info (* .5 for safety)
-        int minCapacity = (int)Math.ceil(info.toString().length() * 1.5);
 
         BufferedReader reader = null;
         BufferedWriter writer = null;
@@ -232,34 +230,28 @@ public final class InternalCore {
                         "Apparently the requested file (" + locString + ") does not exist and cannot be created.");
                 return false;
             }
-            final File temp = File.createTempFile("tmp", "txt");
             reader = new BufferedReader(new FileReader(locString));
-            writer = new BufferedWriter(new FileWriter(temp));
             String currentLine;
             StringBuilder newBuffer = new StringBuilder();
-            newBuffer.ensureCapacity(minCapacity);
             while ((currentLine = reader.readLine()) != null) {
                 if (currentLine.split(infoSeparator)[0].equals(id)) {
                     for (int i = 0; i < info.length; i++) {
-                        if (info[i].equals("")) info[i] = " "; // make space instead of empty otherwise reading issues will occur
+                        if (info[i].equals(""))
+                            info[i] = " "; // make space instead of empty otherwise reading issues will occur
                         if (i == 0) if (!info[i].equals(id)) newBuffer.append(id).append(infoSeparator);
                         newBuffer.append(info[i]).append(infoSeparator);
                     }
                     newBuffer.append("\n");
-                } else {
-                    newBuffer.append(currentLine);
-                    newBuffer.append("\n");
+                    continue;
                 }
-                writer.write(newBuffer.toString());
-                newBuffer.delete(0, newBuffer.length());
+                newBuffer.append(currentLine);
+                newBuffer.append("\n");
             }
             reader.close();
 
-
+            writer = new BufferedWriter(new FileWriter(locString));
             writer.write(newBuffer.toString());
             writer.close();
-
-            temp.renameTo(new File(locString));
         } catch (IOException ioe) {
             printError("InternalCore",
                     "updateInfoFile",
@@ -465,6 +457,8 @@ public final class InternalCore {
                 }
                 InternalCore.printIssue("Wrong input type.", "An integer input was expected but none received");
                 tryCount++;
+                if (inputScanner.hasNextLine()) inputScanner.nextLine();
+                continue;
             }
 
             if (type.equals(String.class)) {
@@ -474,6 +468,7 @@ public final class InternalCore {
                 }
                 InternalCore.printIssue("Wrong input type.", "A string input was expected but none received");
                 tryCount++;
+                continue;
             }
 
             if (type.equals(Long.class)) {
@@ -484,6 +479,8 @@ public final class InternalCore {
                 }
                 InternalCore.printIssue("Wrong input type.", "A long input was expected but none received");
                 tryCount++;
+                if (inputScanner.hasNextLine()) inputScanner.nextLine();
+                continue;
             }
 
             if (type.equals(Double.class)) {
@@ -494,7 +491,17 @@ public final class InternalCore {
                 }
                 InternalCore.printIssue("Wrong input type.", "A double input was expected but none received");
                 tryCount++;
+                if (inputScanner.hasNextLine()) inputScanner.nextLine();
+                continue;
             }
+
+            InternalCore.printError(
+                    "InternalCore",
+                    "getUserInput()",
+                    "InvalidArgument",
+                    "The type requested (" + type + ") is invalid and not supported by the system!"
+            );
+            return null;
         }
         return null;
     }
@@ -655,6 +662,7 @@ public final class InternalCore {
         if (str == null || str.equals("") || str.equals(" ")) return "";
         StringBuilder capitalizedString = new StringBuilder();
         char[] strArray = str.toLowerCase().toCharArray();
+        for (int i = 0; i < strArray.length; i++) if (strArray[i] == '_') strArray[i] = ' ';
         capitalizedString.append(Character.toString(strArray[0]).toUpperCase());
         capitalizedString.append(String.valueOf(Arrays.copyOfRange(strArray, 1, strArray.length)));
         return capitalizedString.toString();
