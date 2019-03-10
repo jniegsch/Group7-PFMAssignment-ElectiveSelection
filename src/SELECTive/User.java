@@ -310,6 +310,7 @@ public class User {
                     "Saving the new account failed. Something seems to be seriously wrong. Exiting...");
             System.exit(InternalCore.USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE);
         }
+                
         return (newLec == null) ? newUser : newLec;
     }
     //endregion
@@ -802,7 +803,7 @@ public class User {
         }
         if (them.type == UserType.ADMIN) Admin.addAdmin(new Admin(them));
         if (them.type == UserType.STUDENT) Student.addStudent(new Student(them));
-        if (them.type == UserType.LECTURER) Lecturer.addLecturer(new Lecturer(them));
+        if (them.type == UserType.LECTURER) Lecturer.addLecturer(new Lecturer(them, ((Lecturer)them).getTitle());
         return them;
     }
 
