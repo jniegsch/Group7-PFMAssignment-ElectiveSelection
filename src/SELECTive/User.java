@@ -976,7 +976,7 @@ public class User {
         strRepresentation.append("[id: ").append(this.userId).append("] ");
         strRepresentation.append(InternalCore.capitalizeString(this.firstName)).append(" ");
         strRepresentation.append(InternalCore.capitalizeString((this.middleInitial.equals(" ") ? "" : this.middleInitial))).append(" ");
-        strRepresentation.append(InternalCore.capitalizeString(this.lastname)).append(" ");
+        strRepresentation.append(InternalCore.capitalizeString(this.lastname));
         return strRepresentation.toString();
     }
 

@@ -142,7 +142,7 @@ public class Lecturer extends User {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public String toString() {
         String userRep = super.toString();
-        userRep.replaceAll("]", "] " + title.toString() + ".");
+        userRep = userRep.replaceAll("]", "] " + InternalCore.capitalizeString(title.toString()) + ".");
         return userRep;
     }
     //endregion
@@ -165,8 +165,13 @@ public class Lecturer extends User {
                     "Please enter the student username for which you would like to add a grade:");
 
             Student student = Student.getStudentWithUsername(studentUsername);
-            Registration registration = Registration.registrationForStudent(student);
+            if (student == null) {
+                InternalCore.printIssue("No such student exists",
+                        "A student with such a username does not exist");
+                break;
+            }
 
+            Registration registration = Registration.registrationForStudent(student);
             if (registration.isNotRegistrationForElective(elective)) {
                 InternalCore.printIssue("Student is not registered",
                         "Looks like the student is not registered for this elective. " +
@@ -212,48 +217,21 @@ public class Lecturer extends User {
         }
     }
 
-    public void showAllStudents() {
-        Elective[] electives = Elective.getAllElectivesForLecturer(this);
-        for (Elective elective : electives) {
-            showStudents(elective.getCourseCode());
-        }
-    }
-
     // This method prints out a list of student grades for a particular elective
     public void showStudentGrades(String courseCode){
         Elective elective = Elective.getElectiveWithCourseCode(courseCode);
         Registration[] registrations = Registration.registrationsForCourse(elective);
         InternalCore.println("The grades for the students enrolled in the course " + courseCode + " are: ");
         for (Registration registration : registrations) {
-            InternalCore.println("> " + registration.getStudent().toString() + " got a " + registration.getGrade(elective));
-        }
-    }
-
-    private double[] getGradesForElective(String courseCode) {
-        String[][] electiveGrade = InternalCore.readInfoFile(SEObjectType.STU_ELECT_RELATION, null);
-        StringBuilder buffer = new StringBuilder();
-        for (int i = 0; i < electiveGrade.length; i++) {
-            if (electiveGrade[i][1].equals(courseCode)) {
-                buffer.append(electiveGrade[i][2]).append(" ");
-                continue;
+            InternalCore.print("> " + registration.getStudent().toString());
+            double grade = registration.getGrade(elective);
+            if (grade == -1) {
+                InternalCore.print(" did not receive a grade yet.");
+            } else {
+                InternalCore.print(" got a " + grade);
             }
-            if (electiveGrade[i][3].equals(courseCode)) {
-                buffer.append(electiveGrade[i][4]).append(" ");
-                continue;
-            }
-            if (electiveGrade[i][5].equals(courseCode)) {
-                buffer.append(electiveGrade[i][6]).append(" ");
-                continue;
-            }
+            InternalCore.println();
         }
-        String[] gradeDump = buffer.toString().split(" ");
-
-        double[] numElectiveGrade = new double[gradeDump.length];
-        for (int j = 0; j < gradeDump.length; j++) {
-            numElectiveGrade[j] = Integer.parseInt(gradeDump[j]);
-        }
-
-        return numElectiveGrade;
     }
 
     public void viewStatsForElective(String courseCode) {

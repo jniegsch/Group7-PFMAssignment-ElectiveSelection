@@ -103,7 +103,7 @@ public class Registration {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public static Registration registrationForStudent(Student stu) {
         hasValidRegistrations = loadRegistrations();
-        if (registrations == null) return null;
+        if (registrations == null || stu == null) return null;
         for (Registration registration : registrations) {
             if (registration.student.getUserId() == stu.getUserId()) return registration;
         }
@@ -112,7 +112,7 @@ public class Registration {
 
     public static Registration[] registrationsForCourse(Elective elect) {
         hasValidRegistrations = loadRegistrations();
-        if (registrations == null) return null;
+        if (registrations == null || elect == null) return null;
         ArrayList<Registration> validRegs = new ArrayList<>();
         for (Registration registration : registrations) {
             if (registration.electives[elect.getBlock() - 3].getCourseCode().equals(elect.getCourseCode())) validRegs.add(registration);
