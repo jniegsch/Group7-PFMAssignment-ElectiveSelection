@@ -255,7 +255,7 @@ public class User {
             return null;
         }
 
-        InternalCore.println("Please fill in the account details. You can also skip them by pressing `enter`. The user can change these at a later stage.");
+        InternalCore.println(" \nPlease fill in the account details. You can also skip them by pressing `enter`. The user can change these at a later stage.\n ");
         String fnameInp = InternalCore.getUserInput(String.class, "What is their first name: ");
         String fname = (fnameInp != null)? fnameInp : "";
         String lnameInp = InternalCore.getUserInput(String.class, "What is their last name: ");

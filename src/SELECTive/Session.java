@@ -1,7 +1,6 @@
 package SELECTive;
 
 import java.util.Arrays;
-import java.util.Scanner;
 
 public class Session {
 
@@ -22,17 +21,18 @@ public class Session {
         if (User.hasNoUsers()) {
             sessionUser = createInitialAdmin();
             sessionAdmin = (Admin)sessionUser;
-            InternalCore.println("\n \n \n");
-        }
-
-        InternalCore.printTitle("Welcome", '*');
-        InternalCore.println("Please login to use the system.");
-        InternalCore.println("Info: see the code for the masterAdmin ;)");
-        InternalCore.println(InternalCore.consoleLine('-'));
-        InternalCore.println("");
-        if (!loginToSession()) {
-            InternalCore.printIssue("Incorrect Username/Password", "The username or password you have entered is incorrect.");
-            System.exit(InternalCore.NO_AUTHENTICATION);
+            InternalCore.println("Initial Admin successfully created! \n \n");
+        } else {
+            InternalCore.printTitle("Welcome", '*');
+            InternalCore.println("Please login to use the system.");
+            InternalCore.println("Info: see the code for the masterAdmin ;)");
+            InternalCore.println(InternalCore.consoleLine('-'));
+            InternalCore.println("");
+            if (!loginToSession()) {
+                InternalCore.printIssue("Incorrect Username/Password",
+                        "The username or password you have entered is incorrect.");
+                System.exit(InternalCore.NO_AUTHENTICATION);
+            }
         }
 
         switch (sessionUser.getUserType()) {
@@ -53,7 +53,7 @@ public class Session {
                 break;
         }
 
-        InternalCore.println("Logging out...");
+        InternalCore.printTitleNoName("Logging out", '-');
         InternalCore.cleanup();
     }
     //endregion
@@ -85,8 +85,7 @@ public class Session {
     //region User Specific Dashboard
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static void adminDashboard() {
-        boolean running = true;
-        while(running) {
+        while (true) {
             InternalCore.println(InternalCore.consoleLine('*'));
             InternalCore.printTitle("Admin Dashboard", '*');
             InternalCore.println(InternalCore.consoleLine('*'));
@@ -103,7 +102,8 @@ public class Session {
                     " 7) Find an elective\n" +
                     " 8) View all electives\n" +
                     "- - - \n" +
-                    " 0) Logout\n");
+                    " 0) Logout\n" +
+                    "- - -");
             Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, etc.):");
             if (userChoice == null) break;
             int choice = userChoice.intValue();
@@ -112,12 +112,11 @@ public class Session {
                 continue;
             }
 
+            if (choice == 0) break;
+
             InternalCore.println();
             InternalCore.println(InternalCore.consoleLine('-'));
             switch (choice) {
-                case 0:
-                    running = false;
-                    break;
                 case 1:
                     resetOrChangePasswordOfUser(null);
                     break;
@@ -144,13 +143,12 @@ public class Session {
                     break;
             }
             InternalCore.println(InternalCore.consoleLine('-'));
-            if (running) waitToReturnToDashboard();
+            waitToReturnToDashboard();
         }
     }
 
     private static void lecturerDashboard() {
-        boolean running = true;
-        while (running) {
+        while (true) {
             InternalCore.println(InternalCore.consoleLine('*'));
             InternalCore.printTitle("Lecturer Dashboard", '*');
             InternalCore.println(InternalCore.consoleLine('*'));
@@ -167,7 +165,8 @@ public class Session {
                     + "- - - Account Management:\n"
                     + " 7) Reset/Change password\n"
                     + "- - - \n"
-                    + " 0) Logout\n");
+                    + " 0) Logout\n"
+                    + "- - -");
 
             Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, etc.):");
             if (userChoice == null)
@@ -178,12 +177,11 @@ public class Session {
                 continue;
             }
 
+            if (choice == 0) break;
+
             InternalCore.println();
             InternalCore.println(InternalCore.consoleLine('-'));
             switch (choice) {
-                case 0:
-                    running = false;
-                    break;
                 case 1:
                     addOrChangeStudentGrade();
                     break;
@@ -208,13 +206,12 @@ public class Session {
 
             }
             InternalCore.println(InternalCore.consoleLine('-'));
-            if (running) waitToReturnToDashboard();
+            waitToReturnToDashboard();
         }
     }
 
     private static void studentDashboard() {
-        boolean running = true;
-        while (running) {
+        while (true) {
             InternalCore.println(InternalCore.consoleLine('*'));
             InternalCore.printTitle("Student Dashboard", '*');
             InternalCore.println(InternalCore.consoleLine('*'));
@@ -229,7 +226,8 @@ public class Session {
                     + "- - - Account Management:\n"
                     + " 6) Reset/Change password\n"
                     + "- - - \n"
-                    + " 0) Logout\n");
+                    + " 0) Logout\n"
+                    + "- - -");
 
             Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, etc.):");
             if (userChoice == null)
@@ -240,12 +238,11 @@ public class Session {
                 continue;
             }
 
+            if (choice == 0) break;
+
             InternalCore.println();
             InternalCore.println(InternalCore.consoleLine('-'));
             switch (choice) {
-                case 0:
-                    running = false;
-                    break;
                 case 1:
                     filterElectives();
                     break;
@@ -267,7 +264,7 @@ public class Session {
 
             }
             InternalCore.println(InternalCore.consoleLine('-'));
-            if (running) waitToReturnToDashboard();
+            waitToReturnToDashboard();
         }
     }
     //endregion
@@ -582,12 +579,12 @@ public class Session {
         }
 
         InternalCore.println("\nThe electives that match your search are presented in the following match list: ");
-        int optEl = 0;
+        int optEl = 1;
         if (electives == null) {
 			InternalCore.println("No matches.");
 		} else {
             for (Elective elect : electives) {
-                InternalCore.println(" " + optId + ") " + elect.toString());
+                InternalCore.println(" " + optEl + ") " + elect.toString());
                 optEl++;
             }
             String viewChoice = InternalCore.getUserInput(String.class, "Would you like to view the details of one of the electives in the match list? (y/n)");
@@ -603,7 +600,7 @@ public class Session {
                     String contChoice = InternalCore.getUserInput(String.class, "Would you like to view another elective from the match list? (y/n)");
                     if (contChoice == null) break;
                     if (contChoice.toLowerCase().equals("y")) {
-                        optEl = 0;
+                        optEl = 1;
                         for (Elective elect : electives) {
                             InternalCore.println(" " + optEl + ") " + elect.toString());
                             optEl++;
@@ -660,15 +657,13 @@ public class Session {
     private static Admin createInitialAdmin() {
         loadRootUser(); // only load root user if initial admin still needs to be created
         InternalCore.printIssue("No admin created.", "Please create an admin first. You will be guided through the setup.");
-        Scanner adminCreationScanner = new Scanner(System.in);
-        InternalCore.print("\nWhat username would you like: ");
-        String uname = "";
-        if (adminCreationScanner.hasNextLine()) {
-            uname = adminCreationScanner.nextLine();
-        } else {
+
+        String uname = InternalCore.getUserInput(String.class, "What username would you like: ");
+        if (uname == null) {
             InternalCore.println("Account creation failed.");
             return null;
         }
+
         if (User.userExists(uname)) {
             InternalCore.println("Account creation failed. The user already exists. Please create a new one.");
             return null;

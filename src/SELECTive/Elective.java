@@ -393,9 +393,9 @@ public class Elective {
                 "(4) Keywords \n" +
                 "(5) Class day \n" +
                 "(6) Block \n" +
-                "(7) Lecturer Id");
+                "(7) Lecturer");
         InternalCore.println(InternalCore.consoleLine('-'));
-        Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, 3, 4, or 5): ");
+        Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice (1, 2, etc.): ");
         if (userChoice == null) return false;
         switch (userChoice) {
             case 1:
@@ -417,7 +417,7 @@ public class Elective {
                 if (editBlock()) break;
                 return false;
             case 7:
-            	if (editLecturerId()) break;
+                if (editLecturer()) break;
             	return false;
         }
 
@@ -501,10 +501,12 @@ public class Elective {
     }
     
     // This method asks for the change of the lecturer id and saves this in the file
-    private boolean editLecturerId() {
-        String newLecturerId = InternalCore.getUserInput(String.class, "What is the id of this elective's lecturer?");
-        if (newLecturerId == null) return false;
-        this.lecturerId = Long.parseLong(newLecturerId);
+    private boolean editLecturer() {
+        String newLecturer = InternalCore.getUserInput(String.class, "What is the username of this elective's lecturer?");
+        if (newLecturer == null) return false;
+        Lecturer lecturer = Lecturer.getLecturerWithUsername(newLecturer);
+        if (lecturer == null) return false;
+        this.lecturerId = lecturer.getUserId();
         return true;
     }
 }

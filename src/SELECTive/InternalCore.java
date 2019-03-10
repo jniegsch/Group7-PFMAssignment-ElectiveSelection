@@ -556,7 +556,12 @@ public final class InternalCore {
             System.out.print(title + " ");
             leftToFill = consoleCharWidth - nLine.length();
         }
-        for (int i = 0; i < leftToFill; i += 2) System.out.print(c + " ");
+        if (leftToFill % 2 == 0) {
+            System.out.print(" ");
+            leftToFill--;
+        }
+        // start at 2 to truncate the last 2 being overwritten
+        for (int i = 2; i < leftToFill; i += 2) System.out.print(c + " ");
         System.out.print("\n");
     }
 
