@@ -463,17 +463,14 @@ public class Session {
                     elects,
                     grds
             );
-            if (studentsRegistrations.saveRegistration(true)) {
-                InternalCore.println("> Registration successful");
-            } else {
+            if (!studentsRegistrations.saveRegistration(true)) {
                 InternalCore.println("> Registration unsuccessful");
             }
-            return;
-        }
-        if (!studentsRegistrations.registerForElective(sessionStudent, elect)) {
+        } else if (!studentsRegistrations.registerForElective(sessionStudent, elect)) {
             InternalCore.printIssue("Could not register",
                     "For some reason you couldn't register for the elective. Please try again.");
         }
+        InternalCore.println("> Registration successful");
     }
 
     private static void viewGrades() {

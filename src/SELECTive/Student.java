@@ -125,11 +125,15 @@ public class Student extends User {
     public void viewElectiveProgress(String courseCode) {
         Registration reg = Registration.registrationForStudent(this);
         if (reg == null) {
-            InternalCore.println("You are not yet enrolled in any electives");
+            InternalCore.printIssue("You are not yet enrolled in any electives", "");
             return;
         }
         Elective elective = Elective.getElectiveWithCourseCode(courseCode);
-        if (reg.isNotRegistrationForElective(elective)) {
+        if (elective == null) {
+            InternalCore.printIssue("The elective you requested does not exist", "");
+            return;
+        }
+        if (reg.isNotRegisteredForElective(elective)) {
             InternalCore.printIssue("You are not enrolled for this course",
                     "If you should be, please register");
             return;

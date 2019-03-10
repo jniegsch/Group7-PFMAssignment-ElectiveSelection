@@ -252,11 +252,11 @@ public final class InternalCore {
             String currentLine;
             StringBuilder newBuffer = new StringBuilder();
             while ((currentLine = reader.readLine()) != null) {
-                if (currentLine.split(infoSeparator)[0].equals(id)) {
+                if (currentLine.split(infoSeparator)[0].equals(Long.toString(id))) {
+                    newBuffer.append(id).append(infoSeparator);
                     for (int i = 0; i < info.length; i++) {
                         if (info[i].equals(""))
                             info[i] = " "; // make space instead of empty otherwise reading issues will occur
-                        if (i == 0) if (!info[i].equals(Long.toString(id))) newBuffer.append(id).append(infoSeparator);
                         newBuffer.append(info[i]).append(infoSeparator);
                     }
                     newBuffer.append("\n");

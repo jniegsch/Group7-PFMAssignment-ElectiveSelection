@@ -178,7 +178,7 @@ public class Lecturer extends User {
                                 "If they should be, contact the student.");
                 continue;
             }
-            if (registration.isNotRegistrationForElective(elective)) {
+            if (registration.isNotRegisteredForElective(elective)) {
                 InternalCore.printIssue("Student is not registered",
                         "Looks like the student is not registered for this elective. " +
                                 "If they should be, contact the user.");

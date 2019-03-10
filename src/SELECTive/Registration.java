@@ -23,18 +23,18 @@ public class Registration {
     }
 
     public double getGrade(Elective elect) {
-        if (isNotRegistrationForElective(elect.getCourseCode())) return -1.0;
+        if (isNotRegisteredForElective(elect.getCourseCode())) return -1.0;
         return grades[elect.getBlock() - 3];
     }
 
-    public boolean isNotRegistrationForElective(Elective elective) {
-        return isNotRegistrationForElective(elective.getCourseCode());
+    public boolean isNotRegisteredForElective(Elective elective) {
+        return isNotRegisteredForElective(elective.getCourseCode());
     }
 
-    private boolean isNotRegistrationForElective(String courseCode) {
+    private boolean isNotRegisteredForElective(String courseCode) {
         if (electives[0].getCourseCode().equals(courseCode)) return false;
         if (electives[1].getCourseCode().equals(courseCode)) return false;
-        return electives[2].getCourseCode().equals(courseCode);
+        return !electives[2].getCourseCode().equals(courseCode);
     }
 
     public boolean mayNotViewGrades(User them) {
@@ -52,7 +52,7 @@ public class Registration {
 
     private boolean mayNotAdaptRegistration(User them) {
         if (them.getUserType() == UserType.ADMIN) return false;
-        return them.getUserType() == UserType.STUDENT && them.getUserId() == student.getUserId();
+        return !(them.getUserType() == UserType.STUDENT && them.getUserId() == student.getUserId());
     }
     //endregion
 
@@ -143,7 +143,7 @@ public class Registration {
             return false;
         }
 
-        if (isNotRegistrationForElective(elect.getCourseCode())) {
+        if (isNotRegisteredForElective(elect.getCourseCode())) {
             InternalCore.printIssue("This registration set does not contain this elective", "");
             return false;
         }
@@ -164,13 +164,13 @@ public class Registration {
                 Double.toString(this.grades[2])
         };
         if (isnew) {
-            if ((relationId = InternalCore.addEntryToInfoFile(SEObjectType.STU_ELECT_RELATION, info)) == -1) {
+            if ((this.relationId = InternalCore.addEntryToInfoFile(SEObjectType.STU_ELECT_RELATION, info)) == -1) {
                 InternalCore.printIssue("Failed to save the file",
                         "If the problem persists, please restart the system. Changes were not saved.");
                 hasValidRegistrations = false;
             }
         } else {
-            if (!InternalCore.updateInfoFile(SEObjectType.STU_ELECT_RELATION, this.relationId, Arrays.copyOfRange(info, 1, info.length))) {
+            if (!InternalCore.updateInfoFile(SEObjectType.STU_ELECT_RELATION, this.relationId, info)) {
                 InternalCore.printIssue("Failed to save the file",
                         "If the problem persists, please restart the system. Changes were not saved.");
                 hasValidRegistrations = false;
@@ -217,7 +217,10 @@ public class Registration {
     }
 
     public static void addRegistration(Registration registration) {
-        if (alreadyHasLoaded(registration)) return;
+        if (alreadyHasLoaded(registration)) {
+            hasValidRegistrations = true;
+            return;
+        }
         int currLength = 0;
         if (registrations != null) {
             currLength = registrations.length;
@@ -226,6 +229,7 @@ public class Registration {
             registrations = new Registration[1];
         }
         registrations[currLength] = registration;
+        hasValidRegistrations = true;
     }
 
     private static boolean alreadyHasLoaded(Registration registration) {

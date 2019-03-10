@@ -120,6 +120,9 @@ public class Elective {
     //endregion
 
     //region Static I/O Access
+    // STORED AS:
+    // 1 | 2         | 3         | 4   | 5      | 6       | 7  | 8    | 9
+    // ID;;CourseCode;;CourseName;;ECTS;;Program;;Keywords;;Day;;Block;;Lecturer
     private static boolean loadElectives() {
         if (hasValidElectives) return true;
         if (isLoading) return false;
@@ -134,9 +137,9 @@ public class Elective {
                     electiveList[i][1],
                     electiveList[i][2],
                     Integer.parseInt(electiveList[i][3]),
-                    (electiveList[i][4].equals("")) ? MasterProgram.valueOf(electiveList[i][4]) : MasterProgram.INVLD,
+                    (!electiveList[i][4].equals("")) ? MasterProgram.valueOf(electiveList[i][4]) : MasterProgram.INVLD,
                     keywordsFromKeywordString(electiveList[i][5]),
-                    (electiveList[i][6].equals("")) ? Day.valueOf(electiveList[i][6]) : Day.INVLD,
+                    (!electiveList[i][6].equals("")) ? Day.valueOf(electiveList[i][6]) : Day.INVLD,
                     Integer.parseInt(electiveList[i][7]),
                     Long.parseLong(electiveList[i][8])
             );
