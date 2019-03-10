@@ -310,7 +310,7 @@ public class User {
                     "Saving the new account failed. Something seems to be seriously wrong. Exiting...");
             System.exit(InternalCore.USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE);
         }
-        return newUser;
+        return (newLec == null) ? newUser : newLec;
     }
     //endregion
 

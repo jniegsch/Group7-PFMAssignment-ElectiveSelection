@@ -147,19 +147,56 @@ public class Lecturer extends User {
     }
     //endregion
 
-    //region Grade Management
+    //region Elective Management
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    private Elective getProperElective(String courseCode) {
+        Elective elective = Elective.getElectiveWithCourseCode(courseCode);
+        if (elective == null) {
+            InternalCore.printIssue("The requested elective does not exist!", "Make sure the elective actually exists or request ");
+            return null;
+        }
+        if (elective.mayNotAccessElective(this)) return null;
+        return elective;
+    }
+
+    private Elective elective = null;
+
+    private Registration[] getProperRegistrations(String courseCode) {
+        this.elective = getProperElective(courseCode);
+        if (this.elective == null) return null;
+
+        Registration[] registrations = Registration.registrationsForCourse(elective);
+        if (registrations == null) {
+            InternalCore.println("> No students are enrolled in your course.");
+            return null;
+        }
+        return registrations;
+    }
+
+    private Registration getProperRegistration(String courseCode, Student student) {
+        this.elective = getProperElective(courseCode);
+        if (this.elective == null) return null;
+
+        Registration registration = Registration.registrationForStudent(student);
+        if (registration == null) {
+            InternalCore.printIssue("No such student exists",
+                    "A student with such a username does not exist");
+            return null;
+        }
+
+        return registration;
+    }
+
     public void newGradeEntry(){
         // Loop to enter student grades until break
-        Elective elective = null;
+        String courseCode = null;
         while (true) {
-            if (elective == null) {
-                String courseCode = InternalCore.getUserInput(String.class,
+            if (this.elective == null) {
+                courseCode = InternalCore.getUserInput(String.class,
                         "Please enter the elective course code for which you would like to add a grade:");
-                elective = Elective.getElectiveWithCourseCode(courseCode);
+                this.elective = getProperElective(courseCode);
+                if (this.elective == null) break;
             }
-
-
 
             String studentUsername = InternalCore.getUserInput(String.class,
                     "Please enter the student username for which you would like to add a grade:");
@@ -171,14 +208,10 @@ public class Lecturer extends User {
                 break;
             }
 
-            Registration registration = Registration.registrationForStudent(student);
-            if (registration == null) {
-                InternalCore.printIssue("Student is not registered",
-                        "Looks like the student is not registered for this elective. " +
-                                "If they should be, contact the student.");
-                continue;
-            }
-            if (registration.isNotRegisteredForElective(elective)) {
+            Registration registration = getProperRegistration(courseCode, student);
+            if (registration == null) continue;
+
+            if (registration.isNotRegisteredForElective(this.elective)) {
                 InternalCore.printIssue("Student is not registered",
                         "Looks like the student is not registered for this elective. " +
                                 "If they should be, contact the user.");
@@ -193,7 +226,7 @@ public class Lecturer extends User {
                 continue;
             }
 
-            if (!registration.updateGradeForElective(elective, this, newGrade)) {
+            if (!registration.updateGradeForElective(this.elective, this, newGrade)) {
                 String retry = InternalCore.getUserInput(String.class,
                         "Seeing as there was an issue, would you like to retry? (y/n)");
                 if (retry.toLowerCase().equals("y")) continue;
@@ -211,12 +244,14 @@ public class Lecturer extends User {
             }
             break;
         }
+        this.elective = null;
     }
 
     // This method prints out a list of registered students for a particular elective
     public void showStudents(String courseCode){
-        Elective elective = Elective.getElectiveWithCourseCode(courseCode);
-        Registration[] registrations = Registration.registrationsForCourse(elective);
+        Registration[] registrations = getProperRegistrations(courseCode);
+        if (registrations == null) return;
+
         InternalCore.println("The following students are enrolled in the course " + courseCode + ": ");
         for (Registration registration : registrations) {
             InternalCore.println("> " + registration.getStudent().toString());
@@ -225,12 +260,13 @@ public class Lecturer extends User {
 
     // This method prints out a list of student grades for a particular elective
     public void showStudentGrades(String courseCode){
-        Elective elective = Elective.getElectiveWithCourseCode(courseCode);
-        Registration[] registrations = Registration.registrationsForCourse(elective);
+        Registration[] registrations = getProperRegistrations(courseCode);
+        if (registrations == null) return;
+
         InternalCore.println("The grades for the students enrolled in the course " + courseCode + " are: ");
         for (Registration registration : registrations) {
             InternalCore.print("> " + registration.getStudent().toString());
-            double grade = registration.getGrade(elective);
+            double grade = registration.getGrade(this.elective);
             if (grade == -1) {
                 InternalCore.print(" did not receive a grade yet.");
             } else {
@@ -238,30 +274,19 @@ public class Lecturer extends User {
             }
             InternalCore.println();
         }
+        this.elective = null;
     }
 
     public void viewStatsForElective(String courseCode) {
-        Elective elective = Elective.getElectiveWithCourseCode(courseCode);
+        Registration[] registrations = getProperRegistrations(courseCode);
+        if (registrations == null) return;
 
-        if (this.getUserType() != UserType.ADMIN) {
-            if (this.getUserType() == UserType.LECTURER) {
-                if (elective.getLecturerId() != this.getUserId()) {
-                    InternalCore.printIssue("Insufficient rights", "You do not have the rights to view the elective statistics of a course you do not teach.");
-                    return;
-                }
-            } else {
-                InternalCore.printIssue("Insufficient rights", "You do not have the rights to view elective statistics.");
-                return;
-            }
-        }
-
-        Registration[] registrations = Registration.registrationsForCourse(elective);
         double[] grades = new double[registrations.length];
         for (int i = 0; i < grades.length; i++) {
             grades[i] = registrations[i].getGrade(elective);
         }
 
-        InternalCore.printTitle("Stats for " + elective.getCourseCode(), '-');
+        InternalCore.printTitle("Stats for " + this.elective.getCourseCode(), '-');
         double minGrade = minGrade(grades);
         InternalCore.println("The minimum value of all grades is: " + minGrade);
         double maxGrade = maxGrade(grades);
@@ -270,6 +295,8 @@ public class Lecturer extends User {
         InternalCore.println("The average value of all grades is: " + meanGrade);
         double failedGrade = failedGrade(grades);
         InternalCore.println("The number of failed grades are: " + failedGrade);
+
+        this.elective = null;
     }
 
     // This method gets regStudents as input and returns its minimum value

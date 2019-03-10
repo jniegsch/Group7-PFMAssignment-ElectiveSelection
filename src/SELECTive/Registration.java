@@ -23,7 +23,7 @@ public class Registration {
     }
 
     public double getGrade(Elective elect) {
-        if (isNotRegisteredForElective(elect.getCourseCode())) return -1.0;
+        if (isNotRegisteredForElective(elect)) return -1.0;
         return grades[elect.getBlock() - 3];
     }
 
@@ -37,17 +37,14 @@ public class Registration {
         return !electives[2].getCourseCode().equals(courseCode);
     }
 
-    public boolean mayNotViewGrades(User them) {
+    public boolean mayNotViewGrade(User them, Elective elective) {
         if (them.getUserType() == UserType.ADMIN) return false;
         if (them.getUserId() == student.getUserId() && them.getUserType() == UserType.STUDENT) return false;
-        return mayNotEditGrades(them);
+        return mayNotEditGrade(them, elective);
     }
 
-    private boolean mayNotEditGrades(User them) {
-        for (Elective elective : electives) {
-            if (elective.getLecturerId() == them.getUserId() && them.getUserType() == UserType.LECTURER) return false;
-        }
-        return true;
+    private boolean mayNotEditGrade(User them, Elective elective) {
+        return !(elective.getLecturerId() == them.getUserId() && them.getUserType() == UserType.LECTURER);
     }
 
     private boolean mayNotAdaptRegistration(User them) {
@@ -101,6 +98,7 @@ public class Registration {
         if (registrations == null || elect == null) return null;
         ArrayList<Registration> validRegs = new ArrayList<>();
         for (Registration registration : registrations) {
+            if (registration.electives[elect.getBlock() - 3] == null) continue;
             if (registration.electives[elect.getBlock() - 3].getCourseCode().equals(elect.getCourseCode())) validRegs.add(registration);
         }
         if (validRegs.size() < 1) return null;
@@ -137,7 +135,7 @@ public class Registration {
     //region Updating & Access
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public boolean updateGradeForElective(Elective elect, Lecturer lecturer, double grade) {
-        if (mayNotEditGrades(lecturer)) {
+        if (mayNotEditGrade(lecturer, elect)) {
             InternalCore.printIssue("Invalid access rights",
                     "You are not the professor of this elective and thus cannot edit the grades.");
             return false;
@@ -213,7 +211,8 @@ public class Registration {
             registrations[i] = new Registration(relId, tmpStudent, els, grs);
             i++;
         }
-        return i == 0;
+        isLoading = false;
+        return true;
     }
 
     public static void addRegistration(Registration registration) {

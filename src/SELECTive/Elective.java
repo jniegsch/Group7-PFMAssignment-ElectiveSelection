@@ -76,7 +76,7 @@ public class Elective {
     }
     //endregion
 
-    //region Accessors
+    //region Retrievers
     public static Elective getElectiveWithCourseCode(String courseCode) {
         hasValidElectives = loadElectives();
         if (electives == null) return null;
@@ -116,6 +116,16 @@ public class Elective {
     }
     public int getBlock() {
         return this.block;
+    }
+    //endregion
+
+    //region Validators
+    public boolean mayNotAccessElective(User them) {
+        if (them.getUserType() == UserType.ADMIN) return false;
+        if (them.getUserType() == UserType.LECTURER && them.getUserId() == this.lecturerId) return false;
+        InternalCore.printIssue("Insufficient Access Rights",
+                "You do not have the required access rights to view details of this course.");
+        return true;
     }
     //endregion
 
