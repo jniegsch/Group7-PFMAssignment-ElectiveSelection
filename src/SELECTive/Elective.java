@@ -391,7 +391,6 @@ public class Elective {
             return false;
         }
 
-        //TODO: Edit class day
         InternalCore.println("" +
                 "What do you want to edit? \n" +
                 "(1) Elective name \n" +
@@ -486,10 +485,10 @@ public class Elective {
     	InternalCore.println("On which day will this class be taught?");
     	String classDay = InternalCore.getUserInput(String.class, "" +
 				"> Lesson day: \n" +
-				"   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
+				"   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri");
 		
     	if (classDay == null) return false;
-    	if (Integer.parseInt(classDay) < 1 || Integer.parseInt(classDay) > 7) return false;
+    	if (Integer.parseInt(classDay) < 1 || Integer.parseInt(classDay) > 5) return false;
         this.lectureDay = Day.values()[Integer.parseInt(classDay) - 1];
     	return true;
 	}
