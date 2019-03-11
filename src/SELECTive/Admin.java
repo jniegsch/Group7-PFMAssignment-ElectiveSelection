@@ -24,7 +24,7 @@ public class Admin extends User {
 
     //region Static Init
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //This methods loads the admins
+    //This methods loads all admin entries from the file and creates an object for every instance
     private static boolean loadAdmins() {
         if (hasValidAdmins) return true;
         if (isLoading) return false;
