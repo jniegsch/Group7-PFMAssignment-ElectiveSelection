@@ -167,6 +167,7 @@ public final class InternalCore {
      */
     public static String[][] readInfoFile(SEObjectType ot, String[] ids) {
         String locString = fileLocationForObjectType(ot);
+        if (locString == null) return null;
         // not thread safe, but faster than StringBuffer -> in a single thread environment so all good
         StringBuilder userDump = new StringBuilder();
         try {
@@ -206,11 +207,10 @@ public final class InternalCore {
         String[] fileRows = userDump.toString().split("\n");
         String[][] info = new String[fileRows.length][];
         int j = 0;
-        for (int i = 0; i < fileRows.length; i++) {
-            String[] row = fileRows[i].split(infoSeparator);
+        for (String fileRow : fileRows) {
+            String[] row = fileRow.split(infoSeparator);
             if (row.length <= 1) continue;
-            info[j] = row;
-            j++;
+            info[j++] = row;
         }
 
         if (info.length < 1) return null;
@@ -236,10 +236,7 @@ public final class InternalCore {
      */
     public static boolean updateInfoFile(SEObjectType ot, long id, String[] info) {
         String locString = fileLocationForObjectType(ot);
-
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
-
+        if (locString == null) return false;
         try {
             if (fileDoesNotExist(ot)) {
                 printError("InternalCore",
@@ -248,7 +245,7 @@ public final class InternalCore {
                         "Apparently the requested file (" + locString + ") does not exist and cannot be created.");
                 return false;
             }
-            reader = new BufferedReader(new FileReader(locString));
+            BufferedReader reader = new BufferedReader(new FileReader(locString));
             String currentLine;
             StringBuilder newBuffer = new StringBuilder();
             while ((currentLine = reader.readLine()) != null) {
@@ -267,7 +264,7 @@ public final class InternalCore {
             }
             reader.close();
 
-            writer = new BufferedWriter(new FileWriter(locString));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(locString));
             writer.write(newBuffer.toString());
             writer.close();
         } catch (IOException ioe) {
@@ -290,6 +287,7 @@ public final class InternalCore {
      */
     public static long addEntryToInfoFile(SEObjectType ot, String[] infoToAdd) {
         String locString = fileLocationForObjectType(ot);
+        if (locString == null) return -1;
         try {
             if (fileDoesNotExist(ot)) {
                 printError("InternalCore",
@@ -359,7 +357,7 @@ public final class InternalCore {
             int selector = selectorForObjectType(ot);
             FileReader fReader = new FileReader(InternalStateLoc);
             char[] fileChars = new char[totalBlocks]; // enough to store 39 digit long ids for each type in total!
-            fReader.read(fileChars);
+            if (fReader.read(fileChars) <= 0) return -1;
             int i = 0, j = 0;
             for ( ; i < fileChars.length; i++) {
                 if (fileChars[i] == TypeKeys[selector]) j = i + 1;
@@ -453,11 +451,10 @@ public final class InternalCore {
 
     //region Getting User Input
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // TODO: DOCS!!!
     private static Scanner inputScanner = null;
 
     // Important scanner is kept open until logout, since otherwise we also close the System.in stream and cannot recover
-    public static <T extends java.lang.Object> T getUserInput(Class<T> type, String prompt) {
+    public static <T> T getUserInput(Class<T> type, String prompt) {
         final int maxTries = 5;
 
         int tryCount = 0;
@@ -563,7 +560,7 @@ public final class InternalCore {
         if (title.length() > consoleCharWidth - 9) return;
         String beginning = c + " " + c + " ";
         int setWidth = beginning.length() + ((supressName)? 0 : systemName.length() + 2); // +2 for the ': ' that is appended later
-        int leftToFill = 0;
+        int leftToFill;
         System.out.print(beginning + ((supressName)? "" : systemName + ": "));
         if (title.length() + setWidth > consoleCharWidth - 3) {
             String nLine = "\n      " + title;
@@ -589,11 +586,11 @@ public final class InternalCore {
      * @return  {@code String} representing the line to print
      */
     public static String consoleLine(char c) {
-        String line = "";
+        StringBuilder line = new StringBuilder();
         int i;
-        for (i = 0; i < consoleCharWidth; i += 2) line += c + " ";
-        if (i - 1 == consoleCharWidth) line += c;
-        return line;
+        for (i = 0; i < consoleCharWidth; i += 2) line.append(c).append(" ");
+        if (i - 1 == consoleCharWidth) line.append(c);
+        return line.toString();
     }
 
     public static void println() {
@@ -606,11 +603,12 @@ public final class InternalCore {
      * @param str the {@code String} to print
      */
     public static void println(String str) {
+        if (str == null) return;
         String[] sections = str.split("\n");
         for (int i = 0; i < sections.length; i++) {
             while (sections[i].length() > consoleCharWidth) {
                 String[] sub = sections[i].split(" ");
-                int charsPrinted = 0, j = 0, nextLength = 0;
+                int charsPrinted = 0, j = 0, nextLength;
                 do {
                     nextLength = (j + 1 < sub.length)? sub[j].length() : 0;
                     charsPrinted += sub[j].length() + " ".length();

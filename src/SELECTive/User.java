@@ -28,11 +28,6 @@ enum UserType {
  * functions are prepared for extra functionality of specific uber classes, but the class does ensure rights are checked.
  */
 public class User {
-    //region Static Private Properties
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    private static User[] allStudents = null;
-    private static boolean hasValidStudentUsers = false;
-    //endregion
     //region Private Property Definitions
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     /**
@@ -76,23 +71,7 @@ public class User {
     public UserType getUserType() {
         return this.type;
     }
-
-    public String getFirstName() {
-        return this.firstName;
-    }
-
-    public String getLastname() {
-        return this.lastname;
-    }
-
-    public String getMiddleInitial() {
-        return this.middleInitial;
-    }
     public String getUsername() { return  this.username; }
-
-    public Date getDateOfBirth() {
-        return this.dateOfBirth;
-    }
     //endregion
 
     //region Constructors
@@ -107,90 +86,6 @@ public class User {
         }
         if (uPs == null) hasOpenUP = false;
     }
-
-    /**
-     * The constructor for admins to use to edit either a users' details or password
-     * @param uname a {@code String} which is the username of the user who will be edited
-     * @param ut    the {@code UserType} defining what type of user it is
-     * @param admin the {@code User} who wants to edit the other user
-     */
-    private User(String uname, UserType ut, User admin) {
-        if (admin.getUserType() != UserType.ADMIN) {
-            InternalCore.printIssue("Cannot create user", "You do not have the rights to create a user");
-            return;
-        }
-
-        SEObjectType ot = objectTypeForUserType(ut);
-        String[][] users = InternalCore.readInfoFile(ot, null);
-        if (users == null) {
-            InternalCore.printIssue("No users for the requested type",
-                    "No requested " + ut.toString() + "s exist.");
-            return;
-        }
-        int userPosition = -1;
-        for (int i = 0; i < users.length; i++) {
-            if (!users[i][4].equals(uname)) continue;
-            userPosition = i;
-            break;
-        }
-        if (userPosition == -1) {
-            InternalCore.printIssue("No such " + ut.toString(),
-                    "The requested " + ut.toString() + " does not exists. Please ensure you are requesting a valid user.");
-            return;
-        }
-
-        this.userId = Long.parseLong(users[userPosition][0]);
-        this.firstName = users[userPosition][1];
-        this.lastname = users[userPosition][2];
-        this.middleInitial = users[userPosition][3];
-        this.username = users[userPosition][4];
-        try {
-            this.dateOfBirth = (users[userPosition][5] != null)? new SimpleDateFormat().parse(users[userPosition][5]) : null;
-        } catch (ParseException pe) {
-            InternalCore.printError("User",
-                    "User(String id, UserType ut)",
-                    "ParseException",
-                    "Could not parse passed date...");
-            this.dateOfBirth = null;
-        }
-        this.type = ut;
-    }
-
-    /**
-     * Creates a new user based on their ID and the specific type of user. Returns a default User instance and prints a
-     * warning in case no user matching the specified ID and type was found.
-     * @param id    a {@code String} representing the id of the user to create
-     * @param ut    a {@code UserType} defining the type of the user to create
-     */
-    private User(String id, UserType ut) {
-        SEObjectType ot = objectTypeForUserType(ut);
-        String[] ids = {id};
-        String[][] userInfo = InternalCore.readInfoFile(ot, ids);
-
-        if (userInfo == null) {
-            InternalCore.printIssue("No such " + ut.toString(),
-                    "The requested " + ut.toString() + " does not exists. Please ensure you are requesting a valid user.");
-            return;
-        } else {
-            String[] reqUser = userInfo[0];
-            this.userId = Long.parseLong(reqUser[0]);
-            this.firstName = reqUser[1];
-            this.lastname = reqUser[2];
-            this.middleInitial = reqUser[3];
-            this.username = reqUser[4];
-            try {
-                this.dateOfBirth = (reqUser[5] != null)? new SimpleDateFormat().parse(reqUser[5]) : null;
-            } catch (ParseException pe) {
-                InternalCore.printError("User",
-                        "User(String id, UserType ut)",
-                        "ParseException",
-                        "Could not parse passed date...");
-                this.dateOfBirth = null;
-            }
-            this.type = ut;
-        }
-    }
-
     /**
      * An initial constructor to be used in the defined subclasses to create themselves based upon a user
      * @param copy {@code User} denoting the user to initialize with
@@ -243,7 +138,7 @@ public class User {
      * @return {@code boolean} indicating if the creation of the user account was successful
      */
     public User createNewUser(String uname, char[] pword, UserType utype) {
-        if (this.type != UserType.ADMIN) {
+        if (!this.isValidAdmin()) {
             InternalCore.printIssue("Cannot create user", "You do not have the rights to create a user");
             return null;
         }
@@ -296,6 +191,10 @@ public class User {
         newUser.middleInitial = minit;
         newUser.username = uname;
         newUser.dateOfBirth = parseDOB(dobStr);
+        if (newUser.dateOfBirth == null) {
+            InternalCore.printIssue("Invalid date!",
+                    "The date you entered is not valid, will store none. Please change it later.");
+        }
         newUser.type = utype;
 
         Lecturer newLec = null;
@@ -315,13 +214,20 @@ public class User {
     }
     //endregion
 
+    //region DOB Checking
+    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//    private static String checkDOB(String dobStr) {
+//        if (dobStr == null) return null;
+//        if (dobStr.equals("")) return dobStr;
+//        String[] dateSections = dobStr.split("-");
+//        if (dateSections.length != 3) return null;
+//        if ()
+//    }
+    //endregion
+
     //region Private user management & session controls
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     // password will never be stored on run time, only checked
-    /**
-     * a quick check {@code boolean} to see if any user is actually logged in
-     */
-    private boolean loggedIn = false;
     /**
      * Methods to check if user is of valid Admin type
      */
@@ -334,10 +240,6 @@ public class User {
      * Methods to check if user is of valid Lecturer type
      */
     public boolean isValidLecturer() { return (this.type == UserType.LECTURER); }
-    /**
-     * Methods to check if user is of valid User type
-     */
-    public boolean isValidUser() { return !(this.type == UserType.DEFAULT); }
     /**
      * A loaded memory copy of the authentication DB
      */
@@ -356,8 +258,8 @@ public class User {
     //endregion
 
     //region User Instance Editing
-    public boolean editUser() {
-        boolean lecturerInstance = this.type == UserType.LECTURER;
+    public boolean editUserUnsuccessful() {
+        boolean lecturerInstance = (this.isValidLecturer());
         InternalCore.println("" +
                 "What do you want to edit? \n" +
                 "(1) First name \n" +
@@ -368,81 +270,82 @@ public class User {
 
         InternalCore.println(InternalCore.consoleLine('-'));
         Integer userChoice = InternalCore.getUserInput(Integer.class, "Please enter your choice: ");
-        if (userChoice == null) return false;
+        if (userChoice == null) return true;
         switch (userChoice) {
             case 1:
                 if (!editUserFName()) {
                     InternalCore.printIssue("Could not change the first name", "");
-                    return false;
+                    return true;
                 }
                 break;
             case 2:
                 if (!editUserLName()) {
                     InternalCore.printIssue("Could not change the last name", "");
-                    return false;
+                    return true;
                 }
                 break;
             case 3:
                 if (!editUserMiddleInitial()) {
                     InternalCore.printIssue("Could not change the middle initial(s)", "");
-                    return false;
+                    return true;
                 }
                 break;
             case 4:
                 if (!editDateofBirth()) {
                     InternalCore.printIssue("Could not change the DOB", "");
-                    return false;
+                    return true;
                 }
                 break;
             case 5:
                 if (!lecturerInstance) {
                     InternalCore.printIssue("Invalid option.", "");
-                    return false;
+                    return true;
                 }
                 if (!((Lecturer) this).editTitle()) {
                     InternalCore.printIssue("Could not change the title", "");
-                    return false;
+                    return true;
                 }
                 break;
             default:
                 InternalCore.printIssue("Invalid option.", "");
-                return false;
+                return true;
         }
 
-        return updateUserInfo(lecturerInstance);
+        return !updateUserInfo(lecturerInstance);
     }
 
-    public boolean editUserFName() {
+    private boolean editUserFName() {
         String newFirstName = InternalCore.getUserInput(String.class, "What is the new first name of this user?");
         if (newFirstName == null) return false;
         this.firstName = newFirstName;
         return true;
     }
 
-    public boolean editUserLName() {
+    private boolean editUserLName() {
         String newLastName = InternalCore.getUserInput(String.class, "What is the new Last name of this user?");
         if (newLastName == null) return false;
         this.lastname = newLastName;
         return true;
     }
 
-    public boolean editUserMiddleInitial() {
+    private boolean editUserMiddleInitial() {
         String newMiddleInitial = InternalCore.getUserInput(String.class, "What is the new middle initial of this user's name?");
         if (newMiddleInitial == null) return false;
         this.middleInitial = newMiddleInitial;
         return true;
     }
 
-    public boolean editDateofBirth() {
+    private boolean editDateofBirth() {
         String newDate = InternalCore.getUserInput(String.class, "What is the new date of birth (please enter int he format yyyy-MM-dd: ");
         this.dateOfBirth = parseDOB(newDate);
-
-        return true;
+        return (this.dateOfBirth != null);
     }
 
     private Date parseDOB(String date) {
         try {
-            return new SimpleDateFormat("yyyy-MM-dd").parse(date);
+            SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+            sf.setLenient(false);
+            return sf.parse(date);
         } catch (ParseException pe) {
             InternalCore.printError("User",
                     "parseDOB",
@@ -526,7 +429,7 @@ public class User {
     private static UserType authenticateUser(String uname, char[] pword) {
         if (!hasOpenUP) { uPs = readDictFromAuthFile(); hasOpenUP = true; }
         String uhash = hashUsername(uname), phash = hashPassword(pword);
-        if (uPs.length == 0) {
+        if (uPs == null) {
             // have to create root >> force
             InternalCore.printIssue("Setting up internal settings", "");
             String[][] addingRoot = {{uhash, phash, UserType.ADMIN.toString()}};
@@ -536,10 +439,14 @@ public class User {
             }
             uPs = readDictFromAuthFile();
         }
-        for (int i = 0; i < uPs.length; i++) {
-            if (uhash.equals(uPs[i][0])) {
-                if (phash.equals(uPs[i][1])) {
-                    return UserType.valueOf(uPs[i][2]);
+        if (uPs == null) {
+            InternalCore.printIssue("Fatal Error", "Please reset!.");
+            System.exit(InternalCore.FATAL_ERROR_RESET_REQUIRED);
+        }
+        for (String[] uP : uPs) {
+            if (uhash.equals(uP[0])) {
+                if (phash.equals(uP[1])) {
+                    return UserType.valueOf(uP[2]);
                 }
                 return UserType.DEFAULT;
             }
@@ -630,8 +537,11 @@ public class User {
         // check if root needs to be created
         if (!userExists(rootUserName)) createRootAdmin();
         if (!hasOpenUP) { uPs = readDictFromAuthFile(); hasOpenUP = true; }
-        if (uPs.length > 1) return false;
-        return true;
+        if (uPs == null) {
+            InternalCore.printIssue("Fatal Error", "Please reset!.");
+            System.exit(InternalCore.FATAL_ERROR_RESET_REQUIRED);
+        }
+        return !(uPs.length > 1);
     }
 
     /**
@@ -643,7 +553,7 @@ public class User {
         if (!hasOpenUP) { uPs = readDictFromAuthFile(); hasOpenUP = true; }
         if (uPs == null) return false;
         String uHash = hashUsername(username);
-        for (int i = 0; i < uPs.length; i++) if (uPs[i][0].equals(uHash)) return true;
+        for (String[] uP : uPs) if (uP[0].equals(uHash)) return true;
         return false;
     }
     //endregion
@@ -661,7 +571,8 @@ public class User {
      */
     private static String[][] readDictFromAuthFile() {
         String fname = InternalCore.fileLocationForObjectType(SEObjectType.USER_AUTH);
-        String dump = "";
+        if (fname == null) return null;
+        StringBuilder dump = new StringBuilder();
         try {
             if (InternalCore.fileDoesNotExist(SEObjectType.USER_AUTH)) {
                 InternalCore.printError("User",
@@ -673,7 +584,7 @@ public class User {
             BufferedReader reader = new BufferedReader(new FileReader(fname));
             String currentLine;
             while ((currentLine = reader.readLine()) != null) {
-                dump += currentLine + " \n";
+                dump.append(currentLine).append(" \n");
             }
             reader.close();
         } catch (IOException ioe) {
@@ -682,7 +593,7 @@ public class User {
                     "IOException",
                     "Could not read the file " + fname);
         }
-        String [] dictPairs = dump.split(" \n");
+        String[] dictPairs = dump.toString().split(" \n");
         if (dictPairs.length == 0) return null;
         if (dictPairs[0].length() < 3) return null;
         String [][] dictToReturn = new String[dictPairs.length][3];
@@ -707,6 +618,7 @@ public class User {
      */
     private static boolean writeDictToAuthFile(String[][] dict, boolean overwrite) {
         String fname = InternalCore.fileLocationForObjectType(SEObjectType.USER_AUTH);
+        if (fname == null) return false;
         try {
             if (InternalCore.fileDoesNotExist(SEObjectType.USER_AUTH)) {
                 InternalCore.printError("User",
@@ -716,11 +628,11 @@ public class User {
                 return false;
             }
             PrintWriter printer = new PrintWriter(new BufferedWriter( new FileWriter(fname, !overwrite)));
-            for (int i = 0; i < dict.length; i++) {
-                String line = "";
-                for (int j = 0; j < dict[i].length; j++) {
-                    line += dict[i][j];
-                    line += (j != dict[i].length - 1)? " : " : "";
+            for (String[] entry : dict) {
+                StringBuilder line = new StringBuilder();
+                for (int j = 0; j < entry.length; j++) {
+                    line.append(entry[j]);
+                    line.append((j != entry.length - 1) ? " : " : "");
                 }
                 printer.println(line);
             }
@@ -746,7 +658,7 @@ public class User {
      * Updates the users record after anything has changed
      * @return {@code bool} indicating if the update was successful
      */
-    public boolean updateUserInfo(boolean isLecturer) {
+    private boolean updateUserInfo(boolean isLecturer) {
         SEObjectType ot = objectTypeForUserType(this.type);
         if (ot == null) {
             InternalCore.printError("User",
@@ -782,9 +694,9 @@ public class User {
                 them.middleInitial,
                 them.username,
                 (them.dateOfBirth != null)? new SimpleDateFormat("yyyy-MM-dd").format(them.dateOfBirth) : "",
-                (them.type == UserType.LECTURER)? ((Lecturer)them).getTitle().toString() : ""
+                (them.isValidLecturer()) ? ((Lecturer) them).getTitle().toString() : ""
         };
-        them.userId = InternalCore.addEntryToInfoFile(type, (them.type == UserType.LECTURER)? userInfo : Arrays.copyOfRange(userInfo, 0, 5));
+        them.userId = InternalCore.addEntryToInfoFile(type, (them.isValidLecturer()) ? userInfo : Arrays.copyOfRange(userInfo, 0, 5));
         if (them.userId == -1) {
             InternalCore.printIssue("Could not create user", "The new user could not be saved");
             return null;
@@ -801,9 +713,9 @@ public class User {
         } else {
             addAuth(them.username, pword, them.type);
         }
-        if (them.type == UserType.ADMIN) Admin.addAdmin(new Admin(them));
-        if (them.type == UserType.STUDENT) Student.addStudent(new Student(them));
-        if (them.type == UserType.LECTURER) Lecturer.addLecturer(new Lecturer(them, ((Lecturer) them).getTitle()));
+        if (them.isValidAdmin()) Admin.addAdmin(new Admin(them));
+        if (them.isValidStudent()) Student.addStudent(new Student(them));
+        if (them.isValidLecturer()) Lecturer.addLecturer(new Lecturer(them, ((Lecturer) them).getTitle()));
         return them;
     }
 
@@ -821,7 +733,7 @@ public class User {
         return null;
     }
 
-    public static void addAuth(String unmae, char[] pword, UserType typ) {
+    private static void addAuth(String unmae, char[] pword, UserType typ) {
         if (hasAlreadyLoaded(unmae)) return;
         int currLength = 0;
         if (uPs != null) {
@@ -897,8 +809,7 @@ public class User {
         if (pword.length < pwordMinLength) return true;
         if (pword.length > pwordMaxLength) return true;
         if (containsLessThan(regexNumCount, pwordMinNumCount, String.copyValueOf(pword))) return true;
-        if (containsLessThan(regexCapital, pwordMinCapitalCount, String.copyValueOf(pword))) return true;
-        return false;
+        return (containsLessThan(regexCapital, pwordMinCapitalCount, String.copyValueOf(pword)));
     }
 
     /**
@@ -973,12 +884,9 @@ public class User {
     //region Misc Overrides
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public String toString() {
-        StringBuilder strRepresentation = new StringBuilder();
-        strRepresentation.append("[id: ").append(this.userId).append("] ");
-        strRepresentation.append(InternalCore.capitalizeString(this.firstName)).append(" ");
-        strRepresentation.append((this.middleInitial.equals(" ") ? "" : this.middleInitial)).append(" ");
-        strRepresentation.append(InternalCore.capitalizeString(this.lastname));
-        return strRepresentation.toString();
+        return ("[id: " + this.userId + "] " + InternalCore.capitalizeString(this.firstName) + " " +
+                (this.middleInitial.equals(" ") ? "" : this.middleInitial) + " " +
+                InternalCore.capitalizeString(this.lastname));
     }
 
     public boolean equals(Object obj) {
@@ -1001,7 +909,6 @@ public class User {
 
     /**
      * Creates a new root user
-     * @return {@code bool} indicating if the creation was a success
      */
     private static void createRootAdmin() {
         User root = new User();

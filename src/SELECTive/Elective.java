@@ -121,8 +121,8 @@ public class Elective {
 
     //region Validators
     public boolean mayNotAccessElective(User them) {
-        if (them.getUserType() == UserType.ADMIN) return false;
-        if (them.getUserType() == UserType.LECTURER && them.getUserId() == this.lecturerId) return false;
+        if (them.isValidAdmin()) return false;
+        if (them.isValidLecturer() && them.getUserId() == this.lecturerId) return false;
         InternalCore.printIssue("Insufficient Access Rights",
                 "You do not have the required access rights to view details of this course.");
         return true;
@@ -329,7 +329,7 @@ public class Elective {
 
     //region Elective Editing
     public boolean saveElective(Admin who, boolean newElective) {
-        if (who.getUserType() != UserType.ADMIN) {
+        if (!who.isValidAdmin()) {
             InternalCore.printIssue("Insufficient access rights", "");
             return false;
         }
@@ -383,8 +383,7 @@ public class Elective {
 
     public boolean edit(Admin who) {
         // Check access rights
-        UserType requestorsType = who.getUserType();
-        if (requestorsType != UserType.ADMIN) {
+        if (!who.isValidAdmin()) {
             InternalCore.printIssue("Invalid Access Rights",
                     "You do not have the correct access privileges to edit an elective.");
             return false;

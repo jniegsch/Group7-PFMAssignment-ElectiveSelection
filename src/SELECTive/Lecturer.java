@@ -229,16 +229,16 @@ public class Lecturer extends User {
             if (!registration.updateGradeForElective(this.elective, this, newGrade)) {
                 String retry = InternalCore.getUserInput(String.class,
                         "Seeing as there was an issue, would you like to retry? (y/n)");
-                if (retry.toLowerCase().equals("y")) continue;
+                if (retry != null) if (retry.toLowerCase().equals("y")) continue;
             }
 
             String addMoreGrades = InternalCore.getUserInput(String.class,
                     "Would you like to add another grade? (y/n)");
-
+            if (addMoreGrades == null) break;
             if (addMoreGrades.toLowerCase().equals("y")) {
                 String sameCourse = InternalCore.getUserInput(String.class,
                         "Is this for the same elective? (y/n))");
-                if (sameCourse.toLowerCase().equals("y")) continue;
+                if (sameCourse != null) if (sameCourse.toLowerCase().equals("y")) continue;
                 elective = null;
                 continue;
             }
@@ -302,7 +302,7 @@ public class Lecturer extends User {
     // This method gets regStudents as input and returns its minimum value
     private double minGrade(double[] numElectiveGrade){
         double minGrade = numElectiveGrade[0];
-        for (int i = 0; i < numElectiveGrade.length; i++) {
+        for (int i = 1; i < numElectiveGrade.length; i++) {
             if (numElectiveGrade[i] < minGrade) {
                 minGrade = numElectiveGrade [i];
             }
@@ -313,7 +313,7 @@ public class Lecturer extends User {
     // This method gets regStudents as input and returns its maximum value
     private double maxGrade(double[] numElectiveGrade){
         double maxGrade = numElectiveGrade[0];
-        for (int i = 0; i < numElectiveGrade.length; i++) {
+        for (int i = 1; i < numElectiveGrade.length; i++) {
             if (numElectiveGrade[i] > maxGrade) {
                 maxGrade = numElectiveGrade[i];
             }
@@ -323,18 +323,18 @@ public class Lecturer extends User {
 
     // This method gets regStudents as input and returns its average
     private double meanGrade(double[] numElectiveGrade){
-        double sumGrade = 0;
-        for (int i = 0; i < numElectiveGrade.length; i++) {
+        double sumGrade = numElectiveGrade[0];
+        for (int i = 1; i < numElectiveGrade.length; i++) {
             sumGrade += numElectiveGrade[i];
         }
-        return (double) sumGrade / numElectiveGrade.length;
+        return sumGrade / numElectiveGrade.length;
     }
 
     // This method gets regStudents as input and returns the number of failed grades
     private double failedGrade(double[] numElectiveGrade){
         double failedGrade = 0;
-        for (int i = 0; i < numElectiveGrade.length; i++) {
-            if(numElectiveGrade[i] < 5.5) {
+        for (double grade : numElectiveGrade) {
+            if (grade < 5.5) {
                 failedGrade ++;
             }
         }

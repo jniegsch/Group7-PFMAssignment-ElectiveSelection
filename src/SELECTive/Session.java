@@ -16,8 +16,6 @@ public class Session {
     //region _MAIN
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public static void main(String[] args) {
-        //TODO: The actual program...
-
         if (User.hasNoUsers()) {
             sessionUser = createInitialAdmin();
             sessionAdmin = (Admin)sessionUser;
@@ -77,8 +75,7 @@ public class Session {
         }
 
         sessionUser = User.login();
-        if (sessionUser != null) return true;
-        return false;
+        return (sessionUser != null);
     }
     //endregion
 
@@ -104,9 +101,8 @@ public class Session {
                     "- - - \n" +
                     " 0) Logout\n" +
                     "- - -");
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, etc.):");
-            if (userChoice == null) break;
-            int choice = userChoice.intValue();
+            Integer choice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, etc.):");
+            if (choice == null) break;
             if (choice < 0 || choice > 8) {
                 InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
                 continue;
@@ -168,10 +164,8 @@ public class Session {
                     + " 0) Logout\n"
                     + "- - -");
 
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, etc.):");
-            if (userChoice == null)
-                break;
-            int choice = userChoice.intValue();
+            Integer choice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, etc.):");
+            if (choice == null) break;
             if (choice < 0 || choice > 7) {
                 InternalCore.printIssue("Invalid input", "Please specify one of the available options.");
                 continue;
@@ -229,10 +223,8 @@ public class Session {
                     + " 0) Logout\n"
                     + "- - -");
 
-            Integer userChoice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, etc.):");
-            if (userChoice == null)
-                break;
-            int choice = userChoice.intValue();
+            Integer choice = InternalCore.getUserInput(Integer.class, "Choice (0, 1, 2, etc.):");
+            if (choice == null) break;
             if (choice < 0 || choice > 6) {
                 InternalCore.printIssue("Invalid input.", "Please specify one of the available options.");
                 continue;
@@ -291,7 +283,7 @@ public class Session {
         }
         Integer utypeSelection = InternalCore.getUserInput(Integer.class,
                 "Specify the user type (1, 2, etc.): ");
-        int typeSelect = (utypeSelection != null)? utypeSelection.intValue() - 1 : UserType.values().length - 1; // Last UserType is default
+        int typeSelect = (utypeSelection != null) ? utypeSelection - 1 : UserType.values().length - 1; // Last UserType is default
 
         // Get user input
         String uname = InternalCore.getUserInput(String.class,
@@ -321,7 +313,7 @@ public class Session {
 
     // Method to view users
     private static void viewUsers() {
-        if (sessionUser.getUserType() != UserType.ADMIN) {
+        if (!sessionUser.isValidAdmin()) {
             InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
             return;
 
@@ -358,7 +350,7 @@ public class Session {
 
     // Method to add an elective
     private static void addElective() {
-        if (sessionUser.getUserType() != UserType.ADMIN) {
+        if (!sessionUser.isValidAdmin()) {
             InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
             return;
         }
@@ -369,7 +361,7 @@ public class Session {
     }
 
     private static void editElective() {
-        if (sessionUser.getUserType() != UserType.ADMIN) {
+        if (!sessionUser.isValidAdmin()) {
             InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
             return;
         }
@@ -380,6 +372,7 @@ public class Session {
 
         if (Elective.getElectiveWithCourseCode(InternalCore.stripWhitespace(code)) == null) return; 
         Elective toEdit = Elective.getElectiveWithCourseCode(InternalCore.stripWhitespace(code));
+        if (toEdit == null) return;
         if (toEdit.getElectiveId() == -1) return;
         toEdit.edit(sessionAdmin);
     }
@@ -495,7 +488,7 @@ public class Session {
     //region All User Actions
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static void resetOrChangePasswordOfUser(User u) {
-        String username = null, oldPassword = null;
+        String username, oldPassword = null;
         if (u == null) {
             username = InternalCore.getUserInput(String.class,
                     "What is the username of the user who's password you would like to change: ");
@@ -524,9 +517,10 @@ public class Session {
       
         boolean success = false;
         if (sessionAdmin == null) {
-            if (sessionUser.changePassword(oldPassword.toCharArray(), newPassword.toCharArray())) success = true;
+            if (oldPassword != null)
+                if (sessionUser.changePassword(oldPassword.toCharArray(), newPassword.toCharArray())) success = true;
         } else {
-            if (sessionAdmin.changePassword(username, (u == null)? null : oldPassword.toCharArray(), newPassword.toCharArray())) success = true;
+            if (sessionAdmin.changePassword(username, null, newPassword.toCharArray())) success = true;
         }
 
         if (success) {
@@ -678,7 +672,6 @@ public class Session {
             String pass = InternalCore.getUserInput(String.class, "Password: ");
             if (pass == null) return null;
             char[] pword = pass.toCharArray();
-            pass = null; // try and get pass GCed
 
             if (User.invalidPassword(pword)) {
                 InternalCore.println("Invalid password!");
@@ -687,12 +680,13 @@ public class Session {
             }
 
             String pass2 = InternalCore.getUserInput(String.class, "Repeat Password: ");
-            if (!Arrays.equals(pword, pass2.toCharArray())) {
-                InternalCore.println("Account creation failed.");
-                numTries++;
-                continue;
+            if (pass2 != null) {
+                if (Arrays.equals(pword, pass2.toCharArray())) {
+                    return new Admin(rootUser.createNewUser(uname, pword, UserType.ADMIN));
+                }
             }
-            return new Admin(rootUser.createNewUser(uname, pword, UserType.ADMIN));
+            InternalCore.println("Account creation failed.");
+            numTries++;
         }
         InternalCore.println("Account creation failed.");
         return null;
@@ -708,11 +702,12 @@ public class Session {
 
     /**
      * Loads the root user to be used in the session
-     * @return a {@code bool} indicating if the load was successful
      */
-    private static boolean loadRootUser() {
-        if ((rootUser = User.rootLogin(User.rootUserName, User.rootUserPass)) == null) return false;
-        return true;
+    private static void loadRootUser() {
+        if ((rootUser = User.rootLogin(User.rootUserName, User.rootUserPass)) == null) {
+            InternalCore.printIssue("Fatal Error", "Could not load the root user.");
+            System.exit(InternalCore.FATAL_ERROR_RESET_REQUIRED);
+        }
     }
     //endregion
 }

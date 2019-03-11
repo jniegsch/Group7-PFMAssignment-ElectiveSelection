@@ -69,15 +69,6 @@ public class Admin extends User {
 
     //region Retrievers
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    public static Admin getAdminWithId(long id) {
-        hasValidAdmins = loadAdmins();
-        if (admins == null) return null;
-        for (Admin adm : admins) {
-            if (adm.getUserId() == id) return adm;
-        }
-        return null;
-    }
-
     public static Admin getAdminWithUsername(String uname) {
         hasValidAdmins = loadAdmins();
         if (admins == null) return null;
@@ -96,14 +87,18 @@ public class Admin extends User {
 
     //region Adding Electives
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    public boolean addElective(String courseCode) {
-        if (this.getUserType() != UserType.ADMIN) return false;
+    public void addElective(String courseCode) {
+        if (!this.isValidAdmin()) {
+            InternalCore.printIssue("Insufficient access rights",
+                    "You do not have the correct access rights to create a new elective");
+            return;
+        }
         InternalCore.println();
         InternalCore.printTitle("Adding an Elective", '*');
         InternalCore.println("You MUST fill in all fields!\n ");
 
         // There are 8 properties to set for an elective
-        String electiveCourseCode = courseCode, electiveName = "";
+        String electiveCourseCode, electiveName = "";
         int electiveECTS = 0, block = 0;
         String[] electiveKeywords = null;
         MasterProgram electiveProgramName = null;
@@ -120,14 +115,15 @@ public class Admin extends User {
                     if (Elective.getElectiveWithCourseCode(electiveCourseCode) != null) {
                         InternalCore.printIssue("Elective already exists",
                                 "Please edit the elective if you need to change anything");
-                        return false; // If we don't let them leave here, then they'll be forced to make a `fake` elective just so that they can leave the dialog
+                        return; // If we don't let them leave here, then they'll be forced to make a `fake` elective just so that they can leave the dialog
                     }
-                    if (electiveCourseCode.equals("") || electiveCourseCode.equals(" ")) successfulSet = false;
+                    if (electiveCourseCode == null) break;
+                    successfulSet = !(electiveCourseCode.equals("") || electiveCourseCode.equals(" "));
                     break;
                 case 1:
                     electiveName = InternalCore.getUserInput(String.class, "Elective name: ");
-                    if (electiveName != null) successfulSet = true;
-                    if (electiveName.equals("") || electiveName.equals(" ")) successfulSet = false;
+                    if (electiveName == null) break;
+                    successfulSet = !(electiveName.equals("") || electiveName.equals(" "));
                     break;
                 case 2:
                     InternalCore.println("> To which program does this elective belong?");
@@ -226,64 +222,57 @@ public class Admin extends User {
 
         InternalCore.println("Elective successfully created!");
         InternalCore.println();
-        return false;
     }
     //endregion
 
     //region User Management
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    public boolean editSpecificUser(String uname, UserType ut) {
+    public void editSpecificUser(String uname, UserType ut) {
 
         if (ut.equals(UserType.LECTURER)) {
             Lecturer tempLecturer = Lecturer.getLecturerWithUsername(uname);
             if (tempLecturer == null) {
                 InternalCore.printIssue("Could not edit the lecturer",
                         "lecturer doesn't seem to exist");
-                return false;
+                return;
             }
-            if (!tempLecturer.editUser()) {
+            if (tempLecturer.editUserUnsuccessful()) {
             	InternalCore.printIssue("Could not edit the lecturer", "");
-            	return false;
             }
         } else if (ut.equals(UserType.STUDENT)) {
             Student tempStudent = Student.getStudentWithUsername(uname);
             if (tempStudent == null) {
                 InternalCore.printIssue("Could not edit the student",
                         "Student doesn't seem to exist");
-                return false;
+                return;
             }
-            if (!tempStudent.editUser()) {
+            if (tempStudent.editUserUnsuccessful()) {
                 InternalCore.printIssue("Could not edit the student",
                         "There was an issue editing the requested user.");
-                return false;
             }
         } else if (ut.equals(UserType.ADMIN)) {
-            if (uname == this.getUsername()) {
-                if (!this.editUser()) {
+            if (uname.equals(this.getUsername())) {
+                if (this.editUserUnsuccessful()) {
                     InternalCore.printIssue("Could not edit yourself", "");
-                    return false;
                 }
             } else {
                 if (uname.equals("sudo")) {
                     InternalCore.printIssue("You may not edit the root user!", "");
-                    return false;
+                    return;
                 }
                 Admin tempAdmin = getAdminWithUsername(uname);
 		if (tempAdmin == null) {
                     InternalCore.printIssue("Could not edit the admin",
                             "admin doesn't seem to exist");
-                    return false;
+            return;
                 }
-                if (!tempAdmin.editUser()) {
+                if (tempAdmin.editUserUnsuccessful()) {
                     InternalCore.printIssue("Could not edit the admin", "");
-                    return false;
                 }
             }
         } else {
             InternalCore.println("You entered an invalid number.");
-            return false;
         }
-        return true;
     }
     //endregion
 }

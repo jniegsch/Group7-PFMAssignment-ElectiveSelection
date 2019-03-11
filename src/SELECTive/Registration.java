@@ -35,23 +35,17 @@ public class Registration {
     private boolean isNotRegisteredForElective(String courseCode) {
         if (electives[0] != null) if (electives[0].getCourseCode().equals(courseCode)) return false;
         if (electives[1] != null) if (electives[1].getCourseCode().equals(courseCode)) return false;
-        if (electives[2] != null) if (electives[2].getCourseCode().equals(courseCode)) return false;
+        if (electives[2] != null) return !(electives[2].getCourseCode().equals(courseCode));
         return true;
     }
 
-    public boolean mayNotViewGrade(User them, Elective elective) {
-        if (them.getUserType() == UserType.ADMIN) return false;
-        if (them.getUserId() == student.getUserId() && them.getUserType() == UserType.STUDENT) return false;
-        return mayNotEditGrade(them, elective);
-    }
-
     private boolean mayNotEditGrade(User them, Elective elective) {
-        return !(elective.getLecturerId() == them.getUserId() && them.getUserType() == UserType.LECTURER);
+        return !(elective.getLecturerId() == them.getUserId() && them.isValidLecturer());
     }
 
     private boolean mayNotAdaptRegistration(User them) {
-        if (them.getUserType() == UserType.ADMIN) return false;
-        return !(them.getUserType() == UserType.STUDENT && them.getUserId() == student.getUserId());
+        if (them.isValidAdmin()) return false;
+        return !(them.isValidStudent() && them.getUserId() == student.getUserId());
     }
     //endregion
 
@@ -223,7 +217,7 @@ public class Registration {
         return true;
     }
 
-    public static void addRegistration(Registration registration) {
+    private static void addRegistration(Registration registration) {
         if (alreadyHasLoaded(registration)) {
             hasValidRegistrations = true;
             return;
