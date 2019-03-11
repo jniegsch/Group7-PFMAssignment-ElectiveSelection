@@ -96,10 +96,6 @@ public class Student extends User {
     }
     //endregion
 
-    //region Elective Registration
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //endregion
-
     //region Enrollment
     //This method allows student users to register themselves to an elective 
     public void viewEnrolledElectives() {
