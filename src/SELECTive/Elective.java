@@ -112,12 +112,15 @@ public class Elective {
     public long getElectiveId() {
         return this.electiveId;
     }
+
     public String getCourseCode() {
         return this.courseCode;
     }
+
     public long getLecturerId() {
         return this.lecturerId;
     }
+
     public int getBlock() {
         return this.block;
     }
@@ -138,7 +141,7 @@ public class Elective {
     // STORED AS:
     // 1 | 2         | 3         | 4   | 5      | 6       | 7  | 8    | 9
     // ID;;CourseCode;;CourseName;;ECTS;;Program;;Keywords;;Day;;Block;;Lecturer
-	
+
     // This method loads all elective entries from the file and create an object for every instance
     private static boolean loadElectives() {
         if (hasValidElectives) return true;
@@ -190,6 +193,7 @@ public class Elective {
     //endregion
 
     //region Filters
+
     /**
      * Returns the electives given a certain filter and arguments. The possible arguments for the filters are:
      * <pre>
@@ -202,11 +206,13 @@ public class Elective {
      *     > KEYWORDS
      *     args: a {@code String[]} of keyword strings
      * </pre>
-     * @param filter    the {@code ElectiveFilterType} to apply
-     * @param argument  a {@code String[]} of the arguments
+     *
+     * @param filter   the {@code ElectiveFilterType} to apply
+     * @param argument a {@code String[]} of the arguments
      * @return {@code Elective[]} of all the electives that fit the filter
      */
     public static Elective[] filterOn(ElectiveFilterType filter, String[] argument) {
+        hasValidElectives = loadElectives();
         switch (filter) {
             case COURSEID:
                 return electivesFilteredOnCourseCode(argument);
@@ -231,7 +237,7 @@ public class Elective {
     //This method filters for electives based on course code
     private static Elective[] electivesFilteredOnCourseCode(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
-	if (electives == null) return null;
+        if (electives == null) return null;
         for (Elective elect : electives) {
             for (String arg : argument) {
                 if (elect.courseCode.equals(arg)) {
@@ -247,7 +253,7 @@ public class Elective {
     //This method filters for electives based on ECTS value
     private static Elective[] electivesFilteredOnEcts(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
-	if (electives == null) return null;
+        if (electives == null) return null;
         for (Elective elect : electives) {
             for (String arg : argument) {
                 if (elect.ects == Integer.parseInt(arg)) {
@@ -263,7 +269,7 @@ public class Elective {
     //This method filters for electives based on the block in which they are taught
     private static Elective[] electivesFilteredOnBlock(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
-	if (electives == null) return null;
+        if (electives == null) return null;
         for (Elective elect : electives) {
             for (String arg : argument) {
                 if (elect.block == Integer.parseInt(arg)) {
@@ -277,9 +283,9 @@ public class Elective {
     }
 
     //This method filters for electives based on keywords
-    private  static Elective[] electivesFilteredOnKeywords(String[] argument) {
+    private static Elective[] electivesFilteredOnKeywords(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
-	if (electives == null) return null;
+        if (electives == null) return null;
         for (Elective elect : electives) {
             boolean earlyExit = false;
             for (String arg : argument) {
@@ -303,6 +309,7 @@ public class Elective {
     //region Misc Lifters
     //This method creates a standardized expression for an elective's keywords
     private static final String keywordStorageSeparator = "&";
+
     private String keywordString() {
         StringBuilder builder = new StringBuilder();
         for (String keyword : keywords) builder.append(keyword).append(keywordStorageSeparator);
@@ -434,14 +441,14 @@ public class Elective {
                 if (editKeywords()) break;
                 return false;
             case 5:
-            	if (editClassDay()) break;
-            	return false;
+                if (editClassDay()) break;
+                return false;
             case 6:
                 if (editBlock()) break;
                 return false;
             case 7:
                 if (editLecturer()) break;
-            	return false;
+                return false;
         }
 
         return saveElective(who, false);
@@ -484,27 +491,28 @@ public class Elective {
         String newKeywords = InternalCore.getUserInput(String.class, "What are the keywords for this elective (separate each keyword using a ';')?");
         if (newKeywords == null) return false;
         // loop through and strip starting or ending whitespace
-        for (int i = 0 ; i < this.keywords.length; i++) {
+        for (int i = 0; i < this.keywords.length; i++) {
             char[] temp = this.keywords[i].toCharArray();
             if (temp[0] == ' ') this.keywords[i] = this.keywords[i].substring(1);
-            if (temp[this.keywords[i].length() - 1] == ' ') this.keywords[i] = this.keywords[i].substring(0, this.keywords[i].length() - 2);
+            if (temp[this.keywords[i].length() - 1] == ' ')
+                this.keywords[i] = this.keywords[i].substring(0, this.keywords[i].length() - 2);
         }
         this.keywords = newKeywords.split(";");
         return true;
     }
 
-     //This method asks for the change of the class time and saves this in the file
+    //This method asks for the change of the class time and saves this in the file
     private boolean editClassDay() {
-    	InternalCore.println("On which day will this class be taught?");
-    	String classDay = InternalCore.getUserInput(String.class, "" +
-				"> Lesson day: \n" +
-				"   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri");
-		
-    	if (classDay == null) return false;
-    	if (Integer.parseInt(classDay) < 1 || Integer.parseInt(classDay) > 5) return false;
+        InternalCore.println("On which day will this class be taught?");
+        String classDay = InternalCore.getUserInput(String.class, "" +
+                "> Lesson day: \n" +
+                "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri");
+
+        if (classDay == null) return false;
+        if (Integer.parseInt(classDay) < 1 || Integer.parseInt(classDay) > 5) return false;
         this.lectureDay = Day.values()[Integer.parseInt(classDay) - 1];
-    	return true;
-	}
+        return true;
+    }
 
     // This method asks for the change of the elective block and saves this in the file
     private boolean editBlock() {
@@ -518,7 +526,7 @@ public class Elective {
         this.block = Integer.parseInt(newBlock);
         return true;
     }
-    
+
     // This method asks for the change of the lecturer id and saves this in the file
     private boolean editLecturer() {
         String newLecturer = InternalCore.getUserInput(String.class, "What is the new username of this elective's lecturer?");

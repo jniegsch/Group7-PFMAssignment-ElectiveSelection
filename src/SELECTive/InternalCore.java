@@ -22,23 +22,51 @@ public final class InternalCore {
 
     //region General System Constants
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    /**
+     * Defines the constant width in chars
+     */
     private static final int consoleCharWidth = 120;
+    /**
+     * Defines the name of the software for printing
+     */
     private static final String systemName = "SELECTive";
     //endregion
 
     //region Exit Codes
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    /**
+     * Defines the exit code for a fatal error when setting up the initial state
+     */
     public static final int INITIAL_STATE_SETUP_FAILED_FATALITY = 1;
+    /**
+     * Defines the exit code when something has gone wrong in the internal state that cannot be fixed without a reset
+     */
     public static final int BROKEN_INTERNAL_STATE_FATAL = 2;
+    /**
+     * Defines the exit code when something in general has gone that also requires a reset
+     */
     public static final int FATAL_ERROR_RESET_REQUIRED = 3;
+    /**
+     * Defines the exit code when saving a user has failed due to an issue with the consistency of the internal state.
+     * Does not necessarily require a reset.
+     */
     public static final int USER_SAVING_FAILED_INCONSISTENT_INTERNAL_STATE = 4;
+    /**
+     * Defines the exit code when one of the required hashing algorithms is not available. In this case the system
+     * cannot be used unless these are installed
+     */
     public static final int REQUIRED_ALGORITHM_NOT_AVAILABLE_CANNOT_CONTINUE = 5;
+    /**
+     * Defines the exit code when the authentication has failed - reset is probably required
+     */
     public static final int NO_AUTHENTICATION = 6;
     //endregion
 
     //region File Access Constants
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
+    /**
+     * The location of the database folder (directory)
+     */
     private final static String DBLoc = "database/";
     /**
      * The location in the DB folder where the authentication file is stored
@@ -73,7 +101,7 @@ public final class InternalCore {
      * The separator that MUST be used to store the different properties of an instance. This value must always be used
      * to separate the individual object properties. For example, any row must be something like this:
      * <pre>
-     *     <object instance id> ; <property 1> ; <property 2> ; <...> ; <property n>
+     *     <object instance id> ;; <property 1> ;; <property 2> ;; <...> ;; <property n>
      * </pre>
      * Seeing as this class should solely read, update, or write this value is kept privately
      */
@@ -335,12 +363,17 @@ public final class InternalCore {
      * The location of the internal state tracker where the last given id is stored for each type
      */
     private final static String InternalStateLoc = DBLoc + ".internalstate.txt";
+
     /**
      * Returns the key to use based on admin = 0; student = 1; lecturer = 2; elective = 3; relation = 4;
      */
     private final static char[] TypeKeys = {'A', 'S', 'L', 'E', 'R'};
 
+    /**
+     * Defines the final size of the internal state in chars
+     */
     private final static int totalBlocks = 40 * TypeKeys.length;
+
     /**
      * Gets the next available id for the specified type. Due to the small file size and manageability
      * writing is achieved with the FileWriter in order to not have too many class instance creations
@@ -424,6 +457,12 @@ public final class InternalCore {
         return false;
     }
 
+    /**
+     * Method to evaluate an SEObjectType to its respective file location
+     *
+     * @param ot the {@code SEObjectType} for which to return the file location
+     * @return {@code String} representing the file location
+     */
     public static String fileLocationForObjectType(SEObjectType ot) {
         switch (ot) {
             case ADMIN_USER: return AdminInfoLoc;
@@ -437,6 +476,11 @@ public final class InternalCore {
         }
     }
 
+    /**
+     * Method to return an integer to use on the {@code TypeKeys} array to find the selector used in the internal state
+     * @param ot    the {@code SEObjectType} for which to return the file location
+     * @return the {@code int} to use to retrieve the correct type key
+     */
     private static int selectorForObjectType(SEObjectType ot) {
         switch (ot) {
             case ADMIN_USER: return 0;
@@ -451,9 +495,19 @@ public final class InternalCore {
 
     //region Getting User Input
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    /**
+     * Scanner instance for the entire session
+     */
     private static Scanner inputScanner = null;
 
-    // Important scanner is kept open until logout, since otherwise we also close the System.in stream and cannot recover
+    /**
+     * Method to retrieve input from a user. The method ensures proper printing as well as allowing the user 5 tries
+     * to enter the expected value. Furthermore, the method ensures the scanner is first checked before reading from it.
+     * @param type      The class of the type you would like to have returned
+     * @param prompt    The prompt to print for the user
+     * @param <T>       The generic type
+     * @return The generic return casted to the type requested
+     */
     public static <T> T getUserInput(Class<T> type, String prompt) {
         final int maxTries = 5;
 
@@ -521,6 +575,9 @@ public final class InternalCore {
         return null;
     }
 
+    /**
+     * This function should be called at the end of a session to properly close the scanner
+     */
     public static void cleanup() {
         inputScanner.close();
         inputScanner = null;
@@ -593,6 +650,10 @@ public final class InternalCore {
         return line.toString();
     }
 
+    /**
+     * Prints an empty line - supplied to ensure there is no need to mix around with the printing of the InternalCore
+     * and the printing provided by the System
+     */
     public static void println() {
         System.out.println();
     }
@@ -646,7 +707,6 @@ public final class InternalCore {
 
     //region Misc
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
     /**
      * Trips the whitespace that might be at the beginning or end of a string if a user does not use the exact separator
      * + spacing as expected
@@ -679,6 +739,12 @@ public final class InternalCore {
         return strArr;
     }
 
+    /**
+     * Capitalizes the passed string and removes all '_' for properly printing the Title enum. Furthermore, the method
+     * can be used to also ensure that all names are actually capitalized when printing
+     * @param str   The {@code String} to capitalize
+     * @return The {@code String} of the capitalized input
+     */
     public static String capitalizeString(String str) {
         if (str == null || str.equals("") || str.equals(" ")) return "";
         StringBuilder capitalizedString = new StringBuilder();
@@ -692,8 +758,11 @@ public final class InternalCore {
 
     //region Error and Issue handling
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
+    /**
+     * An internal boolean that can be flipped in code to easily suppress or allow for error printing
+     */
     private static final boolean systemPrintsErrors = false;
+
     /**
      * Print an error
      * @param className {@code String} defining the class in which the error occurred

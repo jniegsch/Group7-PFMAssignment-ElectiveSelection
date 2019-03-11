@@ -292,7 +292,7 @@ public class User {
                 }
                 break;
             case 4:
-                if (!editDateofBirth()) {
+                if (!editDateOfBirth()) {
                     InternalCore.printIssue("Could not change the DOB", "");
                     return true;
                 }
@@ -340,7 +340,7 @@ public class User {
     }
 
     //This method asks for the user's new date of birth and edits the object's property
-    private boolean editDateofBirth() {
+    private boolean editDateOfBirth() {
         String newDate = InternalCore.getUserInput(String.class, "What is the new date of birth (please enter int he format yyyy-MM-dd: ");
         this.dateOfBirth = parseDOB(newDate);
         return (this.dateOfBirth != null);
