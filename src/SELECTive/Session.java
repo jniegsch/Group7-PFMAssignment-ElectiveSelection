@@ -15,6 +15,7 @@ public class Session {
 
     //region _MAIN
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Main method to check whether to login or to create an initial admin
     public static void main(String[] args) {
         if (User.hasNoUsers()) {
             sessionUser = createInitialAdmin();
@@ -32,7 +33,8 @@ public class Session {
                 System.exit(InternalCore.NO_AUTHENTICATION);
             }
         }
-
+        
+        // Switch to determine which dashboard should be shown
         switch (sessionUser.getUserType()) {
             case ADMIN:
                 sessionAdmin = new Admin(sessionUser);
@@ -81,6 +83,7 @@ public class Session {
 
     //region User Specific Dashboard
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Method to display the admin dashboard
     private static void adminDashboard() {
         while (true) {
             InternalCore.println(InternalCore.consoleLine('*'));
@@ -143,6 +146,7 @@ public class Session {
         }
     }
 
+    // Method to display the lecturer dashboard
     private static void lecturerDashboard() {
         while (true) {
             InternalCore.println(InternalCore.consoleLine('*'));
@@ -204,6 +208,7 @@ public class Session {
         }
     }
 
+    // Method to display the student dashboard
     private static void studentDashboard() {
         while (true) {
             InternalCore.println(InternalCore.consoleLine('*'));
@@ -360,6 +365,7 @@ public class Session {
         sessionAdmin.addElective(courseCode);
     }
 
+    // Method to edit an elective
     private static void editElective() {
         if (!sessionUser.isValidAdmin()) {
             InternalCore.printIssue("Insufficient access rights", "You do not have the rights to create a new Elective");
@@ -377,6 +383,7 @@ public class Session {
         toEdit.edit(sessionAdmin);
     }
 
+    // Method to edit a user
     private static void editAUser() {
         String uname = InternalCore.getUserInput(String.class,
                 "Enter a username: ");
@@ -423,6 +430,7 @@ public class Session {
         sessionLecturer.viewStatsForElective(courseCode);
     }
 
+    // Method to view the electives a lecturer is teaching
     private static void viewOwnElectives() {
         Elective[] electives = Elective.getAllElectivesForLecturer(sessionLecturer);
         if (electives == null) {
@@ -438,6 +446,7 @@ public class Session {
 
     //region Student Actions
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Method to register for an elective
     private static void registerForElective() {
         String courseCode = InternalCore.getUserInput(String.class, "For which elective do you want to register? Please give the course code:");
         if (courseCode == null) return;
@@ -466,6 +475,7 @@ public class Session {
         InternalCore.println("> Registration successful");
     }
 
+    // Method to view grades
     private static void viewGrades() {
         String viewAll = InternalCore.getUserInput(String.class, "Would you like to see your progress for all electives? (y/n)");
         if (viewAll != null) {
@@ -487,6 +497,7 @@ public class Session {
 
     //region All User Actions
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Method to change the user password
     private static void resetOrChangePasswordOfUser(User u) {
         String username, oldPassword = null;
         if (u == null) {
@@ -530,6 +541,7 @@ public class Session {
         }
     }
 
+    // Method to filter electives
     private static void filterElectives() {
         // Print filter options
         int optId = 1;
@@ -543,6 +555,7 @@ public class Session {
         if (userFilterTypeChoice == null) return;
         Elective.ElectiveFilterType userFilterType = Elective.ElectiveFilterType.values()[userFilterTypeChoice - 1];
 
+        // Switch to choose between filtering on courseID, ECTS, block or keywords
         Elective[] electives = null;
         switch (userFilterType) {
             case COURSEID:
@@ -610,6 +623,7 @@ public class Session {
         }
     }
 
+    // Method to view the list of available electives
     private static void viewElectives() {
         Elective[] electives = Elective.getAllElectives();
         if (electives == null) {
@@ -651,6 +665,7 @@ public class Session {
      * Begins the process to create an initial admin
      * @return the {@code Admin} created
      */
+    // Method to create the initial admin
     private static Admin createInitialAdmin() {
         loadRootUser(); // only load root user if initial admin still needs to be created
         InternalCore.printIssue("No admin created.", "Please create an admin first. You will be guided through the setup.");
@@ -695,14 +710,10 @@ public class Session {
 
     //region Initial System Setup
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    /**
-     * The root user of the session
-     */
+    //The root user of the session
     private static Admin rootUser;
 
-    /**
-     * Loads the root user to be used in the session
-     */
+    // Method to load the root user to be used in the session
     private static void loadRootUser() {
         if ((rootUser = User.rootLogin(User.rootUserName, User.rootUserPass)) == null) {
             InternalCore.printIssue("Fatal Error", "Could not load the root user.");
