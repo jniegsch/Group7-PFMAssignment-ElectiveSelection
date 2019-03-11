@@ -182,9 +182,9 @@ public class Admin extends User {
                 case 6:
                     Integer classDay = InternalCore.getUserInput(Integer.class,
                             "> On which day is the lesson taught: \n" +
-                                    "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri, 6 = sat, 7 = sun");
+                                    "   codes: 1 = mon, 2 = tues, 3 = wed, 4 = thurs, 5 = fri");
                     if (classDay != null) {
-                        if (classDay < 1 || classDay > 7) break;
+                        if (classDay < 1 || classDay > 5) break;
                         lectureDay = Day.values()[classDay - 1];
                         successfulSet = true;
                     }
