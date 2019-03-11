@@ -120,7 +120,7 @@ public class Student extends User {
         }
     }
 
-    //This method allows student users to view their grades for electives to which they are registered
+    //This method allows student to view their grades for a particular elective to which they are registered
     public void viewElectiveProgress(String courseCode) {
         Registration reg = Registration.registrationForStudent(this);
         if (reg == null) {
@@ -144,7 +144,7 @@ public class Student extends User {
         InternalCore.println("Your progress for " + courseCode + " is: " + reg.getGrade(elective));
     }
     
-    //This method allows student users to view their grades for electives to which they are registered
+    //This method allows student to view their grades for all electives to which they are registered
     public void viewProgress() {
         Registration reg = Registration.registrationForStudent(this);
         if (reg == null) {
