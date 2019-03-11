@@ -14,24 +14,29 @@ public class Registration {
 
     //region Getters
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Method to get student object
     public Student getStudent() {
         return this.student;
     }
 
+    // Method to get all electives
     public Elective[] getAllElectives() {
         return electives;
     }
 
+    // Method to get grade
     public double getGrade(Elective elect) {
         if (elect == null) return -1.0;
         if (isNotRegisteredForElective(elect)) return -1.0;
         return grades[elect.getBlock() - 3];
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public boolean isNotRegisteredForElective(Elective elective) {
         return isNotRegisteredForElective(elective.getCourseCode());
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private boolean isNotRegisteredForElective(String courseCode) {
         if (electives[0] != null) if (electives[0].getCourseCode().equals(courseCode)) return false;
         if (electives[1] != null) if (electives[1].getCourseCode().equals(courseCode)) return false;
@@ -39,10 +44,12 @@ public class Registration {
         return true;
     }
 
+    // Method to check whether user may edit a grade
     private boolean mayNotEditGrade(User them, Elective elective) {
         return !(elective.getLecturerId() == them.getUserId() && them.isValidLecturer());
     }
 
+    // Method to check whether user may adapt a registration
     private boolean mayNotAdaptRegistration(User them) {
         if (them.isValidAdmin()) return false;
         return !(them.isValidStudent() && them.getUserId() == student.getUserId());
@@ -78,7 +85,7 @@ public class Registration {
     }
     //endregion
 
-    //region Public Retrieval
+    //region Public Retrieval 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public static Registration registrationForStudent(Student stu) {
         hasValidRegistrations = loadRegistrations();
@@ -105,6 +112,7 @@ public class Registration {
 
     //region Registration
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Method to register for an elective
     public boolean registerForElective(Student stu, Elective elect) {
         if (mayNotAdaptRegistration(stu)) {
             InternalCore.printIssue("Insufficient rights",
@@ -136,6 +144,7 @@ public class Registration {
 
     //region Updating & Access
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Method to update the grade a student scored for an elective
     public boolean updateGradeForElective(Elective elect, Lecturer lecturer, double grade) {
         if (mayNotEditGrade(lecturer, elect)) {
             InternalCore.printIssue("Invalid access rights",
@@ -153,6 +162,7 @@ public class Registration {
         return saveRegistration(false);
     }
 
+    // Method to save a student registration to a course
     public boolean saveRegistration(boolean isnew) {
         String[] info = {
                 Long.toString(this.student.getUserId()),
@@ -184,6 +194,7 @@ public class Registration {
 
     //region Backend Loading
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private static boolean loadRegistrations() {
         if (hasValidRegistrations) return true;
         if (isLoading) return false;
@@ -217,6 +228,7 @@ public class Registration {
         return true;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private static void addRegistration(Registration registration) {
         if (alreadyHasLoaded(registration)) {
             hasValidRegistrations = true;
@@ -233,6 +245,7 @@ public class Registration {
         hasValidRegistrations = true;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private static boolean alreadyHasLoaded(Registration registration) {
         hasValidRegistrations = loadRegistrations();
         if (registrations == null) return false;
@@ -245,6 +258,7 @@ public class Registration {
 
     //region Overrides
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     public boolean equals(Object obj) {
         if (obj instanceof Registration) {
             Registration object = (Registration) obj;
