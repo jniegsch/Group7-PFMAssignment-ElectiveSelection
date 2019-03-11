@@ -803,7 +803,7 @@ public class User {
         }
         if (them.type == UserType.ADMIN) Admin.addAdmin(new Admin(them));
         if (them.type == UserType.STUDENT) Student.addStudent(new Student(them));
-        if (them.type == UserType.LECTURER) Lecturer.addLecturer(new Lecturer(them, ((Lecturer)them).getTitle());
+        if (them.type == UserType.LECTURER) Lecturer.addLecturer(new Lecturer(them, ((Lecturer) them).getTitle()));
         return them;
     }
 
@@ -976,7 +976,7 @@ public class User {
         StringBuilder strRepresentation = new StringBuilder();
         strRepresentation.append("[id: ").append(this.userId).append("] ");
         strRepresentation.append(InternalCore.capitalizeString(this.firstName)).append(" ");
-        strRepresentation.append(InternalCore.capitalizeString((this.middleInitial.equals(" ") ? "" : this.middleInitial))).append(" ");
+        strRepresentation.append((this.middleInitial.equals(" ") ? "" : this.middleInitial)).append(" ");
         strRepresentation.append(InternalCore.capitalizeString(this.lastname));
         return strRepresentation.toString();
     }
