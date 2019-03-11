@@ -51,7 +51,7 @@ public class Lecturer extends User {
 
     //region Static Init
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //This method loads the lecturer objects from the file
+    //This method loads all lecturer entries from the file and creates an object for every instance
     private static boolean loadLecturers() {
         if (hasvalidLecturers) return true;
         if (isLoading) return false;
