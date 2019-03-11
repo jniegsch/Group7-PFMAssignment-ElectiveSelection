@@ -478,10 +478,13 @@ public class Session {
         if (viewAll != null) {
             if (viewAll.toLowerCase().equals("y")) {
                 InternalCore.println();
+                InternalCore.printTitle("Viewing all grades", '-');
                 sessionStudent.viewProgress();
                 return;
             }
         }
+        InternalCore.println();
+        InternalCore.printTitle("Viewing specific elective grades", '-');
         String courseCode = InternalCore.getUserInput(String.class, "Please enter the course code of the elective for which you would like to see your grades");
         if (courseCode == null) return;
         InternalCore.println();

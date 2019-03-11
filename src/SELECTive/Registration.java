@@ -23,6 +23,7 @@ public class Registration {
     }
 
     public double getGrade(Elective elect) {
+        if (elect == null) return -1.0;
         if (isNotRegisteredForElective(elect)) return -1.0;
         return grades[elect.getBlock() - 3];
     }
@@ -32,9 +33,10 @@ public class Registration {
     }
 
     private boolean isNotRegisteredForElective(String courseCode) {
-        if (electives[0].getCourseCode().equals(courseCode)) return false;
-        if (electives[1].getCourseCode().equals(courseCode)) return false;
-        return !electives[2].getCourseCode().equals(courseCode);
+        if (electives[0] != null) if (electives[0].getCourseCode().equals(courseCode)) return false;
+        if (electives[1] != null) if (electives[1].getCourseCode().equals(courseCode)) return false;
+        if (electives[2] != null) if (electives[2].getCourseCode().equals(courseCode)) return false;
+        return true;
     }
 
     public boolean mayNotViewGrade(User them, Elective elective) {
