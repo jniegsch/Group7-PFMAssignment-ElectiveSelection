@@ -334,7 +334,6 @@ public class Elective {
             return false;
         }
         String[] info = {
-                Long.toString(this.electiveId),
                 this.courseCode,
                 this.electiveName,
                 Integer.toString(this.ects),
@@ -347,7 +346,7 @@ public class Elective {
 
         boolean storeSuccessful = false, updateSuccessful = false;
         if (newElective) {
-            this.electiveId = InternalCore.addEntryToInfoFile(SEObjectType.ELECTIVE, Arrays.copyOfRange(info, 1, info.length));
+            this.electiveId = InternalCore.addEntryToInfoFile(SEObjectType.ELECTIVE, info);
             if (this.electiveId != -1) storeSuccessful = true;
         } else {
             storeSuccessful = InternalCore.updateInfoFile(SEObjectType.ELECTIVE, this.electiveId, info);
