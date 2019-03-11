@@ -311,7 +311,9 @@ public class Session {
             return;
         }
         if (sessionAdmin.createNewUser(uname, pword, UserType.values()[typeSelect]) == null) {
-            InternalCore.printIssue("Couldn't create the user", "For some reason the user could not be created, please try again.");
+            InternalCore.printIssue("Couldn't create the user",
+                    "For some reason the user could not be created (check previous warnings for details), please try again.");
+            return;
         }
         InternalCore.println("User created successfully!");
     }
@@ -467,10 +469,12 @@ public class Session {
             );
             if (!studentsRegistrations.saveRegistration(true)) {
                 InternalCore.println("> Registration unsuccessful");
+                return;
             }
         } else if (!studentsRegistrations.registerForElective(sessionStudent, elect)) {
             InternalCore.printIssue("Could not register",
                     "For some reason you couldn't register for the elective. Please try again.");
+            return;
         }
         InternalCore.println("> Registration successful");
     }

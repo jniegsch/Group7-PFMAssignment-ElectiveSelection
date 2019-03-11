@@ -218,6 +218,8 @@ public class Registration {
             }
             if (changeElective.toLowerCase().equals("y")) {
                 this.electives[elect.getBlock() - 3] = elect;
+            } else {
+                return false;
             }
         } else {
             this.electives[elect.getBlock() - 3] = elect;
