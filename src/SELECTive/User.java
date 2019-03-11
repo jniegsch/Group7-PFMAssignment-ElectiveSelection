@@ -255,7 +255,7 @@ public class User {
             return null;
         }
 
-        InternalCore.println(" \nPlease fill in the account details. You can also skip them by pressing `enter`. The user can change these at a later stage.\n ");
+        InternalCore.println(" \nPlease fill in the account details. You can also skip them by pressing `enter`. You can change these at a later stage.\n ");
         String fnameInp = InternalCore.getUserInput(String.class, "What is their first name: ");
         String fname = (fnameInp != null)? fnameInp : "";
         String lnameInp = InternalCore.getUserInput(String.class, "What is their last name: ");
@@ -283,7 +283,7 @@ public class User {
             } catch (NumberFormatException nfe) {
                 titleChoice = 0;
             }
-            if (titleChoice < 0 || titleChoice > Lecturer.Title.values().length) {
+            if (titleChoice < 1 || titleChoice > Lecturer.Title.values().length) {
                 title = Lecturer.Title.NO_TITLE;
             } else {
                 title = Lecturer.Title.values()[titleChoice - 1];
