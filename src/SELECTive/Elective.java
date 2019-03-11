@@ -139,7 +139,7 @@ public class Elective {
     // 1 | 2         | 3         | 4   | 5      | 6       | 7  | 8    | 9
     // ID;;CourseCode;;CourseName;;ECTS;;Program;;Keywords;;Day;;Block;;Lecturer
 	
-    //This methods loads the electives
+    // This method loads all elective entries from the file and create an object for every instance
     private static boolean loadElectives() {
         if (hasValidElectives) return true;
         if (isLoading) return false;
