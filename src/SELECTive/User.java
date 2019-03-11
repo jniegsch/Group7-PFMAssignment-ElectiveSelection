@@ -25,7 +25,7 @@ enum UserType {
 
 /**
  * The core class for any user of the system. It handles all basic functionalities shared by all user types. Some
- * functions are prepared for extra functionality of specific uber classes, but the class does ensure rights are checked.
+ * functions are prepared for extra functionality of specific classes, but the class does ensure rights are checked.
  */
 public class User {
     //region Private Property Definitions
