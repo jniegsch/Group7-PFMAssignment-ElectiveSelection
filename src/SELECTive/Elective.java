@@ -77,6 +77,7 @@ public class Elective {
     //endregion
 
     //region Retrievers
+    //This method returns a specific elective object
     public static Elective getElectiveWithCourseCode(String courseCode) {
         hasValidElectives = loadElectives();
         if (electives == null) return null;
@@ -86,6 +87,7 @@ public class Elective {
         return null;
     }
 
+    //This method returns those elective objects that are taught by one specific lecturer
     public static Elective[] getAllElectivesForLecturer(Lecturer lecturer) {
         hasValidElectives = loadElectives();
         ArrayList<Elective> validElectives = new ArrayList<>();
@@ -98,6 +100,7 @@ public class Elective {
         return validElectives.toArray(electivesToReturn);
     }
 
+    //This method returns all elective objects
     public static Elective[] getAllElectives() {
         hasValidElectives = loadElectives();
         return electives;
@@ -105,6 +108,7 @@ public class Elective {
     //endregion
 
     //region Getters
+    //This method allows access to certain private properties of an elective object
     public long getElectiveId() {
         return this.electiveId;
     }
@@ -120,6 +124,7 @@ public class Elective {
     //endregion
 
     //region Validators
+    //This methods validates the access rights of a user
     public boolean mayNotAccessElective(User them) {
         if (them.isValidAdmin()) return false;
         if (them.isValidLecturer() && them.getUserId() == this.lecturerId) return false;
@@ -133,6 +138,8 @@ public class Elective {
     // STORED AS:
     // 1 | 2         | 3         | 4   | 5      | 6       | 7  | 8    | 9
     // ID;;CourseCode;;CourseName;;ECTS;;Program;;Keywords;;Day;;Block;;Lecturer
+	
+    //This methods returns the electives list
     private static boolean loadElectives() {
         if (hasValidElectives) return true;
         if (isLoading) return false;
@@ -158,6 +165,7 @@ public class Elective {
         return true;
     }
 
+    //This method adds an elective to the electives list
     private static void addElective(Elective elective) {
         if (alreadyHasLoaded(elective)) return;
         int currLength = 0;
@@ -170,6 +178,7 @@ public class Elective {
         electives[currLength] = elective;
     }
 
+    //This method checks whether electives have already been loaded
     private static boolean alreadyHasLoaded(Elective elective) {
         hasValidElectives = loadElectives();
         if (electives == null) return false;
@@ -219,6 +228,7 @@ public class Elective {
     will not save much time compared to a generic for loop approach. Changing String[] to ArrayList<String> will
     probably mitigate this performance increase.
      */
+    //This method filters for electives based on course code
     private static Elective[] electivesFilteredOnCourseCode(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
 	if (electives == null) return null;
@@ -234,6 +244,7 @@ public class Elective {
         return finalElectives.toArray(filteredElectives);
     }
 
+    //This method filters for electives based on ECTS value
     private static Elective[] electivesFilteredOnEcts(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
 	if (electives == null) return null;
@@ -249,6 +260,7 @@ public class Elective {
         return finalElectives.toArray(filteredElectives);
     }
 
+    //This method filters for electives based on the block in which they are taught
     private static Elective[] electivesFilteredOnBlock(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
 	if (electives == null) return null;
@@ -264,6 +276,7 @@ public class Elective {
         return finalElectives.toArray(filteredElectives);
     }
 
+    //This method filters for electives based on keywords
     private  static Elective[] electivesFilteredOnKeywords(String[] argument) {
         ArrayList<Elective> finalElectives = new ArrayList<>();
 	if (electives == null) return null;
@@ -288,6 +301,7 @@ public class Elective {
     //endregion
 
     //region Misc Lifters
+    //This method creates a standardized expression for an elective's keywords
     private static final String keywordStorageSeparator = "&";
     private String keywordString() {
         StringBuilder builder = new StringBuilder();
@@ -295,12 +309,14 @@ public class Elective {
         return builder.toString();
     }
 
+    //This method returns all keywords in an array
     private static String[] keywordsFromKeywordString(String keywordStr) {
         return keywordStr.split(keywordStorageSeparator);
     }
     //endregion
 
     //region Stringify
+    //This method turns values into a string
     public String toString() {
         int minSize = this.courseCode.length() + this.electiveName.length() + 50; //50 for good measure of the program, ects, and extras
         StringBuilder repBuilder = new StringBuilder();
@@ -311,6 +327,7 @@ public class Elective {
         return repBuilder.toString();
     }
 
+    //This method returns the details of an elective (its block, class day, lecturer and keywords)
     public String view() {
         Lecturer lecturer = Lecturer.getLecturerWithId(this.lecturerId);
         // need to add keywords, block, and time so increase toString capa by 100
@@ -328,6 +345,7 @@ public class Elective {
     //endregion
 
     //region Elective Editing
+    //This method saves the updated properties to an elective object and the corresponding file
     public boolean saveElective(Admin who, boolean newElective) {
         if (!who.isValidAdmin()) {
             InternalCore.printIssue("Insufficient access rights", "");
@@ -381,6 +399,7 @@ public class Elective {
         return true;
     }
 
+    //This method asks for the property of an elective object that is to be edited and calls the corresponding method
     public boolean edit(Admin who) {
         // Check access rights
         if (!who.isValidAdmin()) {
@@ -428,9 +447,6 @@ public class Elective {
         return saveElective(who, false);
     }
 
-    // The file elective is structured this way:
-    // Elective ID | Course Code | Name | ECTS | Program | Keywords | ClassTimes | Block
-
     // This method asks for the change of the elective name and saves this in the file
     private boolean editElectiveName() {
         String newName = InternalCore.getUserInput(String.class, "What is the new name of this elective?");
@@ -462,7 +478,6 @@ public class Elective {
         this.ects = newECTS;
         return true;
     }
-
 
     // This method asks for the change of the keywords and saves it in the file
     private boolean editKeywords() {
