@@ -77,7 +77,7 @@ public class Elective {
     //endregion
 
     //region Retrievers
-    //This method returns a specific elective object
+    //This method returns a specific elective object, based on its course code
     public static Elective getElectiveWithCourseCode(String courseCode) {
         hasValidElectives = loadElectives();
         if (electives == null) return null;
@@ -139,7 +139,7 @@ public class Elective {
     // 1 | 2         | 3         | 4   | 5      | 6       | 7  | 8    | 9
     // ID;;CourseCode;;CourseName;;ECTS;;Program;;Keywords;;Day;;Block;;Lecturer
 	
-    //This methods returns the electives list
+    //This methods loads the electives
     private static boolean loadElectives() {
         if (hasValidElectives) return true;
         if (isLoading) return false;
@@ -165,7 +165,7 @@ public class Elective {
         return true;
     }
 
-    //This method adds an elective to the electives list
+    //This method adds an elective
     private static void addElective(Elective elective) {
         if (alreadyHasLoaded(elective)) return;
         int currLength = 0;
@@ -178,7 +178,7 @@ public class Elective {
         electives[currLength] = elective;
     }
 
-    //This method checks whether electives have already been loaded
+    //This method checks whether an elective has already been loaded
     private static boolean alreadyHasLoaded(Elective elective) {
         hasValidElectives = loadElectives();
         if (electives == null) return false;
