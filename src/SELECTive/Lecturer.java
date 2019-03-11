@@ -26,6 +26,7 @@ public class Lecturer extends User {
 
     //region Getters
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method returns the title of a specific lecturer user
     public Title getTitle() {
         return this.title;
     }
@@ -50,6 +51,7 @@ public class Lecturer extends User {
 
     //region Static Init
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method loads the lecturer objects from the file
     private static boolean loadLecturers() {
         if (hasvalidLecturers) return true;
         if (isLoading) return false;
@@ -72,6 +74,7 @@ public class Lecturer extends User {
         return true;
     }
 
+    //This method adds a lecturer object to the lecturer list
     public static void addLecturer(Lecturer lecturer) {
         if (alreadyHasLoaded(lecturer)) return;
         int currLength = 0;
@@ -84,6 +87,7 @@ public class Lecturer extends User {
         lecturers[currLength] = lecturer;
     }
 
+    //This method checks whether a lecturer has already been loaded
     private static boolean alreadyHasLoaded(Lecturer lecturer) {
         hasvalidLecturers = loadLecturers();
         if (lecturers == null) return false;
@@ -96,6 +100,7 @@ public class Lecturer extends User {
 
     //region Student Getter
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method returns a specific lecturer object, based on its ID
     public static Lecturer getLecturerWithId(long id) {
         hasvalidLecturers = loadLecturers();
         if (lecturers == null) return null;
@@ -105,6 +110,7 @@ public class Lecturer extends User {
         return null;
     }
 
+    //This method returns a specific lecturer object, based on its user name
     public static Lecturer getLecturerWithUsername(String uname) {
         hasvalidLecturers = loadLecturers();
         if (lecturers == null) return null;
@@ -114,6 +120,7 @@ public class Lecturer extends User {
         return null;
     }
 
+    //This method returns all lecturer objects
     public static Lecturer[] getAllLecturers(Admin admin) {
         if (!admin.isValidAdmin()) return null;
         hasvalidLecturers = loadLecturers();
@@ -123,6 +130,7 @@ public class Lecturer extends User {
 
     //region Instance Editing
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method edits the title of a specific lecturer
     public boolean editTitle() {
         int optId = 0;
         Title[] titles = Title.values();
@@ -140,6 +148,7 @@ public class Lecturer extends User {
 
     //region Stringify Override
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method turns values into a string
     public String toString() {
         String userRep = super.toString();
         userRep = userRep.replaceAll("]", "] " + InternalCore.capitalizeString(title.toString()) + ".");
@@ -149,6 +158,7 @@ public class Lecturer extends User {
 
     //region Elective Management
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method returns an elective, based on the given course code
     private Elective getProperElective(String courseCode) {
         Elective elective = Elective.getElectiveWithCourseCode(courseCode);
         if (elective == null) {
@@ -161,6 +171,7 @@ public class Lecturer extends User {
 
     private Elective elective = null;
 
+    //This method returns an array of registration objects (registered students), based on the given course code
     private Registration[] getProperRegistrations(String courseCode) {
         this.elective = getProperElective(courseCode);
         if (this.elective == null) return null;
@@ -173,6 +184,7 @@ public class Lecturer extends User {
         return registrations;
     }
 
+    //This method returns a registration, based on the given course code and student
     private Registration getProperRegistration(String courseCode, Student student) {
         this.elective = getProperElective(courseCode);
         if (this.elective == null) return null;
@@ -187,6 +199,7 @@ public class Lecturer extends User {
         return registration;
     }
 
+    //This method enables a lecturer to enter or edit the grade of a registered student for one of his/her electives
     public void newGradeEntry(){
         // Loop to enter student grades until break
         String courseCode = null;
@@ -232,6 +245,7 @@ public class Lecturer extends User {
                 if (retry != null) if (retry.toLowerCase().equals("y")) continue;
             }
 
+            //Allowing the lecturer to add additional grades for other students
             String addMoreGrades = InternalCore.getUserInput(String.class,
                     "Would you like to add another grade? (y/n)");
             if (addMoreGrades == null) break;
@@ -277,6 +291,7 @@ public class Lecturer extends User {
         this.elective = null;
     }
 
+    //This method prints out an overview over the grade statistics of a given course
     public void viewStatsForElective(String courseCode) {
         Registration[] registrations = getProperRegistrations(courseCode);
         if (registrations == null) return;
