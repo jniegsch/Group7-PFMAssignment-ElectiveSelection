@@ -196,7 +196,7 @@ public class Registration {
 
     //region Backend Loading
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // Method to load all registrations
+    // Method to load all registration entries from the file and create an object for every instance
       private static boolean loadRegistrations() {
         if (hasValidRegistrations) return true;
         if (isLoading) return false;
