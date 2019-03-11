@@ -4,14 +4,12 @@ import java.util.Arrays;
 
 public class Student extends User {
     //region Static Properties
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     private static Student[] students = null;
     private static boolean hasValidStudents = false;
     private static boolean isLoading = false;
     //endregion
 
     //region Constructor
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     public Student() {
         hasValidStudents = loadStudents();
     }
@@ -23,7 +21,7 @@ public class Student extends User {
     //endregion
 
     //region Student Retrievers
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method returns a specific student object 
     public static Student getStudentWithId(long id) {
         hasValidStudents = loadStudents();
         if (students == null) return null;
@@ -33,6 +31,7 @@ public class Student extends User {
         return null;
     }
 
+    //This method returns a specific student object 
     public static Student getStudentWithUsername(String uname) {
         hasValidStudents = loadStudents();
         if (students == null) return null;
@@ -42,6 +41,7 @@ public class Student extends User {
         return null;
     }
 
+    //This method returns all student objects 
     public static Student[] getAllStudents(Admin admin) {
         if (!admin.isValidAdmin()) return null;
         hasValidStudents = loadStudents();
@@ -50,7 +50,7 @@ public class Student extends User {
     //endregion
 
     //region Static Init
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method returns the student list 
     private static boolean loadStudents() {
         if (hasValidStudents) return true;
         if (isLoading) return false;
@@ -72,6 +72,7 @@ public class Student extends User {
         return true;
     }
 
+    //This method adds a student to the student list 
     public static void addStudent(Student student) {
         if (alreadyHasLoaded(student)) return;
         int currLength = 0;
@@ -84,6 +85,7 @@ public class Student extends User {
         students[currLength] = student;
     }
 
+    //This method checks whether students have already been loaded 
     private static boolean alreadyHasLoaded(Student student) {
         hasValidStudents = loadStudents();
         if (students == null) return false;
@@ -99,7 +101,7 @@ public class Student extends User {
     //endregion
 
     //region Enrollment
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method allows student users to register themselves to an elective 
     public void viewEnrolledElectives() {
         Registration reg = Registration.registrationForStudent(this);
         if (reg == null) {
@@ -122,6 +124,7 @@ public class Student extends User {
         }
     }
 
+    //This method allows student users to view their grades for electives to which they are registered
     public void viewElectiveProgress(String courseCode) {
         Registration reg = Registration.registrationForStudent(this);
         if (reg == null) {
@@ -144,7 +147,8 @@ public class Student extends User {
         }
         InternalCore.println("Your progress for " + courseCode + " is: " + reg.getGrade(elective));
     }
-
+    
+    //This method allows student users to view their grades for electives to which they are registered
     public void viewProgress() {
         Registration reg = Registration.registrationForStudent(this);
         if (reg == null) {
