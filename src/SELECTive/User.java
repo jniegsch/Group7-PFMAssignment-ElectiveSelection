@@ -283,7 +283,7 @@ public class User {
             } catch (NumberFormatException nfe) {
                 titleChoice = 0;
             }
-            if (titleChoice < 0 || titleChoice > Lecturer.Title.values().length) {
+            if (titleChoice < 1 || titleChoice > Lecturer.Title.values().length) {
                 title = Lecturer.Title.NO_TITLE;
             } else {
                 title = Lecturer.Title.values()[titleChoice - 1];
