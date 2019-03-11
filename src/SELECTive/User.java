@@ -258,6 +258,7 @@ public class User {
     //endregion
 
     //region User Instance Editing
+    //This method checks whether the editing of a user's properties was successful and eventually prints a notification
     public boolean editUserUnsuccessful() {
         boolean lecturerInstance = (this.isValidLecturer());
         InternalCore.println("" +
@@ -314,6 +315,7 @@ public class User {
         return !updateUserInfo(lecturerInstance);
     }
 
+    //This method asks for the user's new first name and edits the object's property
     private boolean editUserFName() {
         String newFirstName = InternalCore.getUserInput(String.class, "What is the new first name of this user?");
         if (newFirstName == null) return false;
@@ -321,6 +323,7 @@ public class User {
         return true;
     }
 
+    //This method asks for the user's new last name and edits the object's property
     private boolean editUserLName() {
         String newLastName = InternalCore.getUserInput(String.class, "What is the new Last name of this user?");
         if (newLastName == null) return false;
@@ -328,6 +331,7 @@ public class User {
         return true;
     }
 
+    //This method asks for the user's new middle initial and edits the object's property
     private boolean editUserMiddleInitial() {
         String newMiddleInitial = InternalCore.getUserInput(String.class, "What is the new middle initial of this user's name?");
         if (newMiddleInitial == null) return false;
@@ -335,12 +339,14 @@ public class User {
         return true;
     }
 
+    //This method asks for the user's new date of birth and edits the object's property
     private boolean editDateofBirth() {
         String newDate = InternalCore.getUserInput(String.class, "What is the new date of birth (please enter int he format yyyy-MM-dd: ");
         this.dateOfBirth = parseDOB(newDate);
         return (this.dateOfBirth != null);
     }
 
+    //This method parses the date of birth
     private Date parseDOB(String date) {
         try {
             SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
@@ -883,12 +889,14 @@ public class User {
 
     //region Misc Overrides
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method changes a given value's type into a string
     public String toString() {
         return ("[id: " + this.userId + "] " + InternalCore.capitalizeString(this.firstName) + " " +
                 (this.middleInitial.equals(" ") ? "" : this.middleInitial) + " " +
                 InternalCore.capitalizeString(this.lastname));
     }
 
+    // Method checks whether a given object equals a user object
     public boolean equals(Object obj) {
         if (!(obj instanceof User)) return super.equals(obj);
         User object = (User) obj;
