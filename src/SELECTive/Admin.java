@@ -24,6 +24,7 @@ public class Admin extends User {
 
     //region Static Init
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This methods loads the admins
     private static boolean loadAdmins() {
         if (hasValidAdmins) return true;
         if (isLoading) return false;
@@ -45,6 +46,7 @@ public class Admin extends User {
         return true;
     }
 
+    //This method adds an admin
     public static void addAdmin(Admin admin) {
         if (alreadyHasLoaded(admin)) return;
         int currLength = 0;
@@ -57,6 +59,7 @@ public class Admin extends User {
         admins[currLength] = admin;
     }
 
+    //This method checks whether an admin has already been loaded
     private static boolean alreadyHasLoaded(Admin admin) {
         hasValidAdmins = loadAdmins();
         if (admins == null) return false;
@@ -69,6 +72,7 @@ public class Admin extends User {
 
     //region Retrievers
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method returns a specific admin object, based on its user name
     public static Admin getAdminWithUsername(String uname) {
         hasValidAdmins = loadAdmins();
         if (admins == null) return null;
@@ -78,6 +82,7 @@ public class Admin extends User {
         return null;
     }
 
+    //This method returns all admin objects
     public static Admin[] getAllAdmins(Admin admin) {
         if (!admin.isValidAdmin()) return null;
         hasValidAdmins = loadAdmins();
@@ -87,6 +92,7 @@ public class Admin extends User {
 
     //region Adding Electives
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method enables an admin to create an elective
     public void addElective(String courseCode) {
         if (!this.isValidAdmin()) {
             InternalCore.printIssue("Insufficient access rights",
@@ -105,7 +111,7 @@ public class Admin extends User {
         Day lectureDay = null;
 	    long lecturerId = -1;
 
-        int prop = (courseCode == null)? 0 : 1;
+        int prop = (courseCode == null)? 0 : 1; //variable as counter to declare all 8 properties of an elective
         for (; prop < 8; prop++) {
             boolean successfulSet = false;
             switch (prop) {
@@ -227,6 +233,7 @@ public class Admin extends User {
 
     //region User Management
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //This method enables an admin to edit a specific user's properties
     public void editSpecificUser(String uname, UserType ut) {
 
         if (ut.equals(UserType.LECTURER)) {
