@@ -31,12 +31,12 @@ public class Registration {
         return grades[elect.getBlock() - 3];
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Method checks whether a user is registered to an elective, based on a given elective object
     public boolean isNotRegisteredForElective(Elective elective) {
         return isNotRegisteredForElective(elective.getCourseCode());
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Method checks whether a user is registered to an elective, based on a given elective's course code
     private boolean isNotRegisteredForElective(String courseCode) {
         if (electives[0] != null) if (electives[0].getCourseCode().equals(courseCode)) return false;
         if (electives[1] != null) if (electives[1].getCourseCode().equals(courseCode)) return false;
@@ -87,6 +87,7 @@ public class Registration {
 
     //region Public Retrieval 
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //Method returns a registration of a student, based on a specific student object
     public static Registration registrationForStudent(Student stu) {
         hasValidRegistrations = loadRegistrations();
         if (registrations == null || stu == null) return null;
@@ -96,6 +97,7 @@ public class Registration {
         return null;
     }
 
+    //Method returns an array of registrations (registered students), based on a given elective object
     public static Registration[] registrationsForCourse(Elective elect) {
         hasValidRegistrations = loadRegistrations();
         if (registrations == null || elect == null) return null;
@@ -194,8 +196,8 @@ public class Registration {
 
     //region Backend Loading
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    private static boolean loadRegistrations() {
+    // Method to load all registrations
+      private static boolean loadRegistrations() {
         if (hasValidRegistrations) return true;
         if (isLoading) return false;
         isLoading = true;
@@ -228,7 +230,7 @@ public class Registration {
         return true;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Method to add a registration
     private static void addRegistration(Registration registration) {
         if (alreadyHasLoaded(registration)) {
             hasValidRegistrations = true;
@@ -245,7 +247,7 @@ public class Registration {
         hasValidRegistrations = true;
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Method checks whether a registration has already been loaded
     private static boolean alreadyHasLoaded(Registration registration) {
         hasValidRegistrations = loadRegistrations();
         if (registrations == null) return false;
@@ -258,7 +260,7 @@ public class Registration {
 
     //region Overrides
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // Method checks whether a given object equals a registration object
     public boolean equals(Object obj) {
         if (obj instanceof Registration) {
             Registration object = (Registration) obj;
