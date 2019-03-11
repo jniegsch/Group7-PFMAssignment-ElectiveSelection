@@ -50,7 +50,7 @@ public class Student extends User {
     //endregion
 
     //region Static Init
-    //This method returns the student list 
+    //This method loads all student entries from the file and creates an object for every instance
     private static boolean loadStudents() {
         if (hasValidStudents) return true;
         if (isLoading) return false;
@@ -97,7 +97,7 @@ public class Student extends User {
     //endregion
 
     //region Enrollment
-    //This method allows student users to register themselves to an elective 
+    //This method allows student users to view those electives that they are enrolled in
     public void viewEnrolledElectives() {
         Registration reg = Registration.registrationForStudent(this);
         if (reg == null) {
