@@ -118,6 +118,12 @@ public class Registration {
             return false;
         }
         if (this.electives[elect.getBlock() - 3] != null) {
+            if (this.grades[elect.getBlock() - 3] != -1) {
+                InternalCore.println("You're already enrolled in a course in this block and have received a grade. " +
+                        "Thus you can no longer change your elective. The course is: \n "
+                        + this.electives[elect.getBlock() - 3].toString());
+                return false;
+            }
             InternalCore.println("You're already enrolled in a course in this block. The course is: \n "
                     + this.electives[elect.getBlock() - 3].toString());
             String changeElective = InternalCore.getUserInput(String.class, "Change elective? (y/n)");
